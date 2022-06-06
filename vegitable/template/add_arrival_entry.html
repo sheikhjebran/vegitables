@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+
+
+<div class="container">
+
+    <div class="comment">
+
+            <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Arrival<span> entry</span></h3>
+
+            <form action = "add_arrival" method = "POST">
+                {% csrf_token %}
+                <div class="comment-your">
+                    <span>Gp No</span>
+                    <input type="text" placeholder="Gp Number" name = "gp_number" required="">
+                </div>
+                <div class="comment-your">
+                    <span>Patti Name</span>
+                    <input type="text" placeholder="Patti Name" name = "patti_name" required="">
+                </div>
+                &nbsp;
+                <div class="clearfix"> </div>
+
+
+                <div class="comment-your" style="margin-right:0%">
+                    <span>Total Bags</span>
+                    <input type="text" placeholder="Total Number of Bags" name="total_number_of_bags" required="">
+                </div>
+                <div class="comment-your" style="margin-right:0%">
+                    <span>Advance</span>
+                    <input type="text" placeholder="Advance in Rs" name="advance_amount" required="">
+                </div>
+                <div class="clearfix"> </div>
+
+                <button type="button" class=" btn-l btn-2 " id="add_arrivel_entry_list">Add Arrival Entry</button>
+                <div class="clearfix"> </div>
+
+                <br/><br/>
+
+
+
+                <div>
+                    <h3 style="font-size:25px; font-weight:bold;padding-bottom:3%;">Arrival<span> entries</span></h3>
+                    <div class="clearfix"> </div>
+                </div>
+                <table id="tableWrapper" style="display:block;border-collapse: separate;border-spacing: 0 1em;">
+                    <tbody>
+                        <tr>
+                            <td>Name</td>
+                            <td>Qty</td>
+                            <td>Weight</td>
+                            <td>Remark</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="clearfix"> </div>
+
+                <button type="submit" class=" btn-l btn-2 " >Save</button>
+                <div class="clearfix"> </div>
+
+            </form>
+
+    </div>
+
+
+    
+
+</div>
+{% endblock %}

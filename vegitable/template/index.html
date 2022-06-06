@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container" style="margin-top:5%">
+	<form action="authenticate" method="post">{% csrf_token %}
+	<div class="input-field">
+		<center><h3><span>Login</span></h3></center>
+		<div class="input-top">
+			<div class="input-top-top">&nbsp</div>
+			<div class="input-top-top">
+				<div class="input-top-mid">
+					<i class="fa fa-user"></i>
+					<input type="text" placeholder="User Name" required="" name="username">
+					<div class="clearfix"> </div>
+				</div>
+				<div class="input-top-mid">
+					<i class="fa fa-user"></i>
+					<input type="text" placeholder="Password" required="" name="password">
+					<div class="clearfix"> </div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="buttons">
+		<div class="button-top">
+			<div class="button-1">&nbsp</div>
+			<div class="button-1">&nbsp</div>
+			<div class="button-1">
+				<button type="text" class=" btn-l btn-2 ">Login</button>
+			</div>
+			<div class="clearfix"> </div>
+		</div>
+	</div>
+
+</form>
+</div>
+
+{% endblock %}

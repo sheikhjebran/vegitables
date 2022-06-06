@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+
+<div class="container">
+
+    <div class="comment">
+        <form action = "add_arrival_entry">
+            <div>
+                <button type="button" class=" btn-l btn-2 " onclick="location.href = 'add_arrival_entry';" style="float:right;">Add New Arrival Entry</button>
+                <div class="clearfix"> </div>
+            </div>
+        </form>
+
+    </div>
+
+    <ul class="responsive-table">
+        <li class="table-header">
+            <div class="col col-1">Si No</div>
+            <div class="col col-2">Date</div>
+            <div class="col col-3">Gp Number</div>
+            <div class="col col-4">patti Name</div>
+            <div class="col col-5">Total Bags</div>
+            <div class="col col-6">Advance</div>
+        </li>
+        {%for arrival in arrival_detail %}
+        <li class="table-row">
+          <div class="col col-1"><a href="edit_arrival_entry/{{arrival.id}}">{{ arrival.id}}</a></div>
+          <div class="col col-2" >{{arrival.date}}</div>
+          <div class="col col-3" >{{arrival.gp_no}}</div>
+          <div class="col col-4" >{{arrival.patti_name}}</div>
+            <div class="col col-5" >{{arrival.total_bags}}</div>
+            <div class="col col-6" >{{arrival.advance}}</div>
+        </li>
+        {% endfor %}
+
+  </ul>
+
+    <div class="page-top-mid1">
+            <ul class="page-mid2">
+                <li><span class="pre1"  onclick="location.href = '/home/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
+                <li><a class="next-top1" href="/home/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
+            </ul>
+    </div>
+    <div class="clearfix"> </div>
+</div>
+{% endblock %}
