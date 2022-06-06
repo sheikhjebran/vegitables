@@ -1,0 +1,16 @@
+asgiref==3.5.2
+certifi==2022.5.18.1
+charset-normalizer==2.0.12
+colorclass==2.2.2
+Django==4.0.4
+docopt==0.6.2
+id==0.1.0
+idna==3.3
+mysqlclient==2.1.0
+packaging==21.3
+pip-upgrader==1.4.15
+pyparsing==3.0.9
+requests==2.27.1
+sqlparse==0.4.2
+terminaltables==3.1.10
+urllib3==1.26.9
