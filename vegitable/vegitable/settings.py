@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'vegitable.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -97,15 +97,15 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'SheikhJebran$vegitable_shop',
-        'USER': 'SheikhJebran',
-        'PASSWORD': 'Uc472bmt',
-        'HOST': 'SheikhJebran.mysql.pythonanywhere-services.com',
+        'NAME': 'PrashantSindhe$vegitableshop',
+        'USER': 'PrashantSindhe',
+        'PASSWORD': 'admin@123',
+        'HOST': 'PrashantSindhe.mysql.pythonanywhere-services.com',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
-}'''
+}
 
 
 # Password validation
