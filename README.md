@@ -16,3 +16,5 @@ pip-upgrade requirements.txt
 ```
 
 python3 manage.py sqlmigrate shops 0002
+
+pip install whitenoise

@@ -5,6 +5,7 @@ from django.contrib import messages, auth
 from .models import Shop, Arrival_Entry, Arrival_Goods
 import datetime
 
+
 def index(request):
     return render(request, 'index.html')
 
@@ -21,21 +22,23 @@ def get_authenticate(request):
 
 
 def home_next_page(request, page_number):
-    return home(request,current_page=page_number+1)
+    return home(request, current_page=page_number + 1)
 
 
 def home_prev_page(request, page_number):
     if page_number > 1:
-        return home(request,current_page=page_number-1)
+        return home(request, current_page=page_number - 1)
     else:
         return home(request)
+
 
 @csrf_protect
 def home(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         try:
-            arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[:page * current_page]
+            arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+                                   :page * current_page]
         except Exception as error:
             print(error)
             arrival_entry_detail = None
@@ -80,12 +83,12 @@ def add_arrival(request):
 
     for entry in newLIst:
         arrival_Goods_obj = Arrival_Goods(
-            shop = shop_detail_object,
-            arrival_entry = arrival_Entry_Obj,
-            former_name = request.POST[list(entry)[0]],
-            qty = request.POST[list(entry)[1]],
-            weight = request.POST[list(entry)[2]],
-            remarks = request.POST[list(entry)[3]],
+            shop=shop_detail_object,
+            arrival_entry=arrival_Entry_Obj,
+            former_name=request.POST[list(entry)[0]],
+            qty=request.POST[list(entry)[1]],
+            weight=request.POST[list(entry)[2]],
+            remarks=request.POST[list(entry)[3]],
         )
         arrival_Goods_obj.save()
 
@@ -95,4 +98,3 @@ def add_arrival(request):
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
-
