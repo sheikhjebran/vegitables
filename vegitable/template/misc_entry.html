@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+
+<div class="container">
+
+    <div class="comment">
+        <form action = "add_misc_entry">
+            <div>
+                <button type="button" class=" btn-l btn-2 " onclick="location.href = 'add_misc_entry';" style="float:right;">Add New Miscelenious Entry</button>
+                <div class="clearfix"> </div>
+            </div>
+        </form>
+
+    </div>
+
+    <ul class="responsive-table">
+        <li class="table-header">
+            <div class="col col-1">Si No</div>
+            <div class="col col-2">Date</div>
+            <div class="col col-3">Expense Type</div>
+            <div class="col col-4">Remark</div>
+            <div class="col col-5">Amount</div>
+            
+        </li>
+        {%for misc in misc_detail %}
+        <li class="table-row">
+          <div class="col col-1"><a href="edit_misc_entry/{{misc.id}}">{{ misc.id}}</a></div>
+          <div class="col col-2" >{{misc.date}}</div>
+          <div class="col col-3" >{{misc.expense_type}}</div>
+          <div class="col col-4" >{{misc.remark}}</div>
+          <div class="col col-5" >{{misc.amount}}</div>
+        </li>
+        {% endfor %}
+
+  </ul>
+
+    <div class="page-top-mid1">
+            <ul class="page-mid2">
+                <li><span class="pre1"  onclick="location.href = '/misc/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
+                <li><a class="next-top1" href="/misc/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
+            </ul>
+    </div>
+    <div class="clearfix"> </div>
+</div>
+{% endblock %}

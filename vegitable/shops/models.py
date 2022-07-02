@@ -15,6 +15,16 @@ class Shop(models.Model):
     def __str__(self):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
+class Misc_Entry(models.Model):
+    date = DateField()
+    expense_type = CharField(max_length=50)
+    amount = FloatField(max_length=100)
+    remark = CharField(max_length=255)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.expense_type}-{self.amount}-{self.remark}"
+
 
 class Arrival_Entry(models.Model):
     gp_no = CharField(max_length=100)

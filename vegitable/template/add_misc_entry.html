@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+
+
+<div class="container">
+
+    <div class="comment">
+
+            <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Miscelenious<span> entry</span></h3>
+
+            <form action = "add_arrival" method = "POST">
+                {% csrf_token %}
+                <div class="comment-your">
+                    <span>Expense Type</span>
+                    <input type="text" placeholder="expense type" name = "expense_type" required="">
+                </div>
+                <div class="comment-your">
+                    <span>Amount</span>
+                    <input type="text" placeholder="Amount" name = "amount" required="">
+                </div>
+                &nbsp;
+                <div class="clearfix"> </div>
+
+
+                <div class="your-message">
+                    <span>Your Remark</span>
+                    <textarea placeholder="" required=""></textarea>
+                </div>
+                
+                <div class="clearfix"> </div>
+
+               
+
+                <button type="submit" class=" btn-l btn-2 " >Save</button>
+                <div class="clearfix"> </div>
+
+            </form>
+
+    </div>
+
+
+    
+
+</div>
+{% endblock %}
