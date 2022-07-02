@@ -16,6 +16,13 @@
         </form>
 
     </div>
+    <div class="comment-your">
+        <span>Total Amount</span>
+        <input type="text" placeholder="Total amount" name = "total_amount" readonly value="{{total_amount}}" style="width:20%">
+        <br/><br/>
+    </div>
+    &nbsp;
+    <div class="clearfix"> </div>
 
     <ul class="responsive-table">
         <li class="table-header">
@@ -46,7 +53,5 @@
     </div>
     <div class="clearfix"> </div>
 
-    <iframe id="misc_total_iframe" height=75% width="50%" src="{% url 'misc_total_iframe' %}">
-    </iframe>
 </div>
 {% endblock %}

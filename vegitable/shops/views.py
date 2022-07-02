@@ -69,15 +69,22 @@ def misc_entry(request, page =10, current_page =1):
         try:
             misc_entry_detail = Misc_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
                                    :page * current_page]
+            
+            misc_events_today = Misc_Entry.objects.filter(shop=shop_detail_object).filter(date=datetime.datetime.today()) 
+            total_amount = 0
+            for entry in misc_events_today:
+                total_amount+=entry.amount
+                print(entry.amount)
+                
         except Exception as error:
             print(error)
             
         return render(request, 'misc_entry.html',
                       {
-                          'shop_details': shop_detail_object,
-                          'misc_detail': misc_entry_detail,
-                          'current_page': current_page,
-
+                        'shop_details': shop_detail_object,
+                        'misc_detail': misc_entry_detail,
+                        'current_page': current_page,
+                        'total_amount':total_amount
                       })
     
     return render(request, 'index.html')
