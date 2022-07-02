@@ -89,41 +89,42 @@ def logout(request):
 
 
 def add_new_arrival_entry(request):
-    return render(request, 'add_arrival_entry.html')
+    return render(request, 'modify_arrival_entry.html')
 
 def add_new_misc_entry(request):
-    return render(request, 'add_misc_entry.html')
+    return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
 @csrf_protect
 def add_misc_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    if len(request.POST['misc_id'])<=0:
 
-    arrival_Entry_Obj = Arrival_Entry(
-        gp_no=request.POST['gp_number'],
+        misc_entry_Obj = Misc_Entry(
         date=datetime.datetime.today(),
-        patti_name=request.POST['patti_name'],
-        total_bags=request.POST['total_number_of_bags'],
-        advance=request.POST['advance_amount'],
+        expense_type=request.POST['expense_type'],
+        amount=request.POST['amount'],
+        remark=request.POST['remark'],
         shop=shop_detail_object)
 
-    arrival_Entry_Obj.save()
+    else:
 
-    print(f"New arrival entry  = {arrival_Entry_Obj.id}")
+        misc_entry_Obj = Misc_Entry.objects.get(id=request.POST['misc_id'])  # object to update
+        misc_entry_Obj.date=datetime.datetime.today()
+        misc_entry_Obj.expense_type=request.POST['expense_type']
+        misc_entry_Obj.amount=request.POST['amount']
+        misc_entry_Obj.remark=request.POST['remark']
+        misc_entry_Obj.shop=shop_detail_object
+        
 
-    newLIst = [list(request.POST)[i:i + 4] for i in range(5, len(list(request.POST)), 4)]
-
-    for entry in newLIst:
-        arrival_Goods_obj = Arrival_Goods(
-            shop=shop_detail_object,
-            arrival_entry=arrival_Entry_Obj,
-            former_name=request.POST[list(entry)[0]],
-            qty=request.POST[list(entry)[1]],
-            weight=request.POST[list(entry)[2]],
-            remarks=request.POST[list(entry)[3]],
-        )
-        arrival_Goods_obj.save()
-
+    misc_entry_Obj.save()
+    print(f"New arrival entry  = {misc_entry_Obj.id}")
     return misc_entry(request)
+
+@csrf_protect
+def edit_misc_entry(request,misc_id):
+    misc_detail_obj = Misc_Entry.objects.get(pk=misc_id)
+    return render(request, 'modify_misc_entry.html', {'misc_detail': misc_detail_obj})
+    
 
 @csrf_protect
 def add_arrival(request):

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+<div class="container">
+
+    <div class="comment">
+
+            <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Miscelenious<span> entry</span></h3>
+
+            <form action = "/add_misc" method = "POST">
+                {% csrf_token %}
+
+                <div class="comment-your">
+                    <span>Expense Type</span>
+                    <select class="custom-select" name="expense_type">
+                        {% if misc_detail != "NEW" %}
+                        <option value ="{{misc_detail.expense_type}}" selected="selected">{{misc_detail.expense_type}}</option>            
+                        {% endif %}
+                        <option value ="cash">Cash</option>
+                        <option value ="cheque">Cheque</option>
+                        <option value ="credit card">Credit Card</option>
+                        <option value ="upi">UPI</option>
+                    </select>
+                </div>
+                
+                <div class="comment-your">
+                    <span>Amount</span>
+                    <input type="text" placeholder="Amount" name = "amount" required="" value="{{misc_detail.amount}}">
+                </div>
+                &nbsp;
+                <div class="clearfix"> </div>
+
+                <div class="your-message">
+                    <span>Your Remark</span>
+                    <textarea name="remark" placeholder="" required="">{{misc_detail.remark}}</textarea>
+                </div>
+                <div class="clearfix"> </div>
+
+                <button type="submit" class=" btn-l btn-2 " >Save</button>
+                <div class="clearfix"> </div>
+                <input type="text" hidden="true" name="misc_id" value ="{{misc_detail.id}}">
+            </form>
+
+    </div>
+
+</div>
+{% endblock %}

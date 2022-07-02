@@ -25,5 +25,5 @@ urlpatterns = [
     path('misc/next/<int:page_number>/',views.misc_next_page, name="misc_next_page"),
     path('add_misc_entry', views.add_new_misc_entry, name='add_new_misc_entry'),
     path('add_misc', views.add_misc_entry, name='add_misc_entry'),
-
+    path('edit_misc_entry/<int:misc_id>/', views.edit_misc_entry, name='edit_misc_entry'),
 ]
