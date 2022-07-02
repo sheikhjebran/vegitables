@@ -26,4 +26,5 @@ urlpatterns = [
     path('add_misc_entry', views.add_new_misc_entry, name='add_new_misc_entry'),
     path('add_misc', views.add_misc_entry, name='add_misc_entry'),
     path('edit_misc_entry/<int:misc_id>/', views.edit_misc_entry, name='edit_misc_entry'),
+    path('misc_total_iframe', views.total_amount_misc_entry, name='total_amount_misc_entry'),
 ]

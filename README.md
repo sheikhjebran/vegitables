@@ -15,6 +15,12 @@ pip install pip-upgrader
 pip-upgrade requirements.txt
 ```
 
+### To migrate the sql
+```
 python3 manage.py sqlmigrate shops 0002
+```
 
+### necessary plugin for django
+```
 pip install whitenoise
+```

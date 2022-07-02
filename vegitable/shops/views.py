@@ -125,6 +125,8 @@ def edit_misc_entry(request,misc_id):
     misc_detail_obj = Misc_Entry.objects.get(pk=misc_id)
     return render(request, 'modify_misc_entry.html', {'misc_detail': misc_detail_obj})
     
+def total_amount_misc_entry(request):
+    return render(request,'misc_total_iframe.html')
 
 @csrf_protect
 def add_arrival(request):

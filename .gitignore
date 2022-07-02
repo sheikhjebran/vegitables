@@ -1,6 +1,5 @@
 /venv/
 *.pyc
-*.pyc
-*.pyc
-*.pyc
-*.pyc
+
+vegitable/shops/__pycache__/*
+
