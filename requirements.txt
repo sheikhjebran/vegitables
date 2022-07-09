@@ -4,6 +4,7 @@ charset-normalizer==2.1.0
 colorclass==2.2.2
 Django==4.0.5
 docopt==0.6.2
+gunicorn==20.1.0
 id==0.1.0
 idna==3.3
 mysqlclient==2.1.1
@@ -13,5 +14,6 @@ pyparsing==3.0.9
 requests==2.28.1
 sqlparse==0.4.2
 terminaltables==3.1.10
+tzdata==2022.1
 urllib3==1.26.9
 whitenoise==6.2.0
