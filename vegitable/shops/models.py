@@ -31,8 +31,9 @@ class Arrival_Entry(models.Model):
     date = DateField()
     patti_name = CharField(max_length=50)
     total_bags = IntegerField()
-    advance = FloatField(max_length=100)
+    advance = FloatField(max_length=100)    
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    
 
     def __str__(self):
         return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.advance}"
@@ -45,6 +46,7 @@ class Arrival_Goods(models.Model):
     qty = FloatField(max_length=100)
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
-
+    iteam_name = CharField(max_length=100)
+    
     def __str__(self):
         return f"{self.id} - {self.shop} -{self.former_name}"

@@ -151,16 +151,17 @@ def add_arrival(request):
 
     print(f"New arrival entry  = {arrival_Entry_Obj.id}")
 
-    newLIst = [list(request.POST)[i:i + 4] for i in range(5, len(list(request.POST)), 4)]
+    newLIst = [list(request.POST)[i:i + 5] for i in range(5, len(list(request.POST)), 5)]
 
     for entry in newLIst:
         arrival_Goods_obj = Arrival_Goods(
             shop=shop_detail_object,
             arrival_entry=arrival_Entry_Obj,
             former_name=request.POST[list(entry)[0]],
-            qty=request.POST[list(entry)[1]],
-            weight=request.POST[list(entry)[2]],
-            remarks=request.POST[list(entry)[3]],
+            iteam_name=request.POST[list(entry)[1]],
+            qty=request.POST[list(entry)[2]],
+            weight=request.POST[list(entry)[3]],
+            remarks=request.POST[list(entry)[4]],
         )
         arrival_Goods_obj.save()
 
