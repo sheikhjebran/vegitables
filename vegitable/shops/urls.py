@@ -18,6 +18,7 @@ urlpatterns = [
     # Arrival Entry URL
     path('add_arrival_entry', views.add_new_arrival_entry, name='add_new_arrival_entry'),
     path('add_arrival', views.add_arrival, name='add_arrival'),
+    path('edit_arrival_entry/<int:arrival_id>/', views.modify_arrival, name='modify_arrival'),
 
     #Misc Entry URL
     path('misc_entry', views.misc_entry, name='misc_entry'),
