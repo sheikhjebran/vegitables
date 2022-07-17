@@ -135,8 +135,11 @@ def edit_misc_entry(request,misc_id):
 def total_amount_misc_entry(request):
     return render(request,'misc_total_iframe.html')
 
+@csrf_protect
 def modify_arrival(request, arrival_id):
-    pass
+    arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
+    arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
+    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs})
     
 @csrf_protect
 def add_arrival(request):

@@ -228,7 +228,7 @@ $(document).ready(function(){
  </script>
 <script>
     $(document).ready(function(){
-            var counter= 0;
+            var counter= 1;
           $('#add_arrivel_entry_list').click(function() {
                 $('#tableWrapper')
                 .children('tbody')
@@ -267,12 +267,15 @@ $(document).ready(function(){
                         </td>
                     </tr>
                     `
-                );
+                );counter=counter+1
             });
+			
     });
 
     function removeElement(el) {
+		console.log(el)
         var element = document.getElementById(el);
+
         element.remove();
     }
 
