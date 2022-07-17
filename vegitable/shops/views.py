@@ -135,6 +135,9 @@ def edit_misc_entry(request,misc_id):
 def total_amount_misc_entry(request):
     return render(request,'misc_total_iframe.html')
 
+def modify_arrival(request, arrival_id):
+    pass
+    
 @csrf_protect
 def add_arrival(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
