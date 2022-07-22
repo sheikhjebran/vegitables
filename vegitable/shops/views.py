@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
 
-from .models import Misc_Entry, Shop, Arrival_Entry, Arrival_Goods
+from .models import Misc_Entry, Sales_Bill_Entry, Shop, Arrival_Entry, Arrival_Goods
 import datetime
 
 
@@ -40,6 +40,15 @@ def misc_prev_page(request, page_number):
     else:
         return misc_entry(request)
 
+def sales_bill_next_page(request, page_number):
+    return sales_bill_entry(request, current_page=page_number + 1)
+
+def sales_bill_prev_page(request, page_number):
+    if page_number > 1:
+        return sales_bill_entry(request, current_page=page_number - 1)
+    else:
+        return sales_bill_entry(request)
+    
 @csrf_protect
 def home(request, page=10, current_page=1):
     if request.user.is_authenticated:
@@ -61,6 +70,24 @@ def home(request, page=10, current_page=1):
     
     return render(request, 'index.html')
 
+def sales_bill_entry(request, page =10, current_page =1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        sales_entry_detail = None
+        try:
+            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+                                   :page * current_page]
+        except Exception as error:
+            print(error)
+            
+        return render(request, 'sales_bill_entry.html',
+                      {
+                        'shop_details': shop_detail_object,
+                        'sales_bill_detail': sales_entry_detail,
+                        'current_page': current_page
+                      })
+    
+    return render(request, 'index.html')
 
 def misc_entry(request, page =10, current_page =1):
     if request.user.is_authenticated:
@@ -96,11 +123,14 @@ def logout(request):
 
 
 def add_new_arrival_entry(request):
-    return render(request, 'modify_arrival_entry.html')
+    return render(request, 'modify_arrival_entry.html',{'NEW':True})
 
 def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
+def add_new_sales_bill_entry(request):
+    return render(request, 'modify_sales_bill_entry.html' , {'sales_bill_detail': "NEW"})
+    
 @csrf_protect
 def add_misc_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -139,40 +169,63 @@ def total_amount_misc_entry(request):
 def modify_arrival(request, arrival_id):
     arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
     arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
-    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs})
+    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False})
     
 @csrf_protect
 def add_arrival(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-    arrival_Entry_Obj = Arrival_Entry(
-        gp_no=request.POST['gp_number'],
-        date=datetime.datetime.today(),
-        patti_name=request.POST['patti_name'],
-        total_bags=request.POST['total_number_of_bags'],
-        advance=request.POST['advance_amount'],
-        shop=shop_detail_object)
+    if len(request.POST['arrival_id'])<=0:
+        arrival_Entry_Obj = Arrival_Entry(
+            gp_no=request.POST['gp_number'],
+            date=datetime.datetime.today(),
+            patti_name=request.POST['patti_name'],
+            total_bags=request.POST['total_number_of_bags'],
+            advance=request.POST['advance_amount'],
+            shop=shop_detail_object)
+        
+    else:
+        arrival_Entry_Obj = Arrival_Entry.objects.get(id=request.POST['arrival_id'])  # object to update
+        arrival_Entry_Obj.gp_no=request.POST['gp_number']
+        arrival_Entry_Obj.date=datetime.datetime.today()
+        arrival_Entry_Obj.patti_name=request.POST['patti_name']
+        arrival_Entry_Obj.total_bags=request.POST['total_number_of_bags']
+        arrival_Entry_Obj.advance=request.POST['advance_amount']
+        arrival_Entry_Obj.shop=shop_detail_object
 
-    arrival_Entry_Obj.save()
 
+    arrival_Entry_Obj.save()        
     print(f"New arrival entry  = {arrival_Entry_Obj.id}")
 
-    newLIst = [list(request.POST)[i:i + 5] for i in range(5, len(list(request.POST)), 5)]
+    if len(request.POST['arrival_id'])<=0:
+        newLIst = [list(request.POST)[i:i + 5] for i in range(5, len(list(request.POST)), 5)]
 
-    for entry in newLIst:
-        arrival_Goods_obj = Arrival_Goods(
-            shop=shop_detail_object,
-            arrival_entry=arrival_Entry_Obj,
-            former_name=request.POST[list(entry)[0]],
-            iteam_name=request.POST[list(entry)[1]],
-            qty=request.POST[list(entry)[2]],
-            weight=request.POST[list(entry)[3]],
-            remarks=request.POST[list(entry)[4]],
-        )
-        arrival_Goods_obj.save()
-
+        for entry in newLIst:
+            arrival_Goods_obj = Arrival_Goods(
+                shop=shop_detail_object,
+                arrival_entry=arrival_Entry_Obj,
+                former_name=request.POST[list(entry)[0]],
+                iteam_name=request.POST[list(entry)[1]],
+                qty=request.POST[list(entry)[2]],
+                weight=request.POST[list(entry)[3]],
+                remarks=request.POST[list(entry)[4]],
+            )
+            arrival_Goods_obj.save()
+    else:
+        newList = [list(request.POST)[i:i + 6] for i in range(5, len(list(request.POST)), 15)]
+        
+        for entry in newList:
+            arrival_Goods_obj = Arrival_Goods.objects.get(id=request.POST[list(entry)[5]])  # object to update
+            arrival_Goods_obj.former_name=request.POST[list(entry)[0]]
+            arrival_Goods_obj.iteam_name=request.POST[list(entry)[1]]
+            arrival_Goods_obj.qty=request.POST[list(entry)[2]]
+            arrival_Goods_obj.weight=request.POST[list(entry)[3]]
+            arrival_Goods_obj.remarks=request.POST[list(entry)[4]]
+            arrival_Goods_obj.save()
+            
+            
+        
     return home(request)
-
 
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")

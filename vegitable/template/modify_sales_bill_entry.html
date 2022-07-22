@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+<div class="container">
+
+    <div class="comment">
+
+            <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Sales <span> Bill</span></h3>
+
+            <form action = "/add_sales_bill" method = "POST">
+                {% csrf_token %}
+                <div class="comment-your" style="width:10%">
+                    <span>Bill No</span>
+                    <input type="text" placeholder="Bill No" name = "bill_no" required="" value="{{sales_bill_detail.id}}" readonly>
+                </div>
+                
+                <div class="comment-your">
+                    <span>Payment Type</span>
+                    <button type="button" class=" btn-l btn-3 ">Cash</button>
+                    <button type="button" class=" btn-l btn-3 ">Credit</button>
+                </div>
+                &nbsp;
+                <div class="clearfix"> </div>
+
+                <div class="your-message">
+                    <span>Your Remark</span>
+                    <textarea name="remark" placeholder="" required="">{{misc_detail.remark}}</textarea>
+                </div>
+                <div class="clearfix"> </div>
+
+                <button type="submit" class=" btn-l btn-2 " >Save</button>
+                <div class="clearfix"> </div>
+                <input type="text" hidden="true" name="misc_id" value ="{{misc_detail.id}}">
+            </form>
+
+    </div>
+
+</div>
+{% endblock %}

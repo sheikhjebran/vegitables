@@ -12,7 +12,7 @@
 
             <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Arrival<span> entry</span></h3>
 
-            <form action = "add_arrival" method = "POST">
+            <form action = "/add_arrival" method = "POST">
                 {% csrf_token %}
                 
                 <div class="comment-your">
@@ -58,6 +58,7 @@
                             <td>Remark</td>
                         </tr>
                     </tbody>
+                    {% if NEW == true%}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
                         <td>
                             <div class='comment-your'>
@@ -90,6 +91,45 @@
                              </div>
                         </td>
                     </tr>
+                    {% else %}
+
+                        {% for iteam in arrival_goods_objs %}
+                        <tr style='margin-top:3%;margin-bottom:3%;' id ="{{iteam.id}}_modify_child">
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Former Name' name ="{{iteam.id}}_modify_former_name" value="{{iteam.former_name}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Iteam Name' name ="{{iteam.id}}_modify_iteam_name" value="{{iteam.iteam_name}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Qty' name ="{{iteam.id}}_modify_qty" value="{{iteam.qty}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Weight' name ="{{iteam.id}}_modify_weight" value="{{iteam.weight}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Remark' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='tog-top-4'>
+                                    <img class='close_button' src="{% static 'images/remove.png' %}" onClick="removeElement('{{iteam.id}}_modify_child')" />
+                                    <input type="hidden" name="{{iteam.id}}_arrival_goods_id" value="{{iteam.id}}">
+                                 </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    {% endif %}
                 </table>
                 <div class="clearfix"> </div>
 

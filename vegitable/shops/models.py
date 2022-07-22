@@ -15,6 +15,30 @@ class Shop(models.Model):
     def __str__(self):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
+class Sales_Bill_Entry(models.Model):
+    payment_type = CharField(max_length=10)
+    customer_name = CharField(max_length=50)
+    date = DateField()
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    rmc = FloatField(max_length=50)
+    commission = FloatField(max_length=50)
+    cooli = FloatField(max_length=50)
+    total_amount = FloatField(max_length=50)
+    
+    def __str__(self):
+        return f"{self.id}-{self.customer_name}-{self.total_amount}"
+    
+class Sales_Bill_Iteam(models.Model):
+    iteam_name = CharField(max_length=10)
+    lot_number = CharField(max_length=50)
+    bags = CharField(max_length=50)
+    net_weight = FloatField(max_length=50)
+    rates = FloatField(max_length=50)
+    amount = FloatField(max_length=50)
+    
+    def __str__(self):
+        return f"{self.id}-{self.lot_number}-{self.iteam_name}-{self.bags}-{self.net_weight}-{self.amount}"
+    
 class Misc_Entry(models.Model):
     date = DateField()
     expense_type = CharField(max_length=50)
