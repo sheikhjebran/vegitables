@@ -20,6 +20,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('', include('shops.urls')),
+    path('api-auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
 ]
 

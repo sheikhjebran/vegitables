@@ -19,7 +19,8 @@ urlpatterns = [
     path('add_arrival_entry', views.add_new_arrival_entry, name='add_new_arrival_entry'),
     path('add_arrival', views.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>/', views.modify_arrival, name='modify_arrival'),
-
+    path('get_arrival_goods_iteam_name', views.get_arrival_goods_iteam_name, name='get_arrival_goods_iteam_name'),
+    
     #Misc Entry URL
     path('misc_entry', views.misc_entry, name='misc_entry'),
     path('misc/prev/<int:page_number>/',views.misc_prev_page, name="misc_prev_page"),

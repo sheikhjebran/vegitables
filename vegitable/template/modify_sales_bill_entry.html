@@ -12,28 +12,174 @@
 
             <form action = "/add_sales_bill" method = "POST">
                 {% csrf_token %}
-                <div class="comment-your" style="width:10%">
+                <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
-                    <input type="text" placeholder="Bill No" name = "bill_no" required="" value="{{sales_bill_detail.id}}" readonly>
+                    <input type="text" placeholder="Bill No" name = "sales_entry_bill_no" required="" value="" readonly>
+                </div>
+                <div class="clearfix"> </div>
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Customer Name</span>
+                    <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="" >
+                </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Date</span>
+                    <input type="date" name = "sales_entry_date" required="" value="" >
                 </div>
                 
-                <div class="comment-your">
-                    <span>Payment Type</span>
-                    <button type="button" class=" btn-l btn-3 ">Cash</button>
-                    <button type="button" class=" btn-l btn-3 ">Credit</button>
-                </div>
-                &nbsp;
+                <div class="clearfix"> </div>
+                <div class="radio-bottom radio-bottom5">
+					
+					<span class="mid-radio">
+					    <input type="radio" id="sales_enrty_cash" name="payment_mode" checked>
+					    <label for="sales_enrty_cash">Cash<i></i></label>
+					</span>
+					<span class="mid-radio">
+                        <input type="radio" id="sales_entry_credit" name="payment_mode" >
+                        <label for="sales_entry_credit">Credit<i></i></label>
+                    </span>
+				</div>
                 <div class="clearfix"> </div>
 
-                <div class="your-message">
-                    <span>Your Remark</span>
-                    <textarea name="remark" placeholder="" required="">{{misc_detail.remark}}</textarea>
+                <button type="button" class=" btn-l btn-2 " id="add_sales_entry_list">Add Sales Entry</button>
+                <div class="clearfix"> </div>
+                
+                
+                
+
+                <br/><br/>
+
+
+
+                <div>
+                    <h3 style="font-size:25px; font-weight:bold;padding-bottom:3%;">Sales Bill<span> entries</span></h3>
+                    <div class="clearfix"> </div>
+                </div>
+                <table id="tableWrapper" style="display:block;border-collapse: separate;border-spacing: 0 1em;">
+                    <tbody>
+                        <tr>
+                            <td>Lot No</td>
+                            <td>Iteam Name</td>
+                            <td>Bags</td>
+                            <td>Net Weight</td>
+                            <td>Rates</td>
+                            <td>Amount</td>
+                        </tr>
+                    </tbody>
+                    {% if NEW == true%}
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
+                        <td>
+                            <div class='comment-your'>
+                                <select class="custom-select" name="0_lot_number" id ="0_lot_number">
+                                    {% for arrival_detail in arrival_goods_detail%}
+                                    <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
+                                    {%endfor%}
+                                </select>
+                                
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="0_iteam_name" id="0_iteam_name" required='' readonly>
+                            </div>
+                        </td>
+						
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Bags' name ="0_bags" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Net Weigth' name ="0_net_weight" id="0_net_weight" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Rates' name ="0_rates" required='' id= "0_rates" class="calculate_amount">
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Amount' name ="0_amount" id= "0_amount" required='' readonly>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='tog-top-4'>
+                                <img class='close_button' src="{% static 'images/remove.png' %}" onClick="removeElement('0_child')" />
+                             </div>
+                        </td>
+                    </tr>
+                    {% else %}
+
+                        {% for iteam in arrival_goods_objs %}
+                        <tr style='margin-top:3%;margin-bottom:3%;' id ="{{iteam.id}}_modify_child">
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Former Name' name ="{{iteam.id}}_modify_former_name" value="{{iteam.former_name}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Iteam Name' name ="{{iteam.id}}_modify_iteam_name" value="{{iteam.iteam_name}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Qty' name ="{{iteam.id}}_modify_qty" value="{{iteam.qty}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Weight' name ="{{iteam.id}}_modify_weight" value="{{iteam.weight}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Remark' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='tog-top-4'>
+                                    <img class='close_button' src="{% static 'images/remove.png' %}" onClick="removeElement('{{iteam.id}}_modify_child')" />
+                                    <input type="hidden" name="{{iteam.id}}_arrival_goods_id" value="{{iteam.id}}">
+                                 </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    {% endif %}
+                </table>
+                <div class="clearfix"> </div>
+                <br>
+                <br>
+                <br>
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>RMC</span>
+                    <input type="text" placeholder="RMC" name = "rmc" id="rmc" required="" value="" >
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Comission</span>
+                    <input type="text" placeholder="Comission" id="comission" name = "comission" required="" value="" >
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Cooli</span>
+                    <input type="text" placeholder="Cooli" id= "cooli" name = "cooli" required="" value="" >
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Total Amount</span>
+                    <input type="text" placeholder="Total Amount" id= "total_amount" name = "total_amount" required="" value="" >
                 </div>
                 <div class="clearfix"> </div>
 
-                <button type="submit" class=" btn-l btn-2 " >Save</button>
+                <button type="submit" class=" btn-l btn-2 " style="float:right">Save</button>
                 <div class="clearfix"> </div>
-                <input type="text" hidden="true" name="misc_id" value ="{{misc_detail.id}}">
+                <input type="hidden" value="{{arrival_detail.id}}" name="arrival_id">
             </form>
 
     </div>

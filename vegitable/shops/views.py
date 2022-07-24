@@ -1,6 +1,12 @@
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import permissions
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 
 from .models import Misc_Entry, Sales_Bill_Entry, Shop, Arrival_Entry, Arrival_Goods
 import datetime
@@ -129,7 +135,13 @@ def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
 def add_new_sales_bill_entry(request):
-    return render(request, 'modify_sales_bill_entry.html' , {'sales_bill_detail': "NEW"})
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    
+    return render(request, 'modify_sales_bill_entry.html' , 
+                  {'sales_bill_detail': "NEW",
+                   "arrival_goods_detail":arrival_detail_object}
+                  )
     
 @csrf_protect
 def add_misc_entry(request):
@@ -170,6 +182,20 @@ def modify_arrival(request, arrival_id):
     arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
     arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
     return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False})
+    
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_arrival_goods_iteam_name(request):
+    [...]
+    iteam_name_list = []
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    for arrival_entry in arrival_detail_object:
+        if arrival_entry.remarks == request.GET['selected_lot']:
+            iteam_name_list.append(arrival_entry.iteam_name)
+    data = {'iteam_name_list': iteam_name_list}
+    return Response(data,status=status.HTTP_200_OK)
+    
     
 @csrf_protect
 def add_arrival(request):
