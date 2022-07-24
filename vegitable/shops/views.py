@@ -142,7 +142,31 @@ def add_new_sales_bill_entry(request):
                   {'sales_bill_detail': "NEW",
                    "arrival_goods_detail":arrival_detail_object}
                   )
+def getDate_from_string(stringDate):
+    mystringDate = str(stringDate).split("-")
+    return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
+def modify_sales_bill_entry(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    if len(request.POST['sales_bill_id'])<=0:
+        sales_bill_entry_Obj = Sales_Bill_Entry(
+        
+        payment_type=request.POST['payment_mode'],
+        customer_name=request.POST['sales_entry_customer_name'],
+        date=getDate_from_string(request.POST['sales_entry_date']),
+        shop=shop_detail_object,
+        rmc=request.POST['rmc'],
+        commission=request.POST['comission'],
+        cooli=request.POST['cooli'],
+        total_amount=request.POST['total_amount']
+        )
+    else:
+        sales_bill_entry_Obj = Sales_Bill_Entry.objects.get(id=request.POST['sales_bill_id'])
+
     
+    sales_bill_entry_Obj.save()
+    print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
+
 @csrf_protect
 def add_misc_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)

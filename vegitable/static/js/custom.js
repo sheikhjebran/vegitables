@@ -1,7 +1,7 @@
 
 $(document).ready(function(){
     var global_amount = 0;
-
+    var counter= 1;
 
     $(document).on("change", ".calculate_amount", function() {
         var rate_id = $(this).attr("id");
@@ -46,8 +46,7 @@ $(document).ready(function(){
         $('#total_amount').val(final_value);
     });
 
-
-    $('.custom-select').change(function () {
+    $(document).on("change", ".custom-select", function() {
         var lot_number_Id = $(this).attr("id");
         var selected_lot = $(this).val();
         
@@ -73,7 +72,8 @@ $(document).ready(function(){
 
 
 
-    var counter= 1;
+    
+
     $('#add_arrivel_entry_list').click(function() {
         $('#tableWrapper')
         .children('tbody')
@@ -118,8 +118,8 @@ $(document).ready(function(){
     $(document).on("click", "#add_sales_entry_list", function() {
     
         var iteam_goods_list = "";
+        'use strict';
 
-        
         $.ajax({
             url: "/get_arrival_goods_list",
             dataType: 'json',
@@ -132,23 +132,16 @@ $(document).ready(function(){
             fail: function(){
                 iteam_goods_list="";
             },
-            done: function(data){ 
+            success: function(data){ 
                 iteam_goods_list = data.iteam_goods_list;
             }
         });
      
 
-       
-
-        var select_option = ""
-        for(var i = 0; i < iteam_good_list.length; i++){
-            var obj = iteam_good_list[i];
-            for (var key in obj){
-              var value = obj[key];
-              select_option = select_option + "<option value='"+key+"'>"+value+"</option>";
-            }
+        var select_option = '<option selected="true" disabled="disabled">Choose Lot No</option>';
+        for (var [key, value] of Object.entries(iteam_goods_list)) {
+            select_option = select_option + "<option value='"+key+"'>"+key+"</option>";
           }
-
         
         $('#tableWrapper')
         .children('tbody')
@@ -192,7 +185,7 @@ $(document).ready(function(){
         </td>
         <td>
             <div class='tog-top-4'>
-                <img class='close_button' src="static/images/remove.png" onClick="removeElement(`+counter+`_child');"/>
+                <img class='close_button' src="static/images/remove.png" onClick="removeElement('`+counter+`_child');"/>
              </div>
         </td>
     </tr>

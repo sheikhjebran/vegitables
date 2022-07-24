@@ -38,5 +38,6 @@ urlpatterns = [
     path('sales_bill/prev/<int:page_number>/',views.sales_bill_prev_page, name="sales_bill_prev_page"),
     path('sales_bill/next/<int:page_number>/',views.sales_bill_next_page, name="sales_bill_next_page"),
     path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
+    path('add_sales_bill', views.modify_sales_bill_entry, name='modify_sales_bill_entry'),
     
 ]
