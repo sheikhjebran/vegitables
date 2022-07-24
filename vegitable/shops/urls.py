@@ -19,7 +19,10 @@ urlpatterns = [
     path('add_arrival_entry', views.add_new_arrival_entry, name='add_new_arrival_entry'),
     path('add_arrival', views.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>/', views.modify_arrival, name='modify_arrival'),
+    #RestAPI
     path('get_arrival_goods_iteam_name', views.get_arrival_goods_iteam_name, name='get_arrival_goods_iteam_name'),
+    path('get_arrival_goods_list', views.get_arrival_goods_list, name='get_arrival_goods_list'),
+    
     
     #Misc Entry URL
     path('misc_entry', views.misc_entry, name='misc_entry'),
@@ -35,4 +38,5 @@ urlpatterns = [
     path('sales_bill/prev/<int:page_number>/',views.sales_bill_prev_page, name="sales_bill_prev_page"),
     path('sales_bill/next/<int:page_number>/',views.sales_bill_next_page, name="sales_bill_next_page"),
     path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
+    
 ]

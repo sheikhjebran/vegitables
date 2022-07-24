@@ -1,7 +1,9 @@
 
 $(document).ready(function(){
     var global_amount = 0;
-    $('.calculate_amount').change(function (){
+
+
+    $(document).on("change", ".calculate_amount", function() {
         var rate_id = $(this).attr("id");
         var rate_value = $(this).val();
 
@@ -29,7 +31,7 @@ $(document).ready(function(){
         
     });
 
-    $('#cooli').change(function (){
+    $(document).on("change", "#cooli", function() {
         $('#rmc').val(global_amount*0.006);
         $('#comission').val(global_amount*0.05);
         var rmc_value = $('#rmc').val();
@@ -113,7 +115,41 @@ $(document).ready(function(){
         );counter=counter+1
     });
 
-    $('#add_sales_entry_list').click(function() {
+    $(document).on("click", "#add_sales_entry_list", function() {
+    
+        var iteam_goods_list = "";
+
+        
+        $.ajax({
+            url: "/get_arrival_goods_list",
+            dataType: 'json',
+            data:{
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                iteam_goods_list="";
+            },
+            done: function(data){ 
+                iteam_goods_list = data.iteam_goods_list;
+            }
+        });
+     
+
+       
+
+        var select_option = ""
+        for(var i = 0; i < iteam_good_list.length; i++){
+            var obj = iteam_good_list[i];
+            for (var key in obj){
+              var value = obj[key];
+              select_option = select_option + "<option value='"+key+"'>"+value+"</option>";
+            }
+          }
+
+        
         $('#tableWrapper')
         .children('tbody')
         .last().append(
@@ -122,9 +158,7 @@ $(document).ready(function(){
         <td>
             <div class='comment-your'>
                 <select class="custom-select" name="`+counter+`_lot_number" id ="`+counter+`_lot_number">
-                    {% for arrival_detail in arrival_goods_detail%}
-                    <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
-                    {%endfor%}
+                    `+select_option+`
                 </select>
                 
             </div>

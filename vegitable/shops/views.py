@@ -196,6 +196,19 @@ def get_arrival_goods_iteam_name(request):
     data = {'iteam_name_list': iteam_name_list}
     return Response(data,status=status.HTTP_200_OK)
     
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_arrival_goods_list(request):
+    [...]
+    iteam_goods_list = {}
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    for arrival_entry in arrival_detail_object:
+        iteam_goods_list[arrival_entry.remarks] = arrival_entry.iteam_name
+        
+    data = {'iteam_goods_list': iteam_goods_list}
+    return Response(data,status=status.HTTP_200_OK)
+
     
 @csrf_protect
 def add_arrival(request):
