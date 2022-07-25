@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework import permissions
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
-
-from .models import Misc_Entry, Sales_Bill_Entry, Shop, Arrival_Entry, Arrival_Goods
+import re
+from .models import Misc_Entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
 import datetime
 
 
@@ -166,6 +166,59 @@ def modify_sales_bill_entry(request):
     
     sales_bill_entry_Obj.save()
     print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
+
+    add_sales_bill_iteam(request, list(request.POST),sales_bill_entry_Obj)
+    return sales_bill_entry(request)
+
+def add_sales_bill_iteam(request,request_list, sales):
+    lot_number_list = []
+    bags_list = []
+    net_weight_list = []
+    rates_list = []
+    amount_list = []
+    iteam_name_list = []
+
+    for i in request_list:
+
+        lot_number_regrex = re.search("^.*_lot_number$", i)
+        if lot_number_regrex:
+            lot_number_list.append(i)
+        
+        iteam_name_regrex = re.search("^.*_iteam_name$", i)
+        if iteam_name_regrex:
+            iteam_name_list.append(i)
+        
+        bag_regrex = re.search("^.*_bags$", i)
+        if bag_regrex:
+            bags_list.append(i)
+        
+        net_weight_regrex = re.search("^.*_net_weight$", i)
+        if net_weight_regrex:
+            net_weight_list.append(i)
+            
+        rates_regrex = re.search("^.*_rates$", i)
+        if rates_regrex:
+            rates_list.append(i)
+
+        amount_regrex = re.search("^.*_amount$", i)
+        if amount_regrex:
+            amount_list.append(i)
+        
+    for i in range(0, len(lot_number_list)):
+        lot_number_list
+        sales_bill_entry_Obj = Sales_Bill_Iteam(
+            iteam_name= request.POST[iteam_name_list[i]],
+            lot_number=request.POST[lot_number_list[i]],
+            bags=request.POST[bags_list[i]],
+            net_weight=request.POST[net_weight_list[i]],
+            rates=request.POST[rates_list[i]],
+            amount=request.POST[amount_list[i]],
+            Sales_Bill_Entry = sales
+        )
+
+        sales_bill_entry_Obj.save()
+        print(f"New Sales Bill Iteam  = {sales_bill_entry_Obj.id}")
+
 
 @csrf_protect
 def add_misc_entry(request):

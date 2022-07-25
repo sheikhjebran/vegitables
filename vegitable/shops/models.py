@@ -35,7 +35,7 @@ class Sales_Bill_Iteam(models.Model):
     net_weight = FloatField(max_length=50)
     rates = FloatField(max_length=50)
     amount = FloatField(max_length=50)
-    
+    Sales_Bill_Entry = ForeignKey(Sales_Bill_Entry, on_delete=models.CASCADE)
     def __str__(self):
         return f"{self.id}-{self.lot_number}-{self.iteam_name}-{self.bags}-{self.net_weight}-{self.amount}"
     
