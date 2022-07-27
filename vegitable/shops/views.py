@@ -129,7 +129,7 @@ def logout(request):
 
 
 def add_new_arrival_entry(request):
-    return render(request, 'modify_arrival_entry.html',{'NEW':True})
+    return render(request, 'modify_arrival_entry.html',{'arrival_detail':"NEW"})
 
 def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
@@ -142,6 +142,7 @@ def add_new_sales_bill_entry(request):
                   {'sales_bill_detail': "NEW",
                    "arrival_goods_detail":arrival_detail_object}
                   )
+    
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
@@ -205,7 +206,6 @@ def add_sales_bill_iteam(request,request_list, sales):
             amount_list.append(i)
         
     for i in range(0, len(lot_number_list)):
-        lot_number_list
         sales_bill_entry_Obj = Sales_Bill_Iteam(
             iteam_name= request.POST[iteam_name_list[i]],
             lot_number=request.POST[lot_number_list[i]],
@@ -312,36 +312,57 @@ def add_arrival(request):
 
     arrival_Entry_Obj.save()        
     print(f"New arrival entry  = {arrival_Entry_Obj.id}")
-
-    if len(request.POST['arrival_id'])<=0:
-        newLIst = [list(request.POST)[i:i + 5] for i in range(5, len(list(request.POST)), 5)]
-
-        for entry in newLIst:
-            arrival_Goods_obj = Arrival_Goods(
-                shop=shop_detail_object,
-                arrival_entry=arrival_Entry_Obj,
-                former_name=request.POST[list(entry)[0]],
-                iteam_name=request.POST[list(entry)[1]],
-                qty=request.POST[list(entry)[2]],
-                weight=request.POST[list(entry)[3]],
-                remarks=request.POST[list(entry)[4]],
-            )
-            arrival_Goods_obj.save()
-    else:
-        newList = [list(request.POST)[i:i + 6] for i in range(5, len(list(request.POST)), 15)]
         
-        for entry in newList:
-            arrival_Goods_obj = Arrival_Goods.objects.get(id=request.POST[list(entry)[5]])  # object to update
-            arrival_Goods_obj.former_name=request.POST[list(entry)[0]]
-            arrival_Goods_obj.iteam_name=request.POST[list(entry)[1]]
-            arrival_Goods_obj.qty=request.POST[list(entry)[2]]
-            arrival_Goods_obj.weight=request.POST[list(entry)[3]]
-            arrival_Goods_obj.remarks=request.POST[list(entry)[4]]
-            arrival_Goods_obj.save()
-            
-            
-        
+    add_arrival_goods_iteam(request, list(request.POST), arrival_Entry_Obj ,shop_detail_object)
+    
     return home(request)
+
+
+def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
+    former_name_list = []
+    iteam_name_list = []
+    qty_list = []
+    weight_list = []
+    remarks_list = []
+    
+    for i in request_list:
+        former_name_regrex = re.search("^.*_farmer_name$", i)
+        if former_name_regrex:
+            former_name_list.append(i)
+    
+        iteam_name_regrex = re.search("^.*_iteam_name$", i)
+        if iteam_name_regrex:
+            iteam_name_list.append(i)
+    
+        qty_regrex = re.search("^.*_qty$", i)
+        if qty_regrex:
+            qty_list.append(i)
+            
+        weight_regrex = re.search("^.*_weight$", i)
+        if weight_regrex:
+            weight_list.append(i)
+        
+        remark_regrex = re.search("^.*_remark$", i)
+        if remark_regrex:
+            remarks_list.append(i)
+    
+    
+    for i in range(0, len(former_name_list)):
+        arrival_Goods_obj = Arrival_Goods(
+            iteam_name = request.POST[iteam_name_list[i]],
+            shop = shop_obj,
+            arrival_entry = arrival,
+            former_name = request.POST[former_name_list[i]],
+            qty = request.POST[qty_list[i]],
+            weight=request.POST[weight_list[i]],
+            remarks=request.POST[remarks_list[i]],
+        )
+
+        arrival_Goods_obj.save()
+        print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
+    
+    
+    
 
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
