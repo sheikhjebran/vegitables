@@ -1,3 +1,4 @@
+from tokenize import Double
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
@@ -324,6 +325,7 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
     qty_list = []
     weight_list = []
     remarks_list = []
+    arrival_goods_id = []
     
     for i in request_list:
         former_name_regrex = re.search("^.*_farmer_name$", i)
@@ -345,21 +347,42 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
         remark_regrex = re.search("^.*_remark$", i)
         if remark_regrex:
             remarks_list.append(i)
-    
+
+        arrival_goods_id_regrex = re.search("^.*_arrival_goods_id$", i)
+        if arrival_goods_id_regrex:
+            arrival_goods_id.append(i)
     
     for i in range(0, len(former_name_list)):
-        arrival_Goods_obj = Arrival_Goods(
-            iteam_name = request.POST[iteam_name_list[i]],
-            shop = shop_obj,
-            arrival_entry = arrival,
-            former_name = request.POST[former_name_list[i]],
-            qty = request.POST[qty_list[i]],
-            weight=request.POST[weight_list[i]],
-            remarks=request.POST[remarks_list[i]],
-        )
+        if "modify" in iteam_name_list[i]:
+            # object to update
+            arrival_Goods_obj = Arrival_Goods.objects.get(id= request.POST[arrival_goods_id[i]])
+            arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]],
+            arrival_Goods_obj.former_name = request.POST[former_name_list[i]],
+            arrival_Goods_obj.qty = request.POST[qty_list[i]],
+            
+            print(arrival_Goods_obj.weight)
+            my_weight = float(request.POST[weight_list[i]])
+            
+            
+            arrival_Goods_obj.weight=my_weight,
+            arrival_Goods_obj.remarks=request.POST[remarks_list[i]],
+            
+            arrival_Goods_obj.save()
+            print(f"Update Arrival Goods Iteam  = {arrival_Goods_obj.id}") 
+            
+        else: 
+            arrival_Goods_obj = Arrival_Goods(
+                iteam_name = request.POST[iteam_name_list[i]],
+                shop = shop_obj,
+                arrival_entry = arrival,
+                former_name = request.POST[former_name_list[i]],
+                qty = request.POST[qty_list[i]],
+                weight=request.POST[weight_list[i]],
+                remarks=request.POST[remarks_list[i]],
+            )
 
-        arrival_Goods_obj.save()
-        print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
+            arrival_Goods_obj.save()
+            print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
     
     
     

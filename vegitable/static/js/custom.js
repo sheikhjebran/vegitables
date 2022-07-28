@@ -170,7 +170,6 @@ $(document).ready(function(){
         }else{
             alert("Element does not exists");
         }
-
         
 
         // Delete the child
