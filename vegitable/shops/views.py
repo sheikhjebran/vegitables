@@ -346,3 +346,17 @@ def add_arrival(request):
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
+
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def mobile_get_authenticated(request):
+    user = auth.authenticate(username=request.GET['username'], password=request.GET['password'])
+    if user is not None:
+        auth.login(request, user)
+        data = {'message': "SUCCESS"}
+        return Response(data,status=status.HTTP_200_OK)
+    else:
+        data = {'message': "FAIL"}
+        return Response(data,status=status.HTTP_400_BAD_REQUEST)

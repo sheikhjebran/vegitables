@@ -8,6 +8,9 @@ urlpatterns = [
 
     # Dashboard Authentication
     path('authenticate', views.get_authenticate, name="get_authenticate"),
+    #Mobile APi to get Authenticated
+    path('mobile_get_authenticated', views.mobile_get_authenticated, name="mobile_get_authenticate"),
+
     path('logout', views.logout, name="logout"),
 
     # dashboard URL
