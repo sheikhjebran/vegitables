@@ -24,7 +24,7 @@
             <div class="col col-3">Gp Number</div>
             <div class="col col-4">patti Name</div>
             <div class="col col-5">Total Bags</div>
-            <div class="col col-6">Advance</div>
+            <div class="col col-6">Lorry Number</div>
         </li>
         {%for arrival in arrival_detail %}
         <li class="table-row">
@@ -33,7 +33,7 @@
           <div class="col col-3" >{{arrival.gp_no}}</div>
           <div class="col col-4" >{{arrival.patti_name}}</div>
             <div class="col col-5" >{{arrival.total_bags}}</div>
-            <div class="col col-6" >{{arrival.advance}}</div>
+            <div class="col col-6" >{{arrival.lorry_no}}</div>
         </li>
         {% endfor %}
 

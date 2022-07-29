@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework import permissions
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from datetime import date
 import re
 from .models import Misc_Entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
 import datetime
@@ -77,6 +78,25 @@ def home(request, page=10, current_page=1):
     
     return render(request, 'index.html')
 
+def patti_list(request, page =10, current_page =1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        sales_entry_detail = None
+        try:
+            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+                                   :page * current_page]
+        except Exception as error:
+            print(error)
+            
+        return render(request, 'sales_bill_entry.html',
+                      {
+                        'shop_details': shop_detail_object,
+                        'sales_bill_detail': sales_entry_detail,
+                        'current_page': current_page
+                      })
+    
+    return render(request, 'index.html')
+
 def sales_bill_entry(request, page =10, current_page =1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -139,9 +159,12 @@ def add_new_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     
+    today = date.today()
+    print("Today's date:", today)
+    
     return render(request, 'modify_sales_bill_entry.html' , 
                   {'sales_bill_detail': "NEW",
-                   "arrival_goods_detail":arrival_detail_object}
+                   "arrival_goods_detail":arrival_detail_object,"today":today}
                   )
     
 def getDate_from_string(stringDate):
@@ -298,7 +321,7 @@ def add_arrival(request):
             date=datetime.datetime.today(),
             patti_name=request.POST['patti_name'],
             total_bags=request.POST['total_number_of_bags'],
-            advance=request.POST['advance_amount'],
+            lorry_no = request.POST['lorry_number'],
             shop=shop_detail_object)
         
     else:
@@ -307,7 +330,7 @@ def add_arrival(request):
         arrival_Entry_Obj.date=datetime.datetime.today()
         arrival_Entry_Obj.patti_name=request.POST['patti_name']
         arrival_Entry_Obj.total_bags=request.POST['total_number_of_bags']
-        arrival_Entry_Obj.advance=request.POST['advance_amount']
+        arrival_Entry_Obj.lorry_no = request.POST['lorry_number']
         arrival_Entry_Obj.shop=shop_detail_object
 
 
@@ -326,6 +349,7 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
     weight_list = []
     remarks_list = []
     arrival_goods_id = []
+    advance_amount_list = []
     
     for i in request_list:
         former_name_regrex = re.search("^.*_farmer_name$", i)
@@ -347,6 +371,10 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
         remark_regrex = re.search("^.*_remark$", i)
         if remark_regrex:
             remarks_list.append(i)
+            
+        advance_amount_regrex = re.search("^.*_advance_amount$", i)
+        if advance_amount_regrex:
+            advance_amount_list.append(i)
 
         arrival_goods_id_regrex = re.search("^.*_arrival_goods_id$", i)
         if arrival_goods_id_regrex:
@@ -354,28 +382,27 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
     
     for i in range(0, len(former_name_list)):
         if "modify" in iteam_name_list[i]:
+            local_id = request.POST[arrival_goods_id[i]].split("_")[0]
             # object to update
-            arrival_Goods_obj = Arrival_Goods.objects.get(id= request.POST[arrival_goods_id[i]])
-            arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]],
-            arrival_Goods_obj.former_name = request.POST[former_name_list[i]],
-            arrival_Goods_obj.qty = request.POST[qty_list[i]],
-            
-            print(arrival_Goods_obj.weight)
-            my_weight = float(request.POST[weight_list[i]])
-            
-            
-            arrival_Goods_obj.weight=my_weight,
-            arrival_Goods_obj.remarks=request.POST[remarks_list[i]],
+            arrival_Goods_obj = Arrival_Goods.objects.get(id= int(local_id))
+            arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]]
+            arrival_Goods_obj.former_name = request.POST[former_name_list[i]]
+            arrival_Goods_obj.qty = request.POST[qty_list[i]]
+            arrival_Goods_obj.advance= request.POST[advance_amount_list[i]]
+            arrival_Goods_obj.weight=request.POST[weight_list[i]]
+            arrival_Goods_obj.remarks=request.POST[remarks_list[i]]
             
             arrival_Goods_obj.save()
             print(f"Update Arrival Goods Iteam  = {arrival_Goods_obj.id}") 
             
         else: 
+            
             arrival_Goods_obj = Arrival_Goods(
                 iteam_name = request.POST[iteam_name_list[i]],
                 shop = shop_obj,
                 arrival_entry = arrival,
                 former_name = request.POST[former_name_list[i]],
+                advance = request.POST[advance_amount_list[i]],
                 qty = request.POST[qty_list[i]],
                 weight=request.POST[weight_list[i]],
                 remarks=request.POST[remarks_list[i]],

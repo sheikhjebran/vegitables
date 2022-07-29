@@ -52,15 +52,15 @@ class Misc_Entry(models.Model):
 
 class Arrival_Entry(models.Model):
     gp_no = CharField(max_length=100)
+    lorry_no = CharField(max_length=100 , default='')
     date = DateField()
     patti_name = CharField(max_length=50)
     total_bags = IntegerField()
-    advance = FloatField(max_length=100)    
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
     
 
     def __str__(self):
-        return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.advance}"
+        return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
 
 
 class Arrival_Goods(models.Model):
@@ -71,6 +71,33 @@ class Arrival_Goods(models.Model):
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
     iteam_name = CharField(max_length=100)
+    advance = FloatField(max_length=100 , default=0)    
     
     def __str__(self):
         return f"{self.id} - {self.shop} -{self.former_name}"
+
+
+class Patti_entry(models.Model):
+    lorry_no = CharField(max_length=100)
+    date = DateField()
+    advance = FloatField(max_length=100)
+    farmer_name = CharField(max_length=100)
+    total_weight = FloatField(max_length=100)
+    hamali = FloatField(max_length=100)
+    net_amount = FloatField(max_length=100)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.lorry_no}- {self.farmer_name} - {self.total_weight} - {self.net_amount} -{self.shop}"
+    
+    
+class Patti_entry_list(models.Model):
+    iteam = CharField(max_length=100)
+    lot_no = CharField(max_length=100)
+    weight = CharField(max_length=100)
+    rate = CharField(max_length=100)
+    amount = FloatField(max_length=100)
+    patti = ForeignKey(Patti_entry, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.iteam}- {self.lot_no}- {self.weight}- {self.amount} - {self.patti}"

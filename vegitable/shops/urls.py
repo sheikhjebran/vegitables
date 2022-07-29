@@ -40,4 +40,7 @@ urlpatterns = [
     path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
     path('add_sales_bill', views.modify_sales_bill_entry, name='modify_sales_bill_entry'),
     
+    
+    #patti Entry URL
+    path('patti_list',views.patti_list, name="patti_list"),
 ]

@@ -32,8 +32,8 @@
                     <input type="text" placeholder="Total Number of Bags" id="total_number_of_bags" name="total_number_of_bags" value="{{arrival_detail.total_bags}}" required="">
                 </div>
                 <div class="comment-your" style="margin-right:0%">
-                    <span>Advance</span>
-                    <input type="text" placeholder="Advance in Rs" name="advance_amount" value="{{arrival_detail.advance}}" required="">
+                    <span>Lorry No</span>
+                    <input type="text" placeholder="Lorry Number" name="lorry_number" value="{{arrival_detail.lorry_no}}" required="">
                 </div>
                 <div class="clearfix"> </div>
 
@@ -55,7 +55,8 @@
                             <td>Iteam Name</td>
                             <td>Qty</td>
                             <td>Weight</td>
-                            <td>Remark</td>
+                            <td>Lot no</td>
+                            <td>Advance Amount</td>
                         </tr>
                     </tbody>
                     {% if arrival_detail == 'NEW'%}
@@ -82,7 +83,12 @@
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Remark' name ="0_remark" required=''>
+                                <input type='text' placeholder='Lot Number' name ="0_remark" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Advance Amount' name ="0_advance_amount" value="0" required=''>
                             </div>
                         </td>
                         <td>
@@ -117,12 +123,17 @@
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Remark' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                    <input type='text' placeholder='Lot Number' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                </div>
+                            </td>
+                            <td>
+                                <div class='comment-your'>
+                                    <input type='text' placeholder='Advance Amount' name ="{{iteam.id}}_modify_advance_amount" value = "{{iteam.advance}}" required=''>
                                 </div>
                             </td>
                             <td>
                                 <div class='tog-top-4'>
-                                    <img class='close_button' src="{% static 'images/remove.png' %}" name="{{iteam.id}}_modify" />
+                                    <!--<img class='close_button' src="{% static 'images/remove.png' %}" name="{{iteam.id}}_modify" />-->
                                     <input type="hidden" name="{{iteam.id}}_arrival_goods_id" value="{{iteam.id}}">
                                  </div>
                             </td>

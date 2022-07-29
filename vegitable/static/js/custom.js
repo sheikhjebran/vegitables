@@ -105,7 +105,12 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Remark' name ="`+counter+`_remark" required=''>
+                        <input type='text' placeholder='Lot Number' name ="`+counter+`_remark" required=''>
+                    </div>
+                </td>
+                <td>
+                    <div class='comment-your'>
+                        <input type='text' placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
                     </div>
                 </td>
                 <td>
