@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
-from .models import Misc_Entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
+from .models import Misc_Entry, Patti_entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
 import datetime
 
 
@@ -81,17 +81,17 @@ def home(request, page=10, current_page=1):
 def patti_list(request, page =10, current_page =1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        sales_entry_detail = None
+        patti_entry_detail = None
         try:
-            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+            patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).order_by('-id')[
                                    :page * current_page]
         except Exception as error:
             print(error)
             
-        return render(request, 'sales_bill_entry.html',
+        return render(request, 'patti.html',
                       {
                         'shop_details': shop_detail_object,
-                        'sales_bill_detail': sales_entry_detail,
+                        'patti_entry_detail': patti_entry_detail,
                         'current_page': current_page
                       })
     
@@ -150,13 +150,24 @@ def logout(request):
 
 
 def add_new_arrival_entry(request):
-    return render(request, 'modify_arrival_entry.html',{'arrival_detail':"NEW"})
+    today = date.today()
+    return render(request, 'modify_arrival_entry.html',{'arrival_detail':"NEW","today":today})
 
 def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
+def add_new_patti_entry(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    today = date.today()
+    print("Today's date:", today)
+    
+    return render(request, 'modify_patti_entry.html' , 
+                  {'patti_bill_detail': "NEW","today":today}
+                  )
+    
 def add_new_sales_bill_entry(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     
     today = date.today()
@@ -282,14 +293,17 @@ def total_amount_misc_entry(request):
 def modify_arrival(request, arrival_id):
     arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
     arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
-    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False})
+    
+    today = arrival_entry_obj.date
+    
+    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False,"today":today})
     
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_iteam_name(request):
     [...]
     iteam_name_list = []
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
         if arrival_entry.remarks == request.GET['selected_lot']:
@@ -302,7 +316,7 @@ def get_arrival_goods_iteam_name(request):
 def get_arrival_goods_list(request):
     [...]
     iteam_goods_list = {}
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
         iteam_goods_list[arrival_entry.remarks] = arrival_entry.iteam_name
@@ -318,7 +332,7 @@ def add_arrival(request):
     if len(request.POST['arrival_id'])<=0:
         arrival_Entry_Obj = Arrival_Entry(
             gp_no=request.POST['gp_number'],
-            date=datetime.datetime.today(),
+            date= getDate_from_string(request.POST['arrival_entry_date']),
             patti_name=request.POST['patti_name'],
             total_bags=request.POST['total_number_of_bags'],
             lorry_no = request.POST['lorry_number'],
@@ -327,7 +341,7 @@ def add_arrival(request):
     else:
         arrival_Entry_Obj = Arrival_Entry.objects.get(id=request.POST['arrival_id'])  # object to update
         arrival_Entry_Obj.gp_no=request.POST['gp_number']
-        arrival_Entry_Obj.date=datetime.datetime.today()
+        arrival_Entry_Obj.date=getDate_from_string(request.POST['arrival_entry_date'])
         arrival_Entry_Obj.patti_name=request.POST['patti_name']
         arrival_Entry_Obj.total_bags=request.POST['total_number_of_bags']
         arrival_Entry_Obj.lorry_no = request.POST['lorry_number']
@@ -417,3 +431,20 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_lorry_number_for_date(request,lorry_date):
+    [...]
+    lorry_number_list = []
+    lorry_date = getDate_from_string(lorry_date)
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    arrival_detail_object = Arrival_Entry.objects.filter(shop=shop_detail_object)
+    for arrival_entry in arrival_detail_object:
+        if arrival_entry.date == lorry_date:
+            lorry_number_list.append(arrival_entry.lorry_no)
+        
+    data = {'lorry_number_list': lorry_number_list}
+    return Response(data,status=status.HTTP_200_OK)

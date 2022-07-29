@@ -43,4 +43,7 @@ urlpatterns = [
     
     #patti Entry URL
     path('patti_list',views.patti_list, name="patti_list"),
+    path('add_new_patti_entry',view=views.add_new_patti_entry, name='add_new_patti_entry'),
+    #Rest Api for the patti
+    path('get_all_lorry_number/<str:lorry_date>',view=views.get_lorry_number_for_date, name='get_lorry_number_for_date'),
 ]

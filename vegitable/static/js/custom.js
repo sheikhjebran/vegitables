@@ -260,6 +260,48 @@ $(document).ready(function(){
     });
 
 
+    $(document).on("change", "#patti_entry_date", function() {
+    
+        var lorry_list = "";
+        'use strict';
+
+        var element_value = $(this).val();
+
+        $.ajax({
+            url: "/get_all_lorry_number/"+element_value,
+            dataType: 'json',
+            data:{
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                lorry_list="";
+            },
+            success: function(data){ 
+                lorry_list = data.lorry_number_list;
+            }
+        });
+     
+       
+        var select_option = '<option selected="true" disabled="disabled">Choose Lorry Number</option>';
+        for (var index = 0; index < lorry_list.length; index++) {
+            select_option = select_option + "<option value='"+lorry_list[index]+"'>"+lorry_list[index]+"</option>";
+            console.log(lorry_list[index]);
+        }
+
+    
+        $('#lorry_number').children("option").remove();
+        $('#lorry_number').append(select_option);
+
+    });
+
+
+
+
+
+
 
 });
 

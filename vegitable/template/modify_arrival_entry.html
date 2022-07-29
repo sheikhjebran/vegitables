@@ -14,24 +14,33 @@
 
             <form action = "/add_arrival" method = "POST">
                 {% csrf_token %}
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Date</span>
+                    <input type="date" name = "arrival_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
+                </div>
                 
-                <div class="comment-your">
-                    <span>Gp No</span>
-                    <input type="text" placeholder="Gp Number" name = "gp_number" value="{{arrival_detail.gp_no}}" required="">
-                </div>
-                <div class="comment-your">
-                    <span>Patti Name</span>
-                    <input type="text" placeholder="Patti Name" name = "patti_name" value="{{arrival_detail.patti_name}}" required="">
-                </div>
-                &nbsp;
                 <div class="clearfix"> </div>
 
 
-                <div class="comment-your" style="margin-right:0%">
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
+                    <span>Gp No</span>
+                    <input type="text" placeholder="Gp Number" name = "gp_number" value="{{arrival_detail.gp_no}}" required="">
+                </div>
+                
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
+                    <span>Patti Name</span>
+                    <input type="text" placeholder="Patti Name" name = "patti_name" value="{{arrival_detail.patti_name}}" required="">
+                </div>
+                <br>
+                <div class="clearfix"> </div>
+
+                <br>
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
                     <span>Total Bags</span>
                     <input type="text" placeholder="Total Number of Bags" id="total_number_of_bags" name="total_number_of_bags" value="{{arrival_detail.total_bags}}" required="">
                 </div>
-                <div class="comment-your" style="margin-right:0%">
+                
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
                     <span>Lorry No</span>
                     <input type="text" placeholder="Lorry Number" name="lorry_number" value="{{arrival_detail.lorry_no}}" required="">
                 </div>
