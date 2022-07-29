@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+<div class="container">
+
+    <div class="comment">
+
+            <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Patti <span> Bill</span></h3>
+
+            <form action = "/add_sales_bill" method = "POST">
+                {% csrf_token %}
+                <div class="comment-your" style="width:10%;margin-bottom:2%">
+                    <span>Bill No</span>
+                    <input type="text" placeholder="Bill No" name = "patti_bill_no" required="" value="" readonly>
+                </div>
+                <div class="clearfix"> </div>
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Date</span>
+                    <input type="date" id = "patti_entry_date" name = "patti_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
+                </div>
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Lorry Number</span>
+                    <select class="custom-select" name="lorry_number" id ="lorry_number">
+                    </select>
+                </div>
+                <div class="clearfix"> </div>
+
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Farmer Number</span>
+                    <select class="custom-select" name="farmer_name" id ="farmer_namer">
+                        <option selected="true" disabled="disabled">Choose Farmer Name</option>   
+                        {% for arrival_detail in arrival_goods_detail%}
+                        <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
+                        {%endfor%}
+                    </select>
+                </div>
+                
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                    <span>Advance amount</span>
+                    <input type='text' placeholder='Advance amount' name ="advance_amount" id="advance_amount" required='' readonly>
+                </div>
+                <div class="clearfix"> </div>    
+                
+                <br/><br/>
+
+
+
+                <div>
+                    <h3 style="font-size:25px; font-weight:bold;padding-bottom:3%;">Sales Bill<span> entries</span></h3>
+                    <div class="clearfix"> </div>
+                </div>
+                <table id="tableWrapper" style="display:block;border-collapse: separate;border-spacing: 0 1em;">
+                    <tbody>
+                        <tr>
+                            <td>Iteam Name</td>
+                            <td>Lot Number</td>
+                            <td>Weight</td>
+                            <td>Rate</td>
+                            <td>Amount</td>
+                        </tr>
+                    </tbody>
+                    {% if NEW == true%}
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="0_iteam_name" id="0_iteam_name" required='' readonly>
+                                
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="0_lot_number" id="0_lot_number" required='' readonly>
+                            </div>
+                        </td>
+						
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Weight' name ="0_weight" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Rate' name ="0_rate" id="0_rate" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Amount' name ="0_amount" required='' id= "0_amount">
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                        <!-- TODO  Edit the patti entry need to handle-->
+                        
+
+                    {% endif %}
+                </table>
+                <div class="clearfix"> </div>
+                <br>
+                <br>
+                <br>
+
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Total Weight</span>
+                    <input type="text" placeholder="0" name = "tota_weight" id="total_weight" required="" value="" readonly>
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Hamali</span>
+                    <input type="text" placeholder="0" id="hamali" name = "hamali" required="" value="0" readonly>
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Net Amount</span>
+                    <input type="text" placeholder="net amount" id= "net_amount" name = "net_amount" required="" value="" >
+                </div>
+                <div class="clearfix"> </div>
+                
+                
+
+                <button type="submit" class=" btn-l btn-2 " style="float:right">Save</button>
+                <div class="clearfix"> </div>
+                <input type="hidden" name="sales_bill_id" id="sales_bill_id" value=""">
+            </form>
+
+    </div>
+
+</div>
+{% endblock %}

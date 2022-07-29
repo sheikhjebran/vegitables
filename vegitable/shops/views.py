@@ -1,3 +1,4 @@
+from tokenize import Double
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
@@ -7,8 +8,9 @@ from rest_framework import status
 from rest_framework import permissions
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from datetime import date
 import re
-from .models import Misc_Entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
+from .models import Misc_Entry, Patti_entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
 import datetime
 
 
@@ -76,6 +78,25 @@ def home(request, page=10, current_page=1):
     
     return render(request, 'index.html')
 
+def patti_list(request, page =10, current_page =1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        patti_entry_detail = None
+        try:
+            patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+                                   :page * current_page]
+        except Exception as error:
+            print(error)
+            
+        return render(request, 'patti.html',
+                      {
+                        'shop_details': shop_detail_object,
+                        'patti_entry_detail': patti_entry_detail,
+                        'current_page': current_page
+                      })
+    
+    return render(request, 'index.html')
+
 def sales_bill_entry(request, page =10, current_page =1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -129,19 +150,34 @@ def logout(request):
 
 
 def add_new_arrival_entry(request):
-    return render(request, 'modify_arrival_entry.html',{'NEW':True})
+    today = date.today()
+    return render(request, 'modify_arrival_entry.html',{'arrival_detail':"NEW","today":today})
 
 def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
+def add_new_patti_entry(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    today = date.today()
+    print("Today's date:", today)
+    
+    return render(request, 'modify_patti_entry.html' , 
+                  {'patti_bill_detail': "NEW","today":today}
+                  )
+    
 def add_new_sales_bill_entry(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    
+    today = date.today()
+    print("Today's date:", today)
     
     return render(request, 'modify_sales_bill_entry.html' , 
                   {'sales_bill_detail': "NEW",
-                   "arrival_goods_detail":arrival_detail_object}
+                   "arrival_goods_detail":arrival_detail_object,"today":today}
                   )
+    
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
@@ -205,7 +241,6 @@ def add_sales_bill_iteam(request,request_list, sales):
             amount_list.append(i)
         
     for i in range(0, len(lot_number_list)):
-        lot_number_list
         sales_bill_entry_Obj = Sales_Bill_Iteam(
             iteam_name= request.POST[iteam_name_list[i]],
             lot_number=request.POST[lot_number_list[i]],
@@ -258,14 +293,17 @@ def total_amount_misc_entry(request):
 def modify_arrival(request, arrival_id):
     arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
     arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
-    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False})
+    
+    today = arrival_entry_obj.date
+    
+    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False,"today":today})
     
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_iteam_name(request):
     [...]
     iteam_name_list = []
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
         if arrival_entry.remarks == request.GET['selected_lot']:
@@ -278,7 +316,7 @@ def get_arrival_goods_iteam_name(request):
 def get_arrival_goods_list(request):
     [...]
     iteam_goods_list = {}
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id);
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
         iteam_goods_list[arrival_entry.remarks] = arrival_entry.iteam_name
@@ -294,55 +332,119 @@ def add_arrival(request):
     if len(request.POST['arrival_id'])<=0:
         arrival_Entry_Obj = Arrival_Entry(
             gp_no=request.POST['gp_number'],
-            date=datetime.datetime.today(),
+            date= getDate_from_string(request.POST['arrival_entry_date']),
             patti_name=request.POST['patti_name'],
             total_bags=request.POST['total_number_of_bags'],
-            advance=request.POST['advance_amount'],
+            lorry_no = request.POST['lorry_number'],
             shop=shop_detail_object)
         
     else:
         arrival_Entry_Obj = Arrival_Entry.objects.get(id=request.POST['arrival_id'])  # object to update
         arrival_Entry_Obj.gp_no=request.POST['gp_number']
-        arrival_Entry_Obj.date=datetime.datetime.today()
+        arrival_Entry_Obj.date=getDate_from_string(request.POST['arrival_entry_date'])
         arrival_Entry_Obj.patti_name=request.POST['patti_name']
         arrival_Entry_Obj.total_bags=request.POST['total_number_of_bags']
-        arrival_Entry_Obj.advance=request.POST['advance_amount']
+        arrival_Entry_Obj.lorry_no = request.POST['lorry_number']
         arrival_Entry_Obj.shop=shop_detail_object
 
 
     arrival_Entry_Obj.save()        
     print(f"New arrival entry  = {arrival_Entry_Obj.id}")
-
-    if len(request.POST['arrival_id'])<=0:
-        newLIst = [list(request.POST)[i:i + 5] for i in range(5, len(list(request.POST)), 5)]
-
-        for entry in newLIst:
-            arrival_Goods_obj = Arrival_Goods(
-                shop=shop_detail_object,
-                arrival_entry=arrival_Entry_Obj,
-                former_name=request.POST[list(entry)[0]],
-                iteam_name=request.POST[list(entry)[1]],
-                qty=request.POST[list(entry)[2]],
-                weight=request.POST[list(entry)[3]],
-                remarks=request.POST[list(entry)[4]],
-            )
-            arrival_Goods_obj.save()
-    else:
-        newList = [list(request.POST)[i:i + 6] for i in range(5, len(list(request.POST)), 15)]
         
-        for entry in newList:
-            arrival_Goods_obj = Arrival_Goods.objects.get(id=request.POST[list(entry)[5]])  # object to update
-            arrival_Goods_obj.former_name=request.POST[list(entry)[0]]
-            arrival_Goods_obj.iteam_name=request.POST[list(entry)[1]]
-            arrival_Goods_obj.qty=request.POST[list(entry)[2]]
-            arrival_Goods_obj.weight=request.POST[list(entry)[3]]
-            arrival_Goods_obj.remarks=request.POST[list(entry)[4]]
-            arrival_Goods_obj.save()
-            
-            
-        
+    add_arrival_goods_iteam(request, list(request.POST), arrival_Entry_Obj ,shop_detail_object)
+    
     return home(request)
+
+
+def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
+    former_name_list = []
+    iteam_name_list = []
+    qty_list = []
+    weight_list = []
+    remarks_list = []
+    arrival_goods_id = []
+    advance_amount_list = []
+    
+    for i in request_list:
+        former_name_regrex = re.search("^.*_farmer_name$", i)
+        if former_name_regrex:
+            former_name_list.append(i)
+    
+        iteam_name_regrex = re.search("^.*_iteam_name$", i)
+        if iteam_name_regrex:
+            iteam_name_list.append(i)
+    
+        qty_regrex = re.search("^.*_qty$", i)
+        if qty_regrex:
+            qty_list.append(i)
+            
+        weight_regrex = re.search("^.*_weight$", i)
+        if weight_regrex:
+            weight_list.append(i)
+        
+        remark_regrex = re.search("^.*_remark$", i)
+        if remark_regrex:
+            remarks_list.append(i)
+            
+        advance_amount_regrex = re.search("^.*_advance_amount$", i)
+        if advance_amount_regrex:
+            advance_amount_list.append(i)
+
+        arrival_goods_id_regrex = re.search("^.*_arrival_goods_id$", i)
+        if arrival_goods_id_regrex:
+            arrival_goods_id.append(i)
+    
+    for i in range(0, len(former_name_list)):
+        if "modify" in iteam_name_list[i]:
+            local_id = request.POST[arrival_goods_id[i]].split("_")[0]
+            # object to update
+            arrival_Goods_obj = Arrival_Goods.objects.get(id= int(local_id))
+            arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]]
+            arrival_Goods_obj.former_name = request.POST[former_name_list[i]]
+            arrival_Goods_obj.qty = request.POST[qty_list[i]]
+            arrival_Goods_obj.advance= request.POST[advance_amount_list[i]]
+            arrival_Goods_obj.weight=request.POST[weight_list[i]]
+            arrival_Goods_obj.remarks=request.POST[remarks_list[i]]
+            
+            arrival_Goods_obj.save()
+            print(f"Update Arrival Goods Iteam  = {arrival_Goods_obj.id}") 
+            
+        else: 
+            
+            arrival_Goods_obj = Arrival_Goods(
+                iteam_name = request.POST[iteam_name_list[i]],
+                shop = shop_obj,
+                arrival_entry = arrival,
+                former_name = request.POST[former_name_list[i]],
+                advance = request.POST[advance_amount_list[i]],
+                qty = request.POST[qty_list[i]],
+                weight=request.POST[weight_list[i]],
+                remarks=request.POST[remarks_list[i]],
+            )
+
+            arrival_Goods_obj.save()
+            print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
+    
+    
+    
 
 def getDate_from_string(stringDate):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_lorry_number_for_date(request,lorry_date):
+    [...]
+    lorry_number_list = []
+    lorry_date = getDate_from_string(lorry_date)
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    arrival_detail_object = Arrival_Entry.objects.filter(shop=shop_detail_object)
+    for arrival_entry in arrival_detail_object:
+        if arrival_entry.date == lorry_date:
+            lorry_number_list.append(arrival_entry.lorry_no)
+        
+    data = {'lorry_number_list': lorry_number_list}
+    return Response(data,status=status.HTTP_200_OK)

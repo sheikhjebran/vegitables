@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+
+<div class="container">
+
+    <div class="comment">
+        <form action = "add_misc_entry">
+            <div>
+                <button type="button" class=" btn-l btn-2 " onclick="location.href = '/add_new_patti_entry';" style="float:right;">Add New Patti Entry</button>
+                <div class="clearfix"> </div>
+            </div>
+        </form>
+
+    </div>
+    
+    
+    <div class="clearfix"> </div>
+
+    <ul class="responsive-table">
+        <li class="table-header">
+            <div class="col col-1">Si No</div>
+            <div class="col col-2">Date</div>
+            <div class="col col-3">Lorry Number</div>
+            <div class="col col-4">Farmer Name</div>
+            <div class="col col-5">Total Weight</div>
+            <div class="col col-6">Advance</div>
+            <div class="col col-7">Net amount</div>
+            
+        </li>
+        {%for patti in patti_detail %}
+        <li class="table-row">
+          <div class="col col-1"><a href="/edit_patti_entry/{{patti.id}}">{{ misc.id}}</a></div>
+          <div class="col col-2" >{{patti.date}}</div>
+          <div class="col col-3" >{{patti.lorry_no}}</div>
+          <div class="col col-4" >{{patti.farmer_name}}</div>
+          <div class="col col-5" >{{patti.total_weight}}</div>
+          <div class="col col-6" >{{patti.advance}}</div>
+          <div class="col col-7" >{{patti.net_amount}}</div>
+        </li>
+        {% endfor %}
+
+  </ul>
+
+    <div class="page-top-mid1">
+            <ul class="page-mid2">
+                <li><span class="pre1"  onclick="location.href = '/patti/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
+                <li><a class="next-top1" href="/patti/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
+            </ul>
+    </div>
+    <div class="clearfix"> </div>
+
+</div>
+{% endblock %}

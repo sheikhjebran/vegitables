@@ -1,7 +1,10 @@
 
+'use strict';
+
 $(document).ready(function(){
     var global_amount = 0;
     var counter= 1;
+    var arrival_qty_list = {}
 
     $(document).on("change", ".calculate_amount", function() {
         var rate_id = $(this).attr("id");
@@ -82,7 +85,7 @@ $(document).ready(function(){
             <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Former Name' name ="`+counter+`_name" required=''>
+                        <input type='text' placeholder='Former Name' name ="`+counter+`_farmer_name" required=''>
                     </div>
                 </td>
                 <td>
@@ -92,7 +95,7 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Qty' name ="`+counter+`_qty" required=''>
+                        <input type='text' placeholder='Qty' id ="`+counter+`_qty" name ="`+counter+`_qty" class="qty_validation" required=''>
                     </div>
                 </td>
                 <td>
@@ -102,12 +105,17 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Remark' name ="`+counter+`_remark" required=''>
+                        <input type='text' placeholder='Lot Number' name ="`+counter+`_remark" required=''>
+                    </div>
+                </td>
+                <td>
+                    <div class='comment-your'>
+                        <input type='text' placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
                     </div>
                 </td>
                 <td>
                     <div class='tog-top-4'>
-                        <img class='close_button' src="{% static 'images/remove.png' %}" onClick="removeElement('`+counter+`_child');" '/>
+                        <img class='close_button' src="/static/images/remove.png" name="`+counter+`"/>
                         </div>
                 </td>
             </tr>
@@ -115,6 +123,64 @@ $(document).ready(function(){
         );counter=counter+1
     });
 
+
+    $(document).on("keyup", ".qty_validation", function() {
+        var element_name = $(this).attr("name");
+        var element_value = $(this).val();
+        //var arrival_qty_list = {}
+        arrival_qty_list[element_name] = parseInt(element_value);
+
+        
+        var total = 0;
+        for (var [key, value] of Object.entries(arrival_qty_list)) {
+            if(Number.isNaN(value)){
+                value= 0;
+            }
+            
+            total = total+parseInt(value);
+            
+          }
+
+        if(total==parseInt($("#total_number_of_bags").val())){
+            $("#save").show();
+        }else{
+            $("#save").hide();
+        }
+
+    });
+
+
+    $(document).on("click", ".close_button", function() {
+        //Get the element name
+        var element_name = $(this).attr("name");
+
+        if($('#'+element_name+'_qty').length){
+            var local_qty_element = $('#'+element_name+'_qty').attr("name");
+            arrival_qty_list[local_qty_element] = 0;
+
+            var total = 0;
+            for (var [key, value] of Object.entries(arrival_qty_list)) {
+                if(Number.isNaN(value)){
+                    value= 0;
+                }
+                total = total+parseInt(value);
+            }
+
+            if(total==parseInt($("#total_number_of_bags").val())){
+                $("#save").show();
+            }else{
+                $("#save").hide();
+            }
+
+        }else{
+            alert("Element does not exists");
+        }
+        
+
+        // Delete the child
+        $('#'+element_name+'_child').remove();
+    });
+    
     $(document).on("click", "#add_sales_entry_list", function() {
     
         var iteam_goods_list = "";
@@ -194,11 +260,55 @@ $(document).ready(function(){
     });
 
 
+    $(document).on("change", "#patti_entry_date", function() {
+    
+        var lorry_list = "";
+        'use strict';
+
+        var element_value = $(this).val();
+
+        $.ajax({
+            url: "/get_all_lorry_number/"+element_value,
+            dataType: 'json',
+            data:{
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                lorry_list="";
+            },
+            success: function(data){ 
+                lorry_list = data.lorry_number_list;
+            }
+        });
+     
+       
+        var select_option = '<option selected="true" disabled="disabled">Choose Lorry Number</option>';
+        for (var index = 0; index < lorry_list.length; index++) {
+            select_option = select_option + "<option value='"+lorry_list[index]+"'>"+lorry_list[index]+"</option>";
+            console.log(lorry_list[index]);
+        }
+
+    
+        $('#lorry_number').children("option").remove();
+        $('#lorry_number').append(select_option);
+
+    });
+
+
+
+
+
+
 
 });
 
 function removeElement(el) {
-    console.log(el)
+
+    console.log(el);
+
     var element = document.getElementById(el);
 
     element.remove();
