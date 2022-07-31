@@ -49,7 +49,7 @@ $(document).ready(function(){
         $('#total_amount').val(final_value);
     });
 
-    $(document).on("change", ".custom-select", function() {
+    $(document).on("change", ".add_new_sales_custom_select", function() {
         var lot_number_Id = $(this).attr("id");
         var selected_lot = $(this).val();
         
@@ -327,7 +327,7 @@ $(document).ready(function(){
        
         var select_option = '<option selected="true" disabled="disabled">Choose Farmer Name</option>';
         for (var index = 0; index < patti_farmer_list.length; index++) {
-            select_option = select_option + "<option value='"+patti_farmer_list[index]+"'>"+lorry_list[index]+"</option>";
+            select_option = select_option + "<option value='"+patti_farmer_list[index]+"'>"+patti_farmer_list[index]+"</option>";
             console.log(patti_farmer_list[index]);
         }
 

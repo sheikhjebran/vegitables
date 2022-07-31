@@ -168,7 +168,7 @@ def add_new_patti_entry(request):
     
 def add_new_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(qty__gte = 0)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
     
     today = date.today()
     print("Today's date:", today)
@@ -241,9 +241,12 @@ def add_sales_bill_iteam(request,request_list, sales):
             amount_list.append(i)
         
     for i in range(0, len(lot_number_list)):
+        
+        arrival_goods_entry_Obj = Arrival_Goods.objects.get(id=request.POST[lot_number_list[i]])
+        
         sales_bill_entry_Obj = Sales_Bill_Iteam(
             iteam_name= request.POST[iteam_name_list[i]],
-            lot_number=request.POST[lot_number_list[i]],
+            arrival_goods=arrival_goods_entry_Obj,
             bags=request.POST[bags_list[i]],
             net_weight=request.POST[net_weight_list[i]],
             rates=request.POST[rates_list[i]],
@@ -304,10 +307,10 @@ def get_arrival_goods_iteam_name(request):
     [...]
     iteam_name_list = []
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
+    
     for arrival_entry in arrival_detail_object:
-        if arrival_entry.remarks == request.GET['selected_lot']:
-            iteam_name_list.append(arrival_entry.iteam_name)
+        iteam_name_list.append(arrival_entry.iteam_name)
     data = {'iteam_name_list': iteam_name_list}
     return Response(data,status=status.HTTP_200_OK)
     
@@ -317,9 +320,10 @@ def get_arrival_goods_list(request):
     [...]
     iteam_goods_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
+    
     for arrival_entry in arrival_detail_object:
-        iteam_goods_list[arrival_entry.remarks] = arrival_entry.iteam_name
+        iteam_goods_list[arrival_entry.id] = arrival_entry.remarks
         
     data = {'iteam_goods_list': iteam_goods_list}
     return Response(data,status=status.HTTP_200_OK)

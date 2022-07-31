@@ -49,7 +49,7 @@ $(document).ready(function(){
         $('#total_amount').val(final_value);
     });
 
-    $(document).on("change", ".custom-select", function() {
+    $(document).on("change", ".add_new_sales_custom_select", function() {
         var lot_number_Id = $(this).attr("id");
         var selected_lot = $(this).val();
         
@@ -206,7 +206,7 @@ $(document).ready(function(){
 
         var select_option = '<option selected="true" disabled="disabled">Choose Lot No</option>';
         for (var [key, value] of Object.entries(iteam_goods_list)) {
-            select_option = select_option + "<option value='"+key+"'>"+key+"</option>";
+            select_option = select_option + "<option value='"+key+"'>"+value+"</option>";
           }
         
         $('#tableWrapper')
@@ -216,7 +216,7 @@ $(document).ready(function(){
         <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
         <td>
             <div class='comment-your'>
-                <select class="custom-select" name="`+counter+`_lot_number" id ="`+counter+`_lot_number">
+                <select class="add_new_sales_custom_select" name="`+counter+`_lot_number" id ="`+counter+`_lot_number">
                     `+select_option+`
                 </select>
                 
@@ -336,6 +336,14 @@ $(document).ready(function(){
         $('#patti_farmer_namer').append(select_option);
 
     });
+
+
+
+    $(document).on("change", "#patti_lorry_number", function() {
+
+    });
+
+
 
 
 

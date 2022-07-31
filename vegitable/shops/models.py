@@ -44,7 +44,7 @@ class Arrival_Goods(models.Model):
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
     arrival_entry = ForeignKey(Arrival_Entry, on_delete=models.CASCADE)
     former_name = CharField(max_length=50)
-    qty = CharField(max_length=100)
+    qty = IntegerField()
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
     iteam_name = CharField(max_length=100)
