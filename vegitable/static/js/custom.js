@@ -292,12 +292,50 @@ $(document).ready(function(){
         }
 
     
-        $('#lorry_number').children("option").remove();
-        $('#lorry_number').append(select_option);
+        $('#patti_lorry_number').children("option").remove();
+        $('#patti_lorry_number').append(select_option);
 
     });
 
+    $(document).on("change", "#patti_lorry_number", function() {
+    
+        var patti_farmer_list = "";
+        'use strict';
 
+        var lorry_number_value = $(this).val();
+        var patti_date_value = $('#patti_entry_date').val();
+
+        $.ajax({
+            url: "/get_all_farmer_name",
+            dataType: 'json',
+            data:{
+                'lorry_number':lorry_number_value,
+                'patti_date':patti_date_value
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                patti_farmer_list="";
+            },
+            success: function(data){ 
+                patti_farmer_list = data.farmer_list;
+            }
+        });
+     
+       
+        var select_option = '<option selected="true" disabled="disabled">Choose Farmer Name</option>';
+        for (var index = 0; index < patti_farmer_list.length; index++) {
+            select_option = select_option + "<option value='"+patti_farmer_list[index]+"'>"+patti_farmer_list[index]+"</option>";
+            console.log(patti_farmer_list[index]);
+        }
+
+    
+        $('#patti_farmer_namer').children("option").remove();
+        $('#patti_farmer_namer').append(select_option);
+
+    });
 
 
 

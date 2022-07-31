@@ -73,7 +73,7 @@
                                 <select class="custom-select" name="0_lot_number" id ="0_lot_number">
                                     <option selected="true" disabled="disabled">Choose Lot No</option>   
                                     {% for arrival_detail in arrival_goods_detail%}
-                                    <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
+                                    <option value="{{arrival_detail.id}}">{{arrival_detail.remarks}}</option>
                                     {%endfor%}
                                 </select>
                                 

@@ -25,7 +25,7 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Lorry Number</span>
-                    <select class="custom-select" name="lorry_number" id ="lorry_number">
+                    <select class="custom-select" name="lorry_number" id ="patti_lorry_number">
                     </select>
                 </div>
                 <div class="clearfix"> </div>
@@ -33,11 +33,7 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Farmer Number</span>
-                    <select class="custom-select" name="farmer_name" id ="farmer_namer">
-                        <option selected="true" disabled="disabled">Choose Farmer Name</option>   
-                        {% for arrival_detail in arrival_goods_detail%}
-                        <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
-                        {%endfor%}
+                    <select class="custom-select" name="farmer_name" id ="patti_farmer_namer">
                     </select>
                 </div>
                 

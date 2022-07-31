@@ -168,7 +168,7 @@ def add_new_patti_entry(request):
     
 def add_new_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(qty__gte = 0)
     
     today = date.today()
     print("Today's date:", today)
@@ -448,3 +448,31 @@ def get_lorry_number_for_date(request,lorry_date):
         
     data = {'lorry_number_list': lorry_number_list}
     return Response(data,status=status.HTTP_200_OK)
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_all_farmer_name(request):
+    [...]
+    farmer_name_list = []
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    lorry_number = request.GET['lorry_number']
+    patti_date = getDate_from_string(request.GET['patti_date'])
+    
+    
+    arrival_detail_object = Arrival_Entry.objects.get(
+        shop=shop_detail_object,
+        lorry_no = lorry_number,
+        date = patti_date )
+    
+    arrival_good_object = Arrival_Goods.objects.filter(
+        shop = shop_detail_object,
+        arrival_entry = arrival_detail_object,
+    )
+    
+    for arrival_goods_entry in arrival_good_object:
+        farmer_name_list.append(arrival_goods_entry.former_name)
+        
+    data = {'farmer_list': farmer_name_list}
+    return Response(data,status=status.HTTP_200_OK)
+
