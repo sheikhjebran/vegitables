@@ -40,10 +40,15 @@ urlpatterns = [
     path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
     path('add_sales_bill', views.modify_sales_bill_entry, name='modify_sales_bill_entry'),
     
+    #Rest Api for sales entry list
+    path('get_sales_list_for_arrival_iteam_list',views.get_sales_list_for_arrival_iteam_list,name='get_sales_list_for_arrival_iteam_list'),
     
     #patti Entry URL
     path('patti_list',views.patti_list, name="patti_list"),
     path('add_new_patti_entry',view=views.add_new_patti_entry, name='add_new_patti_entry'),
+    path('generate_patti_pdf_bill',view=views.generate_patti_pdf_bill, name='generate_patti_pdf_bill'),
+    
     #Rest Api for the patti
     path('get_all_lorry_number/<str:lorry_date>',view=views.get_lorry_number_for_date, name='get_lorry_number_for_date'),
+    path('get_all_farmer_name',view= views.get_all_farmer_name,name='get_all_farmer_name'),
 ]

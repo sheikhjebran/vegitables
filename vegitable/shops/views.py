@@ -1,4 +1,4 @@
-from tokenize import Double
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
@@ -10,13 +10,22 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
-from .models import Misc_Entry, Patti_entry, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
+from .models import Misc_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, Arrival_Goods
 import datetime
+# Report import
+from django.http import FileResponse
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
 
 
 def index(request):
     return render(request, 'index.html')
 
+def getDate_from_string(stringDate):
+    mystringDate = str(stringDate).split("-")
+    return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
 
 @csrf_protect
 def get_authenticate(request):
@@ -166,9 +175,10 @@ def add_new_patti_entry(request):
                   {'patti_bill_detail': "NEW","today":today}
                   )
     
+
 def add_new_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
     
     today = date.today()
     print("Today's date:", today)
@@ -178,9 +188,8 @@ def add_new_sales_bill_entry(request):
                    "arrival_goods_detail":arrival_detail_object,"today":today}
                   )
     
-def getDate_from_string(stringDate):
-    mystringDate = str(stringDate).split("-")
-    return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
+
 
 def modify_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -241,9 +250,12 @@ def add_sales_bill_iteam(request,request_list, sales):
             amount_list.append(i)
         
     for i in range(0, len(lot_number_list)):
+        
+        arrival_goods_entry_Obj = Arrival_Goods.objects.get(id=request.POST[lot_number_list[i]])
+        
         sales_bill_entry_Obj = Sales_Bill_Iteam(
             iteam_name= request.POST[iteam_name_list[i]],
-            lot_number=request.POST[lot_number_list[i]],
+            arrival_goods=arrival_goods_entry_Obj,
             bags=request.POST[bags_list[i]],
             net_weight=request.POST[net_weight_list[i]],
             rates=request.POST[rates_list[i]],
@@ -304,10 +316,10 @@ def get_arrival_goods_iteam_name(request):
     [...]
     iteam_name_list = []
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
+    
     for arrival_entry in arrival_detail_object:
-        if arrival_entry.remarks == request.GET['selected_lot']:
-            iteam_name_list.append(arrival_entry.iteam_name)
+        iteam_name_list.append(arrival_entry.iteam_name)
     data = {'iteam_name_list': iteam_name_list}
     return Response(data,status=status.HTTP_200_OK)
     
@@ -317,9 +329,10 @@ def get_arrival_goods_list(request):
     [...]
     iteam_goods_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
+    
     for arrival_entry in arrival_detail_object:
-        iteam_goods_list[arrival_entry.remarks] = arrival_entry.iteam_name
+        iteam_goods_list[arrival_entry.id] = arrival_entry.remarks
         
     data = {'iteam_goods_list': iteam_goods_list}
     return Response(data,status=status.HTTP_200_OK)
@@ -428,9 +441,7 @@ def add_arrival_goods_iteam(request, request_list,arrival,shop_obj):
     
     
 
-def getDate_from_string(stringDate):
-    mystringDate = str(stringDate).split("-")
-    return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
+
 
 
 @api_view(('GET',))
@@ -448,3 +459,187 @@ def get_lorry_number_for_date(request,lorry_date):
         
     data = {'lorry_number_list': lorry_number_list}
     return Response(data,status=status.HTTP_200_OK)
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_all_farmer_name(request):
+    [...]
+    farmer_name_list = []
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    lorry_number = request.GET['lorry_number']
+    patti_date = getDate_from_string(request.GET['patti_date'])
+    
+    
+    arrival_detail_object = Arrival_Entry.objects.get(
+        shop=shop_detail_object,
+        lorry_no = lorry_number,
+        date = patti_date )
+    
+    arrival_good_object = Arrival_Goods.objects.filter(
+        shop = shop_detail_object,
+        arrival_entry = arrival_detail_object,
+    )
+    
+    for arrival_goods_entry in arrival_good_object:
+        farmer_name_list.append(arrival_goods_entry.former_name)
+        
+    data = {'farmer_list': farmer_name_list}
+    return Response(data,status=status.HTTP_200_OK)
+
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_sales_list_for_arrival_iteam_list(request):
+    [...]
+    
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    lorry_number = request.GET['patti_lorry']
+    patti_date = getDate_from_string(request.GET['patti_date'])
+    patti_farmer = request.GET['patti_farmer']
+    
+    
+    arrival_detail_object = Arrival_Entry.objects.get(
+        shop=shop_detail_object,
+        lorry_no = lorry_number,
+        date = patti_date )
+
+    arrival_good_object = Arrival_Goods.objects.filter(
+        shop = shop_detail_object,
+        arrival_entry = arrival_detail_object,
+        former_name = patti_farmer
+    )
+    
+    advance = 0
+    
+    sales_array = []
+    for arrival_single_goods in arrival_good_object:
+        print(arrival_single_goods.id)
+        if float(arrival_single_goods.advance) > 0:
+            advance = arrival_single_goods.advance
+            
+        sales_iteam_list = Sales_Bill_Iteam.objects.filter(
+            arrival_goods = arrival_single_goods
+        )
+        for sales in sales_iteam_list:
+            sales_array.append(sales)
+    
+    
+    sales_response_list = []
+    for single_sales in sales_array:
+        sales_dict = {}    
+        sales_dict['iteam_name'] = single_sales.iteam_name
+        sales_dict['net_weight'] = single_sales.net_weight
+        
+        arrival_good_object = Arrival_Goods.objects.get(
+            id = single_sales.arrival_goods.id,
+        )
+        
+        sales_dict['lot_number'] = arrival_good_object.remarks
+        sales_response_list.append(sales_dict)
+        
+    data = {
+        'farmer_advance': advance,
+        'sales_goods_list': sales_response_list
+            }
+    
+    return Response(data,status=status.HTTP_200_OK)
+
+
+def generate_patti_pdf_bill(request):
+    
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    patti_entry_obj = Patti_entry(
+                lorry_no = request.POST['patti_lorry_number'],
+                shop = shop_detail_object,
+                date = getDate_from_string(request.POST['patti_entry_date']),
+                advance = request.POST['advance_amount'],
+                farmer_name = request.POST['patti_farmer_name'],
+                total_weight = request.POST['total_weight'],
+                hamali = request.POST['hamali'],
+                net_amount = request.POST['net_amount'],
+            )
+
+    patti_entry_obj.save()
+    print(f"New Patti entry Iteam  = {patti_entry_obj.id}")
+
+    add_patti_iteam_list(request,list(request.POST),patti_entry_obj)
+    generate_pdf(request)
+    return patti_list(request)
+    
+    
+def add_patti_iteam_list(request, request_list, patti_entry_obj):
+    iteam_name_list = []
+    lot_number_list = []
+    weight_list = []
+    rate_list = []
+    amount_list = []
+    
+    
+    for i in request_list:
+        iteam_name_list_regrex = re.search("^.*_iteam_name$", i)
+        if iteam_name_list_regrex:
+            iteam_name_list.append(i)
+            
+        lot_number_list_regrex = re.search("^.*_lot_number$", i)
+        if lot_number_list_regrex:
+            lot_number_list.append(i)
+            
+        weight_list_regrex = re.search("^.*_weight$", i)
+        if weight_list_regrex:
+            weight_list.append(i)
+        
+        rate_list_regrex = re.search("^.*_rate$", i)
+        if rate_list_regrex:
+            rate_list.append(i)
+            
+        amount_list_regrex = re.search("^.*_amount$", i)
+        if amount_list_regrex:
+            amount_list.append(i)
+            
+    for i in range(0,len(iteam_name_list)):
+        patti_obj = Patti_entry_list(
+                iteam = request.POST[iteam_name_list[i]],
+                lot_no = request.POST[lot_number_list[i]],
+                weight = request.POST[weight_list[i]],
+                rate = request.POST[rate_list[i]],
+                amount = request.POST[amount_list[i]],
+                patti = patti_entry_obj
+            )
+
+        patti_obj.save()
+    
+    
+def generate_pdf(request):
+    # Create a byte stream buffer
+    buf = io.BytesIO()
+    
+    # Create a canvas
+    c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+    
+    # Text object
+    textOb = c.beginText()
+    textOb.setTextOrigin(inch,inch)
+    textOb.setFont("Helvetica",14)
+    
+    # Add some lines of text
+    lines = [
+        "This is line 1",
+        "This is line 2",
+        "This is line 3"
+    ]
+    
+    #loops
+    for line in lines:
+        textOb.textLine(line)
+    
+    c.drawText(textOb)
+    c.showPage()
+    c.save()
+    
+    buf.seek(0)
+    
+    # Return something
+    return FileResponse(buf, as_attachment=True, filename="dummy.pdf")    

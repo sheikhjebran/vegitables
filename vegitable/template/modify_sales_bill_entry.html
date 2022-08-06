@@ -68,12 +68,12 @@
                     </tbody>
                     {% if NEW == true%}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
-                        <td>
+                        <td class="custom-select">
                             <div class='comment-your'>
-                                <select class="custom-select" name="0_lot_number" id ="0_lot_number">
+                                <select class="add_new_sales_custom_select" name="0_lot_number" id ="0_lot_number">
                                     <option selected="true" disabled="disabled">Choose Lot No</option>   
                                     {% for arrival_detail in arrival_goods_detail%}
-                                    <option value="{{arrival_detail.remarks}}">{{arrival_detail.remarks}}</option>
+                                    <option value="{{arrival_detail.id}}">{{arrival_detail.remarks}}</option>
                                     {%endfor%}
                                 </select>
                                 
