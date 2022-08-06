@@ -5,6 +5,9 @@ $(document).ready(function(){
     var global_amount = 0;
     var counter= 1;
     var arrival_qty_list = {}
+    var global_weight = 0;
+    var local_amount = {};
+    var local_weight = {};
 
     $(document).on("change", ".calculate_amount", function() {
         var rate_id = $(this).attr("id");
@@ -372,49 +375,108 @@ $(document).ready(function(){
             }
         });
 
-       
+        $('#advance_amount').val(farmer_advance);
+        
 
-        $('#tableWrapper')
-        .children('tbody')
-        .last().append(
-        `
-        <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
-                        <td>
-                            <div class='comment-your'>
-                                <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" id="`+counter+`_iteam_name" required='' readonly>
-                                
-                            </div>
-                        </td>
+        $('#tableWrapper').children('tbody').remove()
+                    
+        for (var index = 0; index < patti_sales_entry_list.length; index++) {
+            console.log(patti_sales_entry_list[index]['iteam_name']);
+            console.log(patti_sales_entry_list[index]['net_weight']);
+            console.log(patti_sales_entry_list[index]['lot_number']);
+            
+                $('#tableWrapper')
+                    .children('tbody')
+                    .last().append(
+                    `
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" id="`+counter+`_iteam_name" value="`+patti_sales_entry_list[index]['iteam_name']+`" required='' readonly>
+                                            
+                                        </div>
+                                    </td>
 
-                        <td>
-                            <div class='comment-your'>
-                                <input type='text' placeholder='Iteam Name' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" required='' readonly>
-                            </div>
-                        </td>
-						
-                        <td>
-                            <div class='comment-your'>
-                                <input type='text' placeholder='Weight' name ="`+counter+`_weight" required=''>
-                            </div>
-                        </td>
-                        <td>
-                            <div class='comment-your'>
-                                <input type='text' placeholder='Rate' name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
-                            </div>
-                        </td>
-                        <td>
-                            <div class='comment-your'>
-                                <input type='text' placeholder='Amount' name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
-                            </div>
-                        </td>
-                    </tr>
-            `
-        );counter=counter+1
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Iteam Name' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" value="`+patti_sales_entry_list[index]['lot_number']+`" required='' readonly>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Weight' name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Rate' class="patti_rate" name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Amount' name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
+                                        </div>
+                                    </td>
+                                </tr>
+                                `
+                    );counter=counter+1
+                
+              
+        }
 
     });
 
 
+    $(document).on("change", ".patti_rate", function() {
+        var rate_id = $(this).attr("id");
+        var rate_value = $(this).val();
+        
+        var res = rate_id.split("_");
 
+        var netweigth = $(`#`+res[0]+`_weight`).val();
+        var amount  = ((rate_value*2)*netweigth)/100;
+        $(`#`+res[0]+`_amount`).val(amount);
+
+        local_amount[`#`+res[0]+`_amount`] = amount;
+        
+        local_weight[`#`+res[0]+`_weight`] = netweigth;
+
+        global_amount = 0;
+        for (var [key, value] of Object.entries(local_amount)) {
+            global_amount = parseFloat(global_amount) + parseFloat(value);
+        }
+
+        global_weight = 0;
+        for (var [key, value] of Object.entries(local_weight)) {
+            global_weight = parseFloat(global_weight) + parseFloat(value);        }
+
+        var advance_amount = $('#advance_amount').val();
+        var hamali = $('#hamali').val();
+
+        $('#total_weight').val(global_weight);
+        $('#net_amount').val(global_amount-parseFloat(advance_amount)-parseFloat(hamali));
+
+    });
+
+    $(document).on("change", "#hamali", function() {
+
+        global_amount = 0;
+        for (var [key, value] of Object.entries(local_amount)) {
+            global_amount = parseFloat(global_amount) + parseFloat(value);
+        }
+
+        global_weight = 0;
+        for (var [key, value] of Object.entries(local_weight)) {
+            global_weight = parseFloat(global_weight) + parseFloat(value);        }
+
+        var advance_amount = $('#advance_amount').val();
+        var hamali = $('#hamali').val();
+
+        $('#total_weight').val(global_weight);
+        $('#net_amount').val(global_amount-parseFloat(advance_amount)-parseFloat(hamali));
+
+    });
 
 
 

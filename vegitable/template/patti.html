@@ -31,9 +31,9 @@
             <div class="col col-7">Net amount</div>
             
         </li>
-        {%for patti in patti_detail %}
+        {%for patti in patti_entry_detail %}
         <li class="table-row">
-          <div class="col col-1"><a href="/edit_patti_entry/{{patti.id}}">{{ misc.id}}</a></div>
+          <div class="col col-1"><a href="/edit_patti_entry/{{patti.id}}">{{ patti.id}}</a></div>
           <div class="col col-2" >{{patti.date}}</div>
           <div class="col col-3" >{{patti.lorry_no}}</div>
           <div class="col col-4" >{{patti.farmer_name}}</div>

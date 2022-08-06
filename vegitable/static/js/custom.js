@@ -376,7 +376,12 @@ $(document).ready(function(){
         });
 
         $('#advance_amount').val(farmer_advance);
+        
 
+        $('#tableWrapper').children('tbody').children('tr').remove()
+        $('#total_weight').val(0);
+        $('#net_amount').val(0);
+                    
         for (var index = 0; index < patti_sales_entry_list.length; index++) {
             console.log(patti_sales_entry_list[index]['iteam_name']);
             console.log(patti_sales_entry_list[index]['net_weight']);
@@ -475,7 +480,7 @@ $(document).ready(function(){
 
     });
 
-    
+
 
 
 });
