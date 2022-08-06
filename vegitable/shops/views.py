@@ -166,6 +166,9 @@ def add_new_patti_entry(request):
                   {'patti_bill_detail': "NEW","today":today}
                   )
     
+def generate_patti_pdf_bill(request):
+    pass
+
 def add_new_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
@@ -480,3 +483,61 @@ def get_all_farmer_name(request):
     data = {'farmer_list': farmer_name_list}
     return Response(data,status=status.HTTP_200_OK)
 
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_sales_list_for_arrival_iteam_list(request):
+    [...]
+    
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    
+    lorry_number = request.GET['patti_lorry']
+    patti_date = getDate_from_string(request.GET['patti_date'])
+    patti_farmer = request.GET['patti_farmer']
+    
+    
+    arrival_detail_object = Arrival_Entry.objects.get(
+        shop=shop_detail_object,
+        lorry_no = lorry_number,
+        date = patti_date )
+
+    arrival_good_object = Arrival_Goods.objects.filter(
+        shop = shop_detail_object,
+        arrival_entry = arrival_detail_object,
+        former_name = patti_farmer
+    )
+    
+    advance = 0
+    
+    sales_array = []
+    for arrival_single_goods in arrival_good_object:
+        print(arrival_single_goods.id)
+        if float(arrival_single_goods.advance) > 0:
+            advance = arrival_single_goods.advance
+            
+        sales_iteam_list = Sales_Bill_Iteam.objects.filter(
+            arrival_goods = arrival_single_goods
+        )
+        for sales in sales_iteam_list:
+            sales_array.append(sales)
+    
+    
+    sales_response_list = []
+    for single_sales in sales_array:
+        sales_dict = {}    
+        sales_dict['iteam_name'] = single_sales.iteam_name
+        sales_dict['net_weight'] = single_sales.net_weight
+        
+        arrival_good_object = Arrival_Goods.objects.get(
+            id = single_sales.arrival_goods.id,
+        )
+        
+        sales_dict['lot_number'] = arrival_good_object.remarks
+        sales_response_list.append(sales_dict)
+        
+    data = {
+        'farmer_advance': advance,
+        'sales_goods_list': sales_response_list
+            }
+    
+    return Response(data,status=status.HTTP_200_OK)

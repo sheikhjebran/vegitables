@@ -206,7 +206,7 @@ $(document).ready(function(){
 
         var select_option = '<option selected="true" disabled="disabled">Choose Lot No</option>';
         for (var [key, value] of Object.entries(iteam_goods_list)) {
-            select_option = select_option + "<option value='"+key+"'>"+key+"</option>";
+            select_option = select_option + "<option value='"+key+"'>"+value+"</option>";
           }
         
         $('#tableWrapper')
@@ -216,7 +216,7 @@ $(document).ready(function(){
         <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
         <td>
             <div class='comment-your'>
-                <select class="custom-select" name="`+counter+`_lot_number" id ="`+counter+`_lot_number">
+                <select class="add_new_sales_custom_select" name="`+counter+`_lot_number" id ="`+counter+`_lot_number">
                     `+select_option+`
                 </select>
                 
@@ -336,6 +336,84 @@ $(document).ready(function(){
         $('#patti_farmer_namer').append(select_option);
 
     });
+
+
+
+    $(document).on("change", "#patti_farmer_namer", function() {
+        
+        var farmer_advance = 0;
+        var patti_sales_entry_list = "";
+
+        var patti_farmer_name_value = $(this).val();
+        
+        var patti_date_value = $('#patti_entry_date').val();
+
+        var patti_lorry_value = $('#patti_lorry_number').val();
+
+        $.ajax({
+            url: "/get_sales_list_for_arrival_iteam_list",
+            dataType: 'json',
+            data:{
+                'patti_farmer':patti_farmer_name_value,
+                'patti_date':patti_date_value,
+                'patti_lorry':patti_lorry_value
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                farmer_advance= 0;
+                patti_sales_entry_list="";
+            },
+            success: function(data){ 
+                patti_sales_entry_list = data.sales_goods_list;
+                farmer_advance = data.farmer_advance;
+            }
+        });
+
+       
+
+        $('#tableWrapper')
+        .children('tbody')
+        .last().append(
+        `
+        <tr style='margin-top:3%;margin-bottom:3%;' id ="`+counter+`_child">
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" id="`+counter+`_iteam_name" required='' readonly>
+                                
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" required='' readonly>
+                            </div>
+                        </td>
+						
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Weight' name ="`+counter+`_weight" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Rate' name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Amount' name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
+                            </div>
+                        </td>
+                    </tr>
+            `
+        );counter=counter+1
+
+    });
+
+
 
 
 
