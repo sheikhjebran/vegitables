@@ -24,3 +24,8 @@ python3 manage.py sqlmigrate shops 0002
 ```
 pip install whitenoise
 ```
+
+### Remove all .pyc file from project
+```
+find . -name "*.pyc" -exec rm -f {} \;
+```

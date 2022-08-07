@@ -2133,7 +2133,7 @@ ul.page-mid1 {
     text-align: center;
     line-height: 2.6em;
 }
-.input-top-mid input[type="text"] {
+.input-top-mid input[type="text"] , .input-top-mid input[type="password"] {
     border: none;
     padding: 1em;
     background: none;

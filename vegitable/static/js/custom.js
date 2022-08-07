@@ -98,12 +98,12 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Qty' id ="`+counter+`_qty" name ="`+counter+`_qty" class="qty_validation" required=''>
+                        <input type='text' placeholder='Qty'  id ="`+counter+`_qty" name ="`+counter+`_qty" class="qty_validation number_only" required=''>
                     </div>
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Weight' name ="`+counter+`_weight" required=''>
+                        <input type='text' placeholder='Weight' name ="`+counter+`_weight" class="decimal_number_only" required=''>
                     </div>
                 </td>
                 <td>
@@ -113,7 +113,7 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
+                        <input type='text' class="decimal_number_only" placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
                     </div>
                 </td>
                 <td>
@@ -234,22 +234,22 @@ $(document).ready(function(){
         
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Bags' name ="`+counter+`_bags" required=''>
+                <input type='text' placeholder='Bags' class= "number_only" name ="`+counter+`_bags" required=''>
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Net Weigth' name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
+                <input type='text' placeholder='Net Weigth' class= "decimal_number_only" name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Rates' name ="`+counter+`_rates" required='' id= "`+counter+`_rates" class="calculate_amount">
+                <input type='text' placeholder='Rates' name ="`+counter+`_rates" required='' id= "`+counter+`_rates" class="calculate_amount decimal_number_only">
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Amount' name ="`+counter+`_amount" id= "`+counter+`_amount" required='' readonly>
+                <input type='text' placeholder='Amount' class= "decimal_number_only" name ="`+counter+`_amount" id= "`+counter+`_amount" required='' readonly>
             </div>
         </td>
         <td>
@@ -407,17 +407,17 @@ $(document).ready(function(){
                                     
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Weight' name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
+                                            <input type='text' placeholder='Weight' class= "decimal_number_only" name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
                                         </div>
                                     </td>
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Rate' class="patti_rate" name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
+                                            <input type='text' placeholder='Rate' class="patti_rate decimal_number_only" name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
                                         </div>
                                     </td>
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Amount' name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
+                                            <input type='text' placeholder='Amount' class= "decimal_number_only" name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
                                         </div>
                                     </td>
                                 </tr>
@@ -480,8 +480,28 @@ $(document).ready(function(){
 
     });
 
+    // Code to allow only numbers
+    $(document).on("input", ".number_only", function() {
+        this.value = this.value.replace(/\D/g,'');
+    });
 
+    $(document).on("input", ".decimal_number_only", function() {
+        var position = this.selectionStart - 1;
+        //remove all but number and .
+        var fixed = this.value.replace(/[^0-9\.]/g, '');
+        if (fixed.charAt(0) === '.')                  //can't start with .
+            fixed = fixed.slice(1);
 
+        var pos = fixed.indexOf(".") + 1;
+        if (pos >= 0)               //avoid more than one .
+            fixed = fixed.substr(0, pos) + fixed.slice(pos).replace('.', '');
+
+        if (this.value !== fixed) {
+            this.value = fixed;
+            this.selectionStart = position;
+            this.selectionEnd = position;
+        }
+    });
 
 });
 

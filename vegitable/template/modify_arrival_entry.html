@@ -37,7 +37,7 @@
                 <br>
                 <div class="comment-your" style="width:45%;margin-bottom:2%">
                     <span>Total Bags</span>
-                    <input type="text" placeholder="Total Number of Bags" id="total_number_of_bags" name="total_number_of_bags" value="{{arrival_detail.total_bags}}" required="">
+                    <input type="text" class="number_only" placeholder="Total Number of Bags" id="total_number_of_bags" name="total_number_of_bags" value="{{arrival_detail.total_bags}}" required="">
                 </div>
                 
                 <div class="comment-your" style="width:45%;margin-bottom:2%">
@@ -82,12 +82,12 @@
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Qty' name ="0_qty" id="0_qty" required='' class="qty_validation">
+                                <input type='text' placeholder='Qty' name ="0_qty" id="0_qty" required='' class="qty_validation number_only">
                             </div>
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Weight' name ="0_weight" required=''>
+                                <input type='text' placeholder='Weight' name ="0_weight" class="decimal_number_only" required=''>
                             </div>
                         </td>
                         <td>
