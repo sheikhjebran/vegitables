@@ -77,7 +77,13 @@
                         </td>
 						<td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Iteam Name' name ="0_iteam_name" required=''>
+                                <select  name ="0_iteam_name" id ="0_iteam_name">
+                                    <option selected="true" disabled="disabled">Select Iteam</option>   
+                                    <option value="Onion">Onion</option>
+                                    <option value="Potato">Potato</option>
+                                    <option value="Ginger">Ginger</option>
+                                    <option value="Garlic">Garlic</option>
+                                </select>
                             </div>
                         </td>
                         <td>
@@ -117,12 +123,18 @@
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Iteam Name' name ="{{iteam.id}}_modify_iteam_name" value="{{iteam.iteam_name}}" required=''>
+                                    <select  name ="{{iteam.id}}_modify_iteam_name" id ="{{iteam.id}}_modify_iteam_name">
+                                        <option value="Onion" {% if iteam.iteam_name == 'Onion' %}selected{% endif %}>Onion</option>
+                                        <option value="Potato" {% if iteam.iteam_name == 'Potato' %}selected{% endif %}>Potato</option>
+                                        <option value="Ginger" {% if iteam.iteam_name == 'Ginger' %}selected{% endif %}>Ginger</option>
+                                        <option value="Garlic" {% if iteam.iteam_name == 'Garlic' %}selected{% endif %}>Garlic</option>
+                                    </select>
+
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Qty' id ="{{iteam.id}}_modify_qty" name ="{{iteam.id}}_modify_qty" value="{{iteam.qty}}" class="qty_validation" required=''>
+                                    <input type='text' placeholder='Qty' id ="{{iteam.id}}_modify_qty" name ="{{iteam.id}}_modify_qty" value="{{iteam.qty}}" class="qty_validation number_only" required=''>
                                 </div>
                             </td>
                             <td>
@@ -153,7 +165,7 @@
                 </table>
                 <div class="clearfix"> </div>
 
-                <button type="submit" id= "save" class=" btn-l btn-2 " hidden>Save</button>
+                <button type="submit" id= "save" class=" btn-l btn-2 " >Save</button>
                 <div class="clearfix"> </div>
                 <input type="hidden" value="{{arrival_detail.id}}" name="arrival_id">
             </form>

@@ -109,10 +109,14 @@ def patti_list(request, page =10, current_page =1):
 def sales_bill_entry(request, page =10, current_page =1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        
         sales_entry_detail = None
         try:
             sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
                                    :page * current_page]
+
+            
+
         except Exception as error:
             print(error)
             
@@ -253,6 +257,10 @@ def add_sales_bill_iteam(request,request_list, sales):
         
         arrival_goods_entry_Obj = Arrival_Goods.objects.get(id=request.POST[lot_number_list[i]])
         
+        arrival_goods_entry_Obj.qty= int(arrival_goods_entry_Obj.qty) - int(request.POST[bags_list[i]])
+        arrival_goods_entry_Obj.save()
+
+
         sales_bill_entry_Obj = Sales_Bill_Iteam(
             iteam_name= request.POST[iteam_name_list[i]],
             arrival_goods=arrival_goods_entry_Obj,
@@ -264,6 +272,8 @@ def add_sales_bill_iteam(request,request_list, sales):
         )
 
         sales_bill_entry_Obj.save()
+
+
         print(f"New Sales Bill Iteam  = {sales_bill_entry_Obj.id}")
 
 
@@ -314,12 +324,13 @@ def modify_arrival(request, arrival_id):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_iteam_name(request):
     [...]
-    iteam_name_list = []
+    iteam_name_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
     
     for arrival_entry in arrival_detail_object:
-        iteam_name_list.append(arrival_entry.iteam_name)
+        iteam_name_list[arrival_entry.iteam_name]=arrival_entry.qty
+        
     data = {'iteam_name_list': iteam_name_list}
     return Response(data,status=status.HTTP_200_OK)
     

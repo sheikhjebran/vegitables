@@ -58,6 +58,8 @@ $(document).ready(function(){
         
         var res = lot_number_Id.split("_");
         var iteam_name = `#`+res[0]+`_iteam_name`;
+        var iteam_qty = `#`+res[0]+`_qty`;
+        var iteam_list = ""
 
         $.ajax({
             url: "/get_arrival_goods_iteam_name",
@@ -66,13 +68,21 @@ $(document).ready(function(){
                 "selected_lot": selected_lot
             },
             type:'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
             success: function (data) {
-                $(iteam_name).val(data.iteam_name_list);
-        },
+                iteam_list = data.iteam_name_list;
+            },
             error: function(){
                 console.log("error");
                 }        
-            });
+        });
+
+        for (var [key, value] of Object.entries(iteam_list)) {
+            $(iteam_name).val(key);
+            $(iteam_qty).val(value);
+        }
 
     });
 
@@ -93,7 +103,14 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" required=''>
+
+                        <select  name ="`+counter+`_iteam_name" id ="`+counter+`_iteam_name">
+                                    <option selected="true" disabled="disabled">Select Iteam</option>   
+                                    <option value="Onion">Onion</option>
+                                    <option value="Potato">Potato</option>
+                                    <option value="Ginger">Ginger</option>
+                                    <option value="Garlic">Garlic</option>
+                                </select>
                     </div>
                 </td>
                 <td>
@@ -126,28 +143,31 @@ $(document).ready(function(){
         );counter=counter+1
     });
 
+    
 
     $(document).on("keyup", ".qty_validation", function() {
-        var element_name = $(this).attr("name");
-        var element_value = $(this).val();
-        //var arrival_qty_list = {}
-        arrival_qty_list[element_name] = parseInt(element_value);
 
-        
         var total = 0;
-        for (var [key, value] of Object.entries(arrival_qty_list)) {
-            if(Number.isNaN(value)){
-                value= 0;
+
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
             }
             
-            total = total+parseInt(value);
+            total = total+my_value;
             
-          }
-
+        });
+        
         if(total==parseInt($("#total_number_of_bags").val())){
             $("#save").show();
         }else{
             $("#save").hide();
+        }
+        if(total>parseInt($("#total_number_of_bags").val())){
+            alert("Number of bags are more than Arrival bag count !");
         }
 
     });
@@ -156,34 +176,49 @@ $(document).ready(function(){
     $(document).on("click", ".close_button", function() {
         //Get the element name
         var element_name = $(this).attr("name");
+        // Delete the child
+        $('#'+element_name+'_child').remove();
 
-        if($('#'+element_name+'_qty').length){
-            var local_qty_element = $('#'+element_name+'_qty').attr("name");
-            arrival_qty_list[local_qty_element] = 0;
+        var total = 0;
 
-            var total = 0;
-            for (var [key, value] of Object.entries(arrival_qty_list)) {
-                if(Number.isNaN(value)){
-                    value= 0;
-                }
-                total = total+parseInt(value);
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
             }
-
-            if(total==parseInt($("#total_number_of_bags").val())){
-                $("#save").show();
-            }else{
-                $("#save").hide();
-            }
-
+            
+            total = total+my_value;
+            
+        });
+        
+        if(total==parseInt($("#total_number_of_bags").val())){
+            $("#save").show();
         }else{
-            alert("Element does not exists");
+            $("#save").hide();
+        }
+        
+    });
+    
+    $(document).on("keyup", ".sales_bag_count", function() {
+
+        var bag_count = $(this).val();
+        var bag_id = $(this).attr("name");
+        
+        var res = bag_id.split("_");
+        var qty = `#`+res[0]+`_qty`;
+
+        if (parseInt(bag_count) > parseInt($(qty).val())){
+            alert("Please enter a bag count less than or equal to "+$(qty).val());
+            $(this).val("");
         }
         
 
-        // Delete the child
-        $('#'+element_name+'_child').remove();
     });
-    
+
+
+
     $(document).on("click", "#add_sales_entry_list", function() {
     
         var iteam_goods_list = "";
