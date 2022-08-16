@@ -93,7 +93,14 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" required=''>
+
+                        <select  name ="`+counter+`_iteam_name" id ="`+counter+`_iteam_name">
+                                    <option selected="true" disabled="disabled">Select Iteam</option>   
+                                    <option value="Onion">Onion</option>
+                                    <option value="Potato">Potato</option>
+                                    <option value="Ginger">Ginger</option>
+                                    <option value="Garlic">Garlic</option>
+                                </select>
                     </div>
                 </td>
                 <td>
@@ -126,28 +133,31 @@ $(document).ready(function(){
         );counter=counter+1
     });
 
+    
 
     $(document).on("keyup", ".qty_validation", function() {
-        var element_name = $(this).attr("name");
-        var element_value = $(this).val();
-        //var arrival_qty_list = {}
-        arrival_qty_list[element_name] = parseInt(element_value);
 
-        
         var total = 0;
-        for (var [key, value] of Object.entries(arrival_qty_list)) {
-            if(Number.isNaN(value)){
-                value= 0;
+
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
             }
             
-            total = total+parseInt(value);
+            total = total+my_value;
             
-          }
-
+        });
+        
         if(total==parseInt($("#total_number_of_bags").val())){
             $("#save").show();
         }else{
             $("#save").hide();
+        }
+        if(total>parseInt($("#total_number_of_bags").val())){
+            alert("Number of bags are more than Arrival bag count !");
         }
 
     });
@@ -156,32 +166,29 @@ $(document).ready(function(){
     $(document).on("click", ".close_button", function() {
         //Get the element name
         var element_name = $(this).attr("name");
-
-        if($('#'+element_name+'_qty').length){
-            var local_qty_element = $('#'+element_name+'_qty').attr("name");
-            arrival_qty_list[local_qty_element] = 0;
-
-            var total = 0;
-            for (var [key, value] of Object.entries(arrival_qty_list)) {
-                if(Number.isNaN(value)){
-                    value= 0;
-                }
-                total = total+parseInt(value);
-            }
-
-            if(total==parseInt($("#total_number_of_bags").val())){
-                $("#save").show();
-            }else{
-                $("#save").hide();
-            }
-
-        }else{
-            alert("Element does not exists");
-        }
-        
-
         // Delete the child
         $('#'+element_name+'_child').remove();
+
+        var total = 0;
+
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            
+            total = total+my_value;
+            
+        });
+        
+        if(total==parseInt($("#total_number_of_bags").val())){
+            $("#save").show();
+        }else{
+            $("#save").hide();
+        }
+        
     });
     
     $(document).on("click", "#add_sales_entry_list", function() {
