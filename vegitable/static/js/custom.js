@@ -58,6 +58,8 @@ $(document).ready(function(){
         
         var res = lot_number_Id.split("_");
         var iteam_name = `#`+res[0]+`_iteam_name`;
+        var iteam_qty = `#`+res[0]+`_qty`;
+        var iteam_list = ""
 
         $.ajax({
             url: "/get_arrival_goods_iteam_name",
@@ -66,13 +68,21 @@ $(document).ready(function(){
                 "selected_lot": selected_lot
             },
             type:'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
             success: function (data) {
-                $(iteam_name).val(data.iteam_name_list);
-        },
+                iteam_list = data.iteam_name_list;
+            },
             error: function(){
                 console.log("error");
                 }        
-            });
+        });
+
+        for (var [key, value] of Object.entries(iteam_list)) {
+            $(iteam_name).val(key);
+            $(iteam_qty).val(value);
+        }
 
     });
 
@@ -191,6 +201,24 @@ $(document).ready(function(){
         
     });
     
+    $(document).on("keyup", ".sales_bag_count", function() {
+
+        var bag_count = $(this).val();
+        var bag_id = $(this).attr("name");
+        
+        var res = bag_id.split("_");
+        var qty = `#`+res[0]+`_qty`;
+
+        if (parseInt(bag_count) > parseInt($(qty).val())){
+            alert("Please enter a bag count less than or equal to "+$(qty).val());
+            $(this).val("");
+        }
+        
+
+    });
+
+
+
     $(document).on("click", "#add_sales_entry_list", function() {
     
         var iteam_goods_list = "";
