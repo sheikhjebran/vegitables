@@ -48,7 +48,8 @@ class Arrival_Goods(models.Model):
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
     iteam_name = CharField(max_length=100)
-    advance = FloatField(max_length=100 , default=0)    
+    advance = FloatField(max_length=100 , default=0)
+    patti_status = BooleanField(default=False)  
     
     def __str__(self):
         return f"{self.id} - {self.shop} -{self.former_name}"

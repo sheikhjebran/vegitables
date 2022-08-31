@@ -16,16 +16,17 @@
                     <span>Bill No</span>
                     <input type="text" placeholder="Bill No" name = "sales_entry_bill_no" required="" value="" readonly>
                 </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%; margin-left:5%;">
+                    <span>Date</span>
+                    <input type="date" name = "sales_entry_date"  required="" value="{{today|date:'Y-m-d'}}" >
+                </div>
                 <div class="clearfix"> </div>
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Customer Name</span>
                     <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="" >
                 </div>
-                <div class="comment-your" style="width:25%;margin-bottom:2%">
-                    <span>Date</span>
-                    <input type="date" name = "sales_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
-                </div>
+                
                 
                 <div class="clearfix"> </div>
                 <div class="radio-bottom radio-bottom5">
@@ -136,7 +137,7 @@
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Cooli</span>
-                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required="" value="" >
+                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required="" value="0" >
                 </div>
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">

@@ -1,3 +1,4 @@
+from multiprocessing import Value
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
@@ -490,6 +491,7 @@ def get_all_farmer_name(request):
     arrival_good_object = Arrival_Goods.objects.filter(
         shop = shop_detail_object,
         arrival_entry = arrival_detail_object,
+        patti_status = False
     )
     
     for arrival_goods_entry in arrival_good_object:
@@ -519,7 +521,8 @@ def get_sales_list_for_arrival_iteam_list(request):
     arrival_good_object = Arrival_Goods.objects.filter(
         shop = shop_detail_object,
         arrival_entry = arrival_detail_object,
-        former_name = patti_farmer
+        former_name = patti_farmer,
+        patti_status = False
     )
     
     advance = 0
@@ -542,12 +545,15 @@ def get_sales_list_for_arrival_iteam_list(request):
         sales_dict = {}    
         sales_dict['iteam_name'] = single_sales.iteam_name
         sales_dict['net_weight'] = single_sales.net_weight
+        sales_dict['sold_qty'] = single_sales.bags
         
         arrival_good_object = Arrival_Goods.objects.get(
             id = single_sales.arrival_goods.id,
         )
         
         sales_dict['lot_number'] = arrival_good_object.remarks
+        sales_dict['arrival_qty'] = arrival_good_object.qty
+        
         sales_response_list.append(sales_dict)
         
     data = {
@@ -575,7 +581,22 @@ def generate_patti_pdf_bill(request):
 
     patti_entry_obj.save()
     print(f"New Patti entry Iteam  = {patti_entry_obj.id}")
+    
+    arrival_detail_object = Arrival_Entry.objects.get(
+        shop=shop_detail_object,
+        lorry_no = request.POST['patti_lorry_number'],
+        date = getDate_from_string(request.POST['patti_entry_date']) )
 
+    arrival_good_object = Arrival_Goods.objects.get(
+        shop = shop_detail_object,
+        arrival_entry = arrival_detail_object,
+        former_name = request.POST['patti_farmer_name'],
+        
+    )
+    arrival_good_object.patti_status = True
+    arrival_good_object.save() 
+    
+    
     add_patti_iteam_list(request,list(request.POST),patti_entry_obj)
     generate_pdf(request)
     return patti_list(request)

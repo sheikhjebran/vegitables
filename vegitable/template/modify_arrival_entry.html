@@ -64,7 +64,7 @@
                             <td>Iteam Name</td>
                             <td>Qty</td>
                             <td>Weight</td>
-                            <td>Lot no</td>
+                            <td>Bag Mark</td>
                             <td>Advance Amount</td>
                         </tr>
                     </tbody>
@@ -78,9 +78,8 @@
 						<td>
                             <div class='comment-your'>
                                 <select  name ="0_iteam_name" id ="0_iteam_name">
-                                    <option selected="true" disabled="disabled">Select Iteam</option>   
                                     <option value="Onion">Onion</option>
-                                    <option value="Potato">Potato</option>
+                                    <option selected="true" value="Potato">Potato</option>
                                     <option value="Ginger">Ginger</option>
                                     <option value="Garlic">Garlic</option>
                                 </select>
@@ -98,7 +97,7 @@
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Lot Number' name ="0_remark" required=''>
+                                <input type='text' placeholder='Mark' name ="0_remark" required=''>
                             </div>
                         </td>
                         <td>
@@ -144,7 +143,7 @@
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Lot Number' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                    <input type='text' placeholder='Mark' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
                                 </div>
                             </td>
                             <td>

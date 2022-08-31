@@ -105,9 +105,8 @@ $(document).ready(function(){
                     <div class='comment-your'>
 
                         <select  name ="`+counter+`_iteam_name" id ="`+counter+`_iteam_name">
-                                    <option selected="true" disabled="disabled">Select Iteam</option>   
                                     <option value="Onion">Onion</option>
-                                    <option value="Potato">Potato</option>
+                                    <option selected="true"value="Potato">Potato</option>
                                     <option value="Ginger">Ginger</option>
                                     <option value="Garlic">Garlic</option>
                                 </select>
@@ -362,7 +361,6 @@ $(document).ready(function(){
             }
         });
      
-       
         var select_option = '<option selected="true" disabled="disabled">Choose Farmer Name</option>';
         for (var index = 0; index < patti_farmer_list.length; index++) {
             select_option = select_option + "<option value='"+patti_farmer_list[index]+"'>"+patti_farmer_list[index]+"</option>";
@@ -436,7 +434,19 @@ $(document).ready(function(){
 
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Iteam Name' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" value="`+patti_sales_entry_list[index]['lot_number']+`" required='' readonly>
+                                            <input type='text' placeholder='Bag Mark' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" value="`+patti_sales_entry_list[index]['lot_number']+`" required='' readonly>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Sold Bag' name ="`+counter+`_sold_bag" id="`+counter+`_sold_bagr" value="`+patti_sales_entry_list[index]['sold_qty']+`" required='' readonly>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Balance Bag' name ="`+counter+`_balance_bag" id="`+counter+`_balance_bag" value="`+patti_sales_entry_list[index]['arrival_qty']+`" required='' readonly>
                                         </div>
                                     </td>
                                     
