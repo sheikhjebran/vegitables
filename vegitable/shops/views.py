@@ -181,7 +181,7 @@ def add_new_patti_entry(request):
                   )
     
 
-def add_new_sales_bill_entry(request):
+def navigate_to_add_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
     
@@ -308,6 +308,7 @@ def add_misc_entry(request):
 def edit_misc_entry(request,misc_id):
     misc_detail_obj = Misc_Entry.objects.get(pk=misc_id)
     return render(request, 'modify_misc_entry.html', {'misc_detail': misc_detail_obj})
+    
     
 def total_amount_misc_entry(request):
     return render(request,'misc_total_iframe.html')
@@ -675,3 +676,13 @@ def generate_pdf(request):
     
     # Return something
     return FileResponse(buf, as_attachment=True, filename="dummy.pdf")    
+
+
+@csrf_protect
+def edit_sales_bill_entry(request, sales_id):
+    arrival_entry_obj = Arrival_Entry.objects.get(pk=sales_id)
+    arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
+    
+    today = arrival_entry_obj.date
+    
+    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False,"today":today})

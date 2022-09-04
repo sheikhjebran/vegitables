@@ -37,8 +37,9 @@ urlpatterns = [
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
     path('sales_bill/prev/<int:page_number>/',views.sales_bill_prev_page, name="sales_bill_prev_page"),
     path('sales_bill/next/<int:page_number>/',views.sales_bill_next_page, name="sales_bill_next_page"),
-    path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
+    path('navigate_to_add_sales_bill_entry', views.navigate_to_add_sales_bill_entry, name='navigate_to_add_sales_bill_entry'),
     path('add_sales_bill', views.modify_sales_bill_entry, name='modify_sales_bill_entry'),
+    path('edit_sales_bill_entry/<int:sales_id>/', views.edit_sales_bill_entry, name='edit_sales_bill_entry'),
     
     #Rest Api for sales entry list
     path('get_sales_list_for_arrival_iteam_list',views.get_sales_list_for_arrival_iteam_list,name='get_sales_list_for_arrival_iteam_list'),
