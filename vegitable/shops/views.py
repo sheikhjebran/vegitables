@@ -189,7 +189,8 @@ def navigate_to_add_sales_bill_entry(request):
     print("Today's date:", today)
     
     return render(request, 'modify_sales_bill_entry.html' , 
-                  {'sales_bill_detail': "NEW",
+                  {'sales_bill_detail': True,
+                   'NEW':True,
                    "arrival_goods_detail":arrival_detail_object,"today":today}
                   )
     
@@ -680,9 +681,17 @@ def generate_pdf(request):
 
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
-    arrival_entry_obj = Arrival_Entry.objects.get(pk=sales_id)
-    arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
+    sales_obj = Sales_Bill_Entry.objects.get(pk=sales_id)
+    sales_iteam_objs = Sales_Bill_Iteam.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
     
-    today = arrival_entry_obj.date
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
     
-    return render(request, 'modify_arrival_entry.html', {'arrival_detail': arrival_entry_obj,'arrival_goods_objs':arrival_goods_objs,'NEW':False,"today":today})
+    
+    return render(request, 'modify_sales_bill_entry.html' , 
+                  {'sales_bill_detail': False,
+                   "arrival_goods_detail":arrival_detail_object,
+                   "sales_obj":sales_obj,
+                   "sales_iteam_objs":sales_iteam_objs
+                   }
+                  )

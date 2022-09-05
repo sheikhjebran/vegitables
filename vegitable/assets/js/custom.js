@@ -254,7 +254,7 @@ $(document).ready(function(){
         </td>
         <td>
             <div class='tog-top-4'>
-                <img class='close_button' src="static/images/remove.png" onClick="removeElement('`+counter+`_child');"/>
+                <img class='close_button' src="/static/images/remove.png" onClick="removeElement('`+counter+`_child');"/>
              </div>
         </td>
     </tr>

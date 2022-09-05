@@ -52,4 +52,6 @@ width:10%;
 width:80%;
 }
 
-
+input[type="date"] {
+    height: 25px;
+}
