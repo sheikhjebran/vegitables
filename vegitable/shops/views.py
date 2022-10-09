@@ -165,14 +165,27 @@ def logout(request):
 
 def add_new_arrival_entry(request):
     today = date.today()
-    return render(request, 'modify_arrival_entry.html',{'arrival_detail':"NEW","today":today})
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    arrival_Entry_Obj = Arrival_Entry(
+            gp_no="",
+            date= getDate_from_string(today),
+            patti_name="",
+            total_bags=0,
+            lorry_no = "",
+            shop=shop_detail_object
+            )
+    arrival_Entry_Obj.save()
+    
+    return render(request, 'modify_arrival_entry.html',{
+        "arrival_detail":arrival_Entry_Obj,
+        "today":today,
+        "NEW":True
+        })
 
 def add_new_misc_entry(request):
     return render(request, 'modify_misc_entry.html' , {'misc_detail': "NEW"})
 
 def add_new_patti_entry(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    
     today = date.today()
     print("Today's date:", today)
     
@@ -182,26 +195,37 @@ def add_new_patti_entry(request):
     
 
 def navigate_to_add_sales_bill_entry(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
-    
     today = date.today()
-    print("Today's date:", today)
     
-    return render(request, 'modify_sales_bill_entry.html' , 
-                  {'sales_bill_detail': True,
-                   'NEW':True,
-                   "arrival_goods_detail":arrival_detail_object,"today":today}
-                  )
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     
+    sales_obj = Sales_Bill_Entry(
+        payment_type="",
+        customer_name="",
+        date=getDate_from_string(today),
+        shop=shop_detail_object,
+        rmc=0,
+        commission=0,
+        cooli=0,
+        total_amount=0
+        )
+    sales_obj.save()
+    
+    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte = 1)
 
-
+    return render(request, 'modify_sales_bill_entry.html' , {
+                    'sales_bill_detail': True,
+                    'sales_obj':sales_obj,
+                    'NEW':True,
+                    "arrival_goods_detail":arrival_detail_object,
+                    "today":today
+                    })
+    
 
 def modify_sales_bill_entry(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     if len(request.POST['sales_bill_id'])<=0:
         sales_bill_entry_Obj = Sales_Bill_Entry(
-        
         payment_type=request.POST['payment_mode'],
         customer_name=request.POST['sales_entry_customer_name'],
         date=getDate_from_string(request.POST['sales_entry_date']),
@@ -213,7 +237,14 @@ def modify_sales_bill_entry(request):
         )
     else:
         sales_bill_entry_Obj = Sales_Bill_Entry.objects.get(id=request.POST['sales_bill_id'])
-
+        sales_bill_entry_Obj.payment_type=request.POST['payment_mode']
+        sales_bill_entry_Obj.customer_name=request.POST['sales_entry_customer_name']
+        sales_bill_entry_Obj.date=getDate_from_string(request.POST['sales_entry_date'])
+        sales_bill_entry_Obj.shop=shop_detail_object
+        sales_bill_entry_Obj.rmc=request.POST['rmc']
+        sales_bill_entry_Obj.commission=request.POST['comission']
+        sales_bill_entry_Obj.cooli=request.POST['cooli']
+        sales_bill_entry_Obj.total_amount=request.POST['total_amount']
     
     sales_bill_entry_Obj.save()
     print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")

@@ -1,3 +1,5 @@
+from datetime import date, timedelta, timezone
+from email.policy import default
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -25,7 +27,6 @@ class Misc_Entry(models.Model):
 
     def __str__(self):
         return f"{self.id}-{self.expense_type}-{self.amount}-{self.remark}"
-
 
 class Arrival_Entry(models.Model):
     gp_no = CharField(max_length=100)
