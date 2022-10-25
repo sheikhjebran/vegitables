@@ -14,31 +14,47 @@
                 {% csrf_token %}
                 <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
-                    <input type="text" placeholder="Bill No" name = "sales_entry_bill_no" required="" value="" readonly>
+                    <input type="text" name="sales_bill_id" id="sales_bill_id" value="{{sales_obj.id}}" readonly>
                 </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%; margin-left:5%;">
                     <span>Date</span>
-                    <input type="date" name = "sales_entry_date"  required="" value="{{today|date:'Y-m-d'}}" >
+                    {% if sales_bill_detail == False %}
+                        <input type="date" name = "sales_entry_date"  required="" value="{{sales_obj.date|date:'Y-m-d'}}" >
+                    {% else %}
+                        <input type="date" name = "sales_entry_date"  required="" value="{{today|date:'Y-m-d'}}" >
+                    {% endif %}
                 </div>
+                
                 <div class="clearfix"> </div>
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Customer Name</span>
-                    <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="" >
+                    <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="{{sales_obj.customer_name}}" >
                 </div>
                 
                 
                 <div class="clearfix"> </div>
                 <div class="radio-bottom radio-bottom5">
+					{% if sales_bill_detail %}
+                        <span class="mid-radio">
+                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" checked>
+                            <label for="sales_enrty_cash">Cash<i></i></label>
+                        </span>
+                        <span class="mid-radio">
+                            <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit">
+                            <label for="sales_entry_credit">Credit<i></i></label>
+                        </span>
+                    {% else %}
+                        <span class="mid-radio">
+                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
+                            <label for="sales_enrty_cash">Cash<i></i></label>
+                        </span>
+                        <span class="mid-radio">
+                            <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
+                            <label for="sales_entry_credit">Credit<i></i></label>
+                        </span>
+                    {% endif %}
 					
-					<span class="mid-radio">
-					    <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" checked>
-					    <label for="sales_enrty_cash">Cash<i></i></label>
-					</span>
-					<span class="mid-radio">
-                        <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit">
-                        <label for="sales_entry_credit">Credit<i></i></label>
-                    </span>
 				</div>
                 <div class="clearfix"> </div>
 
@@ -67,7 +83,7 @@
                             <td>Amount</td>
                         </tr>
                     </tbody>
-                    {% if NEW == true%}
+                    {% if sales_bill_detail%}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
                         <td class="custom-select">
                             <div class='comment-your'>
@@ -75,7 +91,7 @@
                                     <option selected="true" disabled="disabled">Choose Lot No</option>   
                                     {% for arrival_detail in arrival_goods_detail%}
                                     <option value="{{arrival_detail.id}}">{{arrival_detail.remarks}}</option>
-                                    {%endfor%}
+                                    {% endfor %}
                                 </select>
                                 
                             </div>
@@ -84,7 +100,7 @@
                         <td>
                             <div class='comment-your'>
                                 <input type='text' placeholder='Iteam Name' name ="0_iteam_name" id="0_iteam_name" required='' readonly>
-                                <input type='text' placeholder='qty' name ="0_qty" id="0_qty" required='' hidden readonly>
+                                <input type='text' placeholder='qty' name ="0_qty" id="0_qty" required='' readonly hidden>
                             </div>
                         </td>
 						
@@ -95,7 +111,7 @@
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Net Weigth' name ="0_net_weight" id="0_net_weight" class= "decimal_number_only" required=''>
+                                <input type='text' placeholder='Net Weight' name ="0_net_weight" id="0_net_weight" class= "decimal_number_only" required=''>
                             </div>
                         </td>
                         <td>
@@ -115,9 +131,54 @@
                         </td>
                     </tr>
                     {% else %}
+                    {% for iteam in sales_iteam_objs %}
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="{{iteam.id}}_modify_child">
+                        <td class="custom-select">
+                            <div class='comment-your'>
+                                <select class="add_new_sales_custom_select" name="{{iteam.id}}_modify_lot_number" id ="{{iteam.id}}_modify_lot_number">
+                                    
+                                    {% for arrival_detail in arrival_goods_detail%}
+                                    <option value="{{arrival_detail.id}}" {% if iteam.iteam_name == "{{arrival_detail.iteam_name}}" %}selected{% endif %}>{{arrival_detail.remarks}}</option>
+                                    {%endfor%}
+                                </select>
+                                
+                            </div>
+                        </td>
 
-                        <!-- TODO  Edit the patti entry need to handle-->
-
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Iteam Name' name ="{{iteam.id}}_modify_iteam_name" id="{{iteam.id}}_modify_iteam_name" required='' value = "{{iteam.iteam_name}}" readonly>
+                                {% for arrival_detail in arrival_goods_detail%}
+                                    {% if arrival_detail.id == iteam.arrival_goods.id%}
+                                        <input type='text' placeholder='qty' name ="{{iteam.id}}_modify_qty" id="{{iteam.id}}_modify_qty" value= "{{arrival_detail.qty}}" required=''  readonly hidden>
+                                    {%endif%}
+                                {%endfor%}
+                            </div>
+                        </td>
+						
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Bags' name ="{{iteam.id}}_modify_bags" class= "sales_bag_count number_only" value= "{{iteam.bags}}" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Net Weigth' name ="{{iteam.id}}_modify_net_weight" id="{{iteam.id}}_modify_net_weight" class= "decimal_number_only" value="{{iteam.net_weight}}" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Rates' name ="{{iteam.id}}_modify_rates" required='' id= "{{iteam.id}}_modify_rates" value="{{iteam.rates}}" class="calculate_amount decimal_number_only">
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Amount' name ="{{iteam.id}}_modify_amount" id= "{{iteam.id}}_modify_amount" class= "decimal_number_only" value= "{{iteam.amount}}" required='' readonly>
+                            </div>
+                        </td>
+                       
+                    </tr>
+                    {% endfor %}
                     {% endif %}
                 </table>
                 <div class="clearfix"> </div>
@@ -127,28 +188,28 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>RMC</span>
-                    <input type="text" placeholder="0" name = "rmc" id="rmc" required="" value="" readonly>
+                    <input type="text" placeholder="0" name = "rmc" id="rmc" required="" value="{{sales_obj.rmc}}" readonly>
                 </div>
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Comission</span>
-                    <input type="text" placeholder="0" id="comission" name = "comission" required="" value="0" readonly>
+                    <input type="text" placeholder="0" id="comission" name = "comission" required="" value="{{sales_obj.commission}}" readonly>
                 </div>
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Cooli</span>
-                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required="" value="0" >
+                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required="" value="{{sales_obj.cooli}}" >
                 </div>
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Total Amount</span>
-                    <input type="text" placeholder="0" id= "total_amount" name = "total_amount" required="" value="0" readonly>
+                    <input type="text" placeholder="0" id= "total_amount" name = "total_amount" required="" value="{{sales_obj.total_amount}}" readonly>
                 </div>
                 <div class="clearfix"> </div>
 
                 <button type="submit" class=" btn-l btn-2 " style="float:right">Save</button>
                 <div class="clearfix"> </div>
-                <input type="hidden" name="sales_bill_id" id="sales_bill_id" value=""">
+                
             </form>
 
     </div>

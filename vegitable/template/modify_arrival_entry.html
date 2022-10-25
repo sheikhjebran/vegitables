@@ -14,7 +14,11 @@
 
             <form action = "/add_arrival" method = "POST">
                 {% csrf_token %}
-                <div class="comment-your" style="width:25%;margin-bottom:2%">
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
+                    <span>Bill Number</span>                    
+                    <input type="text"  name="arrival_id" value="{{arrival_detail.id}}" readonly>
+                </div>
+                <div class="comment-your" style="width:45%;margin-bottom:2%">
                     <span>Date</span>
                     <input type="date" name = "arrival_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
                 </div>
@@ -68,7 +72,7 @@
                             <td>Advance Amount</td>
                         </tr>
                     </tbody>
-                    {% if arrival_detail == 'NEW'%}
+                    {% if NEW == true %}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
                         <td>
                             <div class='comment-your'>
@@ -164,9 +168,9 @@
                 </table>
                 <div class="clearfix"> </div>
 
-                <button type="submit" id= "save" class=" btn-l btn-2 " >Save</button>
+                <button type="submit" id= "save" class=" btn-l btn-2 " hidden>Save</button>
                 <div class="clearfix"> </div>
-                <input type="hidden" value="{{arrival_detail.id}}" name="arrival_id">
+                
             </form>
 
     </div>

@@ -37,8 +37,9 @@ urlpatterns = [
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
     path('sales_bill/prev/<int:page_number>/',views.sales_bill_prev_page, name="sales_bill_prev_page"),
     path('sales_bill/next/<int:page_number>/',views.sales_bill_next_page, name="sales_bill_next_page"),
-    path('add_sales_bill_entry', views.add_new_sales_bill_entry, name='add_new_sales_bill_entry'),
+    path('navigate_to_add_sales_bill_entry', views.navigate_to_add_sales_bill_entry, name='navigate_to_add_sales_bill_entry'),
     path('add_sales_bill', views.modify_sales_bill_entry, name='modify_sales_bill_entry'),
+    path('edit_sales_bill_entry/<int:sales_id>/', views.edit_sales_bill_entry, name='edit_sales_bill_entry'),
     
     #Rest Api for sales entry list
     path('get_sales_list_for_arrival_iteam_list',views.get_sales_list_for_arrival_iteam_list,name='get_sales_list_for_arrival_iteam_list'),
@@ -47,8 +48,10 @@ urlpatterns = [
     path('patti_list',views.patti_list, name="patti_list"),
     path('add_new_patti_entry',view=views.add_new_patti_entry, name='add_new_patti_entry'),
     path('generate_patti_pdf_bill',view=views.generate_patti_pdf_bill, name='generate_patti_pdf_bill'),
-    
+    path('edit_patti_entry/<int:patti_id>/', views.edit_patti_entry, name='edit_patti_entry'),
+
     #Rest Api for the patti
     path('get_all_lorry_number/<str:lorry_date>',view=views.get_lorry_number_for_date, name='get_lorry_number_for_date'),
-    path('get_all_farmer_name',view= views.get_all_farmer_name,name='get_all_farmer_name'),
+    path('get_all_farmer_name',view=views.get_all_farmer_name,name='get_all_farmer_name')
+
 ]

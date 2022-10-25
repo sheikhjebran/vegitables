@@ -1,3 +1,5 @@
+from datetime import date, timedelta, timezone
+from email.policy import default
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -15,13 +17,14 @@ class Shop(models.Model):
     def __str__(self):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
-    
+
 class Misc_Entry(models.Model):
     date = DateField()
     expense_type = CharField(max_length=50)
     amount = FloatField(max_length=100)
     remark = CharField(max_length=255)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    Empty_data = BooleanField(default=True)
 
     def __str__(self):
         return f"{self.id}-{self.expense_type}-{self.amount}-{self.remark}"
@@ -29,12 +32,12 @@ class Misc_Entry(models.Model):
 
 class Arrival_Entry(models.Model):
     gp_no = CharField(max_length=100)
-    lorry_no = CharField(max_length=100 , default='')
+    lorry_no = CharField(max_length=100, default='')
     date = DateField()
     patti_name = CharField(max_length=50)
     total_bags = IntegerField()
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
-    
+    Empty_data = BooleanField(default=True)
 
     def __str__(self):
         return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
@@ -48,11 +51,12 @@ class Arrival_Goods(models.Model):
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
     iteam_name = CharField(max_length=100)
-    advance = FloatField(max_length=100 , default=0)
-    patti_status = BooleanField(default=False)  
-    
+    advance = FloatField(max_length=100, default=0)
+    patti_status = BooleanField(default=False)
+
     def __str__(self):
         return f"{self.id} - {self.shop} -{self.former_name}"
+
 
 class Sales_Bill_Entry(models.Model):
     payment_type = CharField(max_length=10)
@@ -63,10 +67,12 @@ class Sales_Bill_Entry(models.Model):
     commission = FloatField(max_length=50)
     cooli = FloatField(max_length=50)
     total_amount = FloatField(max_length=50)
-    
+    Empty_data = BooleanField(default=True)
+
     def __str__(self):
         return f"{self.id}-{self.customer_name}-{self.total_amount}"
-    
+
+
 class Sales_Bill_Iteam(models.Model):
     iteam_name = CharField(max_length=10)
     arrival_goods = ForeignKey(Arrival_Goods, on_delete=models.CASCADE)
@@ -75,10 +81,11 @@ class Sales_Bill_Iteam(models.Model):
     rates = FloatField(max_length=50)
     amount = FloatField(max_length=50)
     Sales_Bill_Entry = ForeignKey(Sales_Bill_Entry, on_delete=models.CASCADE)
-    
+
     def __str__(self):
         return f"{self.id}-{self.iteam_name}-{self.bags}-{self.net_weight}-{self.amount}"
-    
+
+
 class Patti_entry(models.Model):
     lorry_no = CharField(max_length=100)
     date = DateField()
@@ -88,11 +95,12 @@ class Patti_entry(models.Model):
     hamali = FloatField(max_length=100)
     net_amount = FloatField(max_length=100)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
-    
+    Empty_data = BooleanField(default=True)
+
     def __str__(self):
         return f"{self.lorry_no}- {self.farmer_name} - {self.total_weight} - {self.net_amount} -{self.shop}"
-    
-    
+
+
 class Patti_entry_list(models.Model):
     iteam = CharField(max_length=100)
     lot_no = CharField(max_length=100)
@@ -100,6 +108,6 @@ class Patti_entry_list(models.Model):
     rate = CharField(max_length=100)
     amount = FloatField(max_length=100)
     patti = ForeignKey(Patti_entry, on_delete=models.CASCADE)
-    
+
     def __str__(self):
         return f"{self.iteam}- {self.lot_no}- {self.weight}- {self.amount} - {self.patti}"

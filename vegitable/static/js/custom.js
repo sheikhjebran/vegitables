@@ -263,17 +263,18 @@ $(document).ready(function(){
         <td>
             <div class='comment-your'>
                 <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" id="`+counter+`_iteam_name" required='' readonly>
+                <input type='text' placeholder='qty' name ="`+counter+`_qty" id="`+counter+`_qty" required='' readonly hidden>
             </div>
         </td>
         
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Bags' class= "number_only" name ="`+counter+`_bags" required=''>
+                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="`+counter+`_bags" required=''>
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Net Weigth' class= "decimal_number_only" name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
+                <input type='text' placeholder='Net Weight' class= "decimal_number_only" name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
             </div>
         </td>
         <td>
@@ -288,7 +289,7 @@ $(document).ready(function(){
         </td>
         <td>
             <div class='tog-top-4'>
-                <img class='close_button' src="static/images/remove.png" onClick="removeElement('`+counter+`_child');"/>
+                <img class='close_button' src="/static/images/remove.png" onClick="removeElement('`+counter+`_child');"/>
              </div>
         </td>
     </tr>
