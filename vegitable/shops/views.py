@@ -81,7 +81,8 @@ def home(request, page=10, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         arrival_entry_detail = None
         try:
-            arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by('-id')[
+            arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(
+                Empty_data=False).order_by('-id')[
                                    :page * current_page]
         except Exception as error:
             print(error)
@@ -102,7 +103,8 @@ def patti_list(request, page=10, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         patti_entry_detail = None
         try:
-            patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+            patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by(
+                '-id')[
                                  :page * current_page]
         except Exception as error:
             print(error)
@@ -123,7 +125,8 @@ def sales_bill_entry(request, page=10, current_page=1):
 
         sales_entry_detail = None
         try:
-            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by('-id')[
+            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).filter(
+                Empty_data=False).order_by('-id')[
                                  :page * current_page]
 
 
@@ -201,10 +204,24 @@ def add_new_misc_entry(request):
 
 def add_new_patti_entry(request):
     today = date.today()
-    print("Today's date:", today)
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+
+    patti_bill_detail = Patti_entry(
+        lorry_no="",
+        date=today,
+        advance=0,
+        farmer_name="",
+        total_weight=0,
+        hamali=0,
+        net_amount=0,
+        shop=shop_detail_object,
+    )
+    patti_bill_detail.save()
 
     return render(request, 'modify_patti_entry.html',
-                  {'patti_bill_detail': "NEW", "today": today}
+                  {'patti_bill_detail': patti_bill_detail,
+                   "today": today,
+                   "NEW": True}
                   )
 
 
@@ -422,6 +439,7 @@ def add_arrival(request):
         arrival_Entry_Obj.total_bags = request.POST['total_number_of_bags']
         arrival_Entry_Obj.lorry_no = request.POST['lorry_number']
         arrival_Entry_Obj.shop = shop_detail_object
+        arrival_Entry_Obj.Empty_data = False
 
     arrival_Entry_Obj.save()
     print(f"New arrival entry  = {arrival_Entry_Obj.id}")
@@ -610,16 +628,16 @@ def get_sales_list_for_arrival_iteam_list(request):
 def generate_patti_pdf_bill(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-    patti_entry_obj = Patti_entry(
-        lorry_no=request.POST['patti_lorry_number'],
-        shop=shop_detail_object,
-        date=getDate_from_string(request.POST['patti_entry_date']),
-        advance=request.POST['advance_amount'],
-        farmer_name=request.POST['patti_farmer_name'],
-        total_weight=request.POST['total_weight'],
-        hamali=request.POST['hamali'],
-        net_amount=request.POST['net_amount'],
-    )
+    patti_entry_obj = Patti_entry.objects.get(id=request.POST['patti_bill_id'])
+    patti_entry_obj.lorry_no = request.POST['patti_lorry_number']
+    patti_entry_obj.shop = shop_detail_object
+    patti_entry_obj.date = getDate_from_string(request.POST['patti_entry_date'])
+    patti_entry_obj.advance = request.POST['advance_amount']
+    patti_entry_obj.farmer_name = request.POST['patti_farmer_name']
+    patti_entry_obj.total_weight = request.POST['total_weight']
+    patti_entry_obj.hamali = request.POST['hamali']
+    patti_entry_obj.net_amount = request.POST['net_amount']
+    patti_entry_obj.Empty_data = False
 
     patti_entry_obj.save()
     print(f"New Patti entry Iteam  = {patti_entry_obj.id}")
@@ -731,4 +749,19 @@ def edit_sales_bill_entry(request, sales_id):
                    "sales_obj": sales_obj,
                    "sales_iteam_objs": sales_iteam_objs
                    }
+                  )
+
+
+@csrf_protect
+def edit_patti_entry(request, patti_id):
+    patti_bill_detail = Patti_entry.objects.get(pk=patti_id)
+    today = patti_bill_detail.date
+
+    patti_entry_obj = Patti_entry_list.objects.filter(patti=patti_bill_detail)
+
+    return render(request, 'modify_patti_entry.html',
+                  {'patti_bill_detail': patti_bill_detail,
+                   "today": today,
+                   "patti_entry_obj":patti_entry_obj,
+                   "NEW": False}
                   )
