@@ -529,7 +529,7 @@ def get_lorry_number_for_date(request, lorry_date):
 
     arrival_detail_object = Arrival_Entry.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
-        if arrival_entry.date == lorry_date:
+        if arrival_entry.date == lorry_date and arrival_entry.Empty_data is False:
             lorry_number_list.append(arrival_entry.lorry_no)
 
     data = {'lorry_number_list': lorry_number_list}
