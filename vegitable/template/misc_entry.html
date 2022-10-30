@@ -23,27 +23,30 @@
     </div>
     &nbsp;
     <div class="clearfix"> </div>
-
-    <ul class="responsive-table">
-        <li class="table-header">
-            <div class="col col-1">Bill No</div>
-            <div class="col col-2">Date</div>
-            <div class="col col-3">Expense Type</div>
-            <div class="col col-4">Remark</div>
-            <div class="col col-5">Amount</div>
-            
-        </li>
-        {%for misc in misc_detail %}
-        <li class="table-row">
-          <div class="col col-1"><a href="/edit_misc_entry/{{misc.id}}">{{ misc.id}}</a></div>
-          <div class="col col-2" >{{misc.date}}</div>
-          <div class="col col-3" >{{misc.expense_type}}</div>
-          <div class="col col-4" >{{misc.remark}}</div>
-          <div class="col col-5" >{{misc.amount}}</div>
-        </li>
-        {% endfor %}
-
-  </ul>
+    <table class="custom-table">
+        <thead >
+            <tr>
+                <td>Bill No</td>
+                <td>Date</td>
+                <td>Expense Type</td>
+                <td>Remark</td>
+                <td>Amount</td>
+            </tr>
+        </thead>
+        <tbody>
+            {%for misc in misc_detail %}
+            <tr>
+                <td><a href="/edit_misc_entry/{{misc.id}}">{{ misc.id}}</a></td>
+                <td>{{misc.date}}</td>
+                <td>{{misc.expense_type}}</td>
+                <td>{{misc.remark}}</td>
+                <td>{{misc.amount}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+        
 
     <div class="page-top-mid1">
             <ul class="page-mid2">

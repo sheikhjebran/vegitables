@@ -20,30 +20,32 @@
     
     <div class="clearfix"> </div>
 
-    <ul class="responsive-table">
-        <li class="table-header">
-            <div class="col col-1">Bill No</div>
-            <div class="col col-2">Date</div>
-            <div class="col col-3">Lorry Number</div>
-            <div class="col col-4">Farmer Name</div>
-            <div class="col col-5">Total Weight</div>
-            <div class="col col-6">Advance</div>
-            <div class="col col-7">Net amount</div>
-            
-        </li>
-        {%for patti in patti_entry_detail %}
-        <li class="table-row">
-          <div class="col col-1"><a href="/edit_patti_entry/{{patti.id}}">{{ patti.id}}</a></div>
-          <div class="col col-2" >{{patti.date}}</div>
-          <div class="col col-3" >{{patti.lorry_no}}</div>
-          <div class="col col-4" >{{patti.farmer_name}}</div>
-          <div class="col col-5" >{{patti.total_weight}}</div>
-          <div class="col col-6" >{{patti.advance}}</div>
-          <div class="col col-7" >{{patti.net_amount}}</div>
-        </li>
-        {% endfor %}
-
-  </ul>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <td>Bill No</td>
+                <td>Date</td>
+                <td>Lorry Number</td>
+                <td>Farmer Name</td>
+                <td>Total Weight</td>
+                <td>Advance</td>
+                <td>Net amount</td>
+            </tr>
+        </thead>
+        <tbody>
+            {%for patti in patti_entry_detail %}
+                <tr>
+                    <td><a href="/edit_patti_entry/{{patti.id}}">{{ patti.id}}</a></td>
+                    <td>{{patti.date}}</td>
+                    <td>{{patti.lorry_no}}</td>
+                    <td>{{patti.farmer_name}}</td>
+                    <td>{{patti.total_weight}}</td>
+                    <td>{{patti.advance}}</td>
+                    <td>{{patti.net_amount}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <div class="page-top-mid1">
             <ul class="page-mid2">

@@ -18,23 +18,29 @@
     </div>
     <div class="clearfix"> </div>
 
-    <ul class="responsive-table">
-        <li class="table-header">
-            <div class="col col-1">Bill No</div>
-            <div class="col col-2">Customer Name</div>
-            <div class="col col-3">Date</div>
-            <div class="col col-7">total amount</div>
-        </li>
-        {%for sales_bill in sales_bill_detail %}
-        <li class="table-row">
-          <div class="col col-1"><a href="/edit_sales_bill_entry/{{sales_bill.id}}">{{ sales_bill.id}}</a></div>
-          <div class="col col-2" >{{sales_bill.customer_name}}</div>
-          <div class="col col-2" >{{sales_bill.date}}</div>
-          <div class="col col-2" >{{sales_bill.total_amount}}</div>
-        </li>
-        {% endfor %}
+    
+        <table class="custom-table">
+            <thead >
+                <tr>
+                    <td>Bill No</td>
+                    <td>Customer Name</td>
+                    <td>Date</td>
+                    <td>Total amount</td>
+                </tr>
+            </thead>
+            <tbody>
+                {%for sales_bill in sales_bill_detail %}
+                <tr>
+                    <td><a href="/edit_sales_bill_entry/{{sales_bill.id}}">{{ sales_bill.id}}</a></td>
+                    <td>{{sales_bill.customer_name}}</td>
+                    <td>{{sales_bill.date}}</td>
+                    <td>{{sales_bill.total_amount}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
 
-  </ul>
 
     <div class="page-top-mid1">
             <ul class="page-mid2">
