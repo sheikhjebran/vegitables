@@ -1,80 +1,90 @@
 
 .close_button{
-max-width: 30%;
-cursor:pointer;
-}
-#dynamicTable > tbody,#dynamicTable > tr{
-width:100%;
-font-family:bold;
-padding-bottom:10px;
-}
-#dynamicTable > tbody > tr >td{
-width:20%;
-}
-
-.responsive-table  li {
-border-radius: 3px;
-padding: 25px 30px;
-display: flex;
-justify-content: space-between;
-margin-bottom: 25px;
-}
-
-.custom-select > div > select,select{
-color:#7f8c8d;
-font-size:1em;
-background:#fff;
-width:100%;
-border:1px solid #7f8c8d;
-outline:none;
-border-radius:5px;
-padding:1em;
-}
-
-#tableWrapper  tr td{
-width:10%;
-}
-#tableWrapper .comment-your{
-width:80%;
-}
-
-input[type="date"] {
-    height: 25px;
-}
-
-.custom-table{
-    width: 100%;
-}
-.custom-table >thead{
-    width: 100%;
-}
-
-.custom-table >thead> tr >td , .custom-table >tbody> tr >td {
-    width: 15%;
-    display: inline-block;
-    word-wrap:break-word;
-    height: 50px;
-    border-bottom: 1px solid rgb(2, 103, 22);
-    border-collapse: inherit;
-    padding-top: 2%;
-    padding-left: 0.95%;
-}
-
-.custom-table >thead> tr >td{
-    background-color: #232323;
-    color:aliceblue;
-    font-size: 20px;
-    font-weight: bolder;
-}
-
-.custom-table >tbody> tr >td{
-    font-size: 20px;
-}
-
-.custom-table >tbody> tr >td> a{
-    font-weight: bolder;
-    color: rgb(0, 0, 0);
-    background-color: transparent;
-    text-decoration: underline;
+    max-width: 30%;
     cursor:pointer;
-}
+    }
+    #dynamicTable > tbody,#dynamicTable > tr{
+    width:100%;
+    font-family:bold;
+    padding-bottom:10px;
+    }
+    #dynamicTable > tbody > tr >td{
+    width:20%;
+    }
+    
+    .responsive-table  li {
+    border-radius: 3px;
+    padding: 25px 30px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    }
+    
+    .custom-select > div > select,select{
+    color:#7f8c8d;
+    font-size:1em;
+    background:#fff;
+    width:100%;
+    border:1px solid #7f8c8d;
+    outline:none;
+    border-radius:5px;
+    padding:1em;
+    }
+    
+    #tableWrapper  tr td{
+    width:10%;
+    }
+    #tableWrapper .comment-your{
+    width:80%;
+    }
+    
+    input[type="date"] {
+        height: 25px;
+    }
+    
+    .custom-table{
+        width: 100%;
+        border-spacing: 0px;
+    }
+    .custom-table >thead{
+        width: 100%;
+    }
+    
+    .custom-table >thead> tr >td , .custom-table >tbody> tr >td {
+        display: inline-block;
+        word-wrap:break-word;
+        height: 50px;
+        border-collapse: inherit;
+        padding-top: 2%;
+        padding-left: 0.95%;
+        /*border: 1px solid;*/
+        width:13%;
+    }
+    .custom-table >thead> tr >td{
+        background-color: #232323;
+        color:aliceblue;
+        font-size: 100%;
+        font-weight: bolder;
+    }
+    
+    .custom-table >tbody> tr >td{
+        font-size: 20px;
+        border-bottom: 1px solid rgb(2, 103, 22);
+    }
+    
+    .custom-table >tbody> tr >td> a{
+        font-weight: bolder;
+        color: rgb(0, 0, 0);
+        background-color: transparent;
+        text-decoration: none;
+        cursor:pointer;
+    }
+      
+    /* for the small screen */
+    @media (max-width: 800px) {
+        /* CSS that should be displayed if width is equal to or less than 800px goes here */
+        .custom-table >thead> tr >td , .custom-table >tbody> tr >td {
+            font-size: 80%;       
+        }
+    
+      }
