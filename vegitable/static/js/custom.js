@@ -417,9 +417,6 @@ $(document).ready(function(){
         $('#net_amount').val(0);
                     
         for (var index = 0; index < patti_sales_entry_list.length; index++) {
-            console.log(patti_sales_entry_list[index]['iteam_name']);
-            console.log(patti_sales_entry_list[index]['net_weight']);
-            console.log(patti_sales_entry_list[index]['lot_number']);
             
                 $('#tableWrapper')
                     .children('tbody')
@@ -453,7 +450,7 @@ $(document).ready(function(){
                                     
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Weight' class= "decimal_number_only" name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
+                                            <input type='text' placeholder='Weight' class= "patti_weight decimal_number_only" name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
                                         </div>
                                     </td>
                                     <td>
@@ -463,7 +460,7 @@ $(document).ready(function(){
                                     </td>
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Amount' class= "decimal_number_only" name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
+                                            <input type='text' placeholder='Amount' class= "patti_amount decimal_number_only" name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
                                         </div>
                                     </td>
                                 </tr>
@@ -475,14 +472,55 @@ $(document).ready(function(){
 
     });
 
+    $(document).on("keyup", ".patti_weight", function() {
+        var local_patti_weight = 0
+        $(".patti_weight").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_weight = local_patti_weight+my_value;
+        });
+        $('#total_weight').val(local_patti_weight);
+        
+    });
 
-    $(document).on("change", ".patti_rate", function() {
+    $(document).on("keyup", ".patti_rate", function() {
         var rate_id = $(this).attr("id");
         var rate_value = $(this).val();
         
         var res = rate_id.split("_");
 
+        var local_patti_weight = 0
+        $(".patti_weight").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_weight = local_patti_weight+my_value;
+        });
+
+        var local_patti_rate = 0
+        $(".patti_rate").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_rate = local_patti_rate+my_value;
+        });
+
+        var local_patti_amount = 0
+        $(".patti_amount").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_amount = local_patti_amount+my_value;
+        });
+
+
         var netweigth = $(`#`+res[0]+`_weight`).val();
+
         var amount  = ((rate_value*2)*netweigth)/100;
         $(`#`+res[0]+`_amount`).val(amount);
 
@@ -490,7 +528,7 @@ $(document).ready(function(){
         
         local_weight[`#`+res[0]+`_weight`] = netweigth;
 
-        global_amount = 0;
+        /*global_amount = 0;
         for (var [key, value] of Object.entries(local_amount)) {
             global_amount = parseFloat(global_amount) + parseFloat(value);
         }
@@ -498,12 +536,13 @@ $(document).ready(function(){
         global_weight = 0;
         for (var [key, value] of Object.entries(local_weight)) {
             global_weight = parseFloat(global_weight) + parseFloat(value);        }
-
+        */
+       
         var advance_amount = $('#advance_amount').val();
         var hamali = $('#hamali').val();
 
-        $('#total_weight').val(global_weight);
-        $('#net_amount').val(global_amount-parseFloat(advance_amount)-parseFloat(hamali));
+        $('#total_weight').val(local_patti_weight);
+        $('#net_amount').val(local_patti_amount-parseFloat(advance_amount)-parseFloat(hamali));
 
     });
 

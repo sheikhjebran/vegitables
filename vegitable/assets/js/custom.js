@@ -58,6 +58,8 @@ $(document).ready(function(){
         
         var res = lot_number_Id.split("_");
         var iteam_name = `#`+res[0]+`_iteam_name`;
+        var iteam_qty = `#`+res[0]+`_qty`;
+        var iteam_list = ""
 
         $.ajax({
             url: "/get_arrival_goods_iteam_name",
@@ -66,13 +68,21 @@ $(document).ready(function(){
                 "selected_lot": selected_lot
             },
             type:'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
             success: function (data) {
-                $(iteam_name).val(data.iteam_name_list);
-        },
+                iteam_list = data.iteam_name_list;
+            },
             error: function(){
                 console.log("error");
                 }        
-            });
+        });
+
+        for (var [key, value] of Object.entries(iteam_list)) {
+            $(iteam_name).val(key);
+            $(iteam_qty).val(value);
+        }
 
     });
 
@@ -93,17 +103,23 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" required=''>
+
+                        <select  name ="`+counter+`_iteam_name" id ="`+counter+`_iteam_name">
+                                    <option value="Onion">Onion</option>
+                                    <option selected="true"value="Potato">Potato</option>
+                                    <option value="Ginger">Ginger</option>
+                                    <option value="Garlic">Garlic</option>
+                                </select>
                     </div>
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Qty' id ="`+counter+`_qty" name ="`+counter+`_qty" class="qty_validation" required=''>
+                        <input type='text' placeholder='Qty'  id ="`+counter+`_qty" name ="`+counter+`_qty" class="qty_validation number_only" required=''>
                     </div>
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Weight' name ="`+counter+`_weight" required=''>
+                        <input type='text' placeholder='Weight' name ="`+counter+`_weight" class="decimal_number_only" required=''>
                     </div>
                 </td>
                 <td>
@@ -113,7 +129,7 @@ $(document).ready(function(){
                 </td>
                 <td>
                     <div class='comment-your'>
-                        <input type='text' placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
+                        <input type='text' class="decimal_number_only" placeholder='Advance Amount' value="0" name ="`+counter+`_advance_amount" required=''>
                     </div>
                 </td>
                 <td>
@@ -126,28 +142,31 @@ $(document).ready(function(){
         );counter=counter+1
     });
 
+    
 
     $(document).on("keyup", ".qty_validation", function() {
-        var element_name = $(this).attr("name");
-        var element_value = $(this).val();
-        //var arrival_qty_list = {}
-        arrival_qty_list[element_name] = parseInt(element_value);
 
-        
         var total = 0;
-        for (var [key, value] of Object.entries(arrival_qty_list)) {
-            if(Number.isNaN(value)){
-                value= 0;
+
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
             }
             
-            total = total+parseInt(value);
+            total = total+my_value;
             
-          }
-
+        });
+        
         if(total==parseInt($("#total_number_of_bags").val())){
             $("#save").show();
         }else{
             $("#save").hide();
+        }
+        if(total>parseInt($("#total_number_of_bags").val())){
+            alert("Number of bags are more than Arrival bag count !");
         }
 
     });
@@ -156,34 +175,49 @@ $(document).ready(function(){
     $(document).on("click", ".close_button", function() {
         //Get the element name
         var element_name = $(this).attr("name");
+        // Delete the child
+        $('#'+element_name+'_child').remove();
 
-        if($('#'+element_name+'_qty').length){
-            var local_qty_element = $('#'+element_name+'_qty').attr("name");
-            arrival_qty_list[local_qty_element] = 0;
+        var total = 0;
 
-            var total = 0;
-            for (var [key, value] of Object.entries(arrival_qty_list)) {
-                if(Number.isNaN(value)){
-                    value= 0;
-                }
-                total = total+parseInt(value);
+        $(".qty_validation").each(function (index, element) {
+            
+            var my_value =parseInt($(element).val()); 
+            
+            if(Number.isNaN(my_value)){
+                my_value= 0;
             }
-
-            if(total==parseInt($("#total_number_of_bags").val())){
-                $("#save").show();
-            }else{
-                $("#save").hide();
-            }
-
+            
+            total = total+my_value;
+            
+        });
+        
+        if(total==parseInt($("#total_number_of_bags").val())){
+            $("#save").show();
         }else{
-            alert("Element does not exists");
+            $("#save").hide();
+        }
+        
+    });
+    
+    $(document).on("keyup", ".sales_bag_count", function() {
+
+        var bag_count = $(this).val();
+        var bag_id = $(this).attr("name");
+        
+        var res = bag_id.split("_");
+        var qty = `#`+res[0]+`_qty`;
+
+        if (parseInt(bag_count) > parseInt($(qty).val())){
+            alert("Please enter a bag count less than or equal to "+$(qty).val());
+            $(this).val("");
         }
         
 
-        // Delete the child
-        $('#'+element_name+'_child').remove();
     });
-    
+
+
+
     $(document).on("click", "#add_sales_entry_list", function() {
     
         var iteam_goods_list = "";
@@ -229,27 +263,28 @@ $(document).ready(function(){
         <td>
             <div class='comment-your'>
                 <input type='text' placeholder='Iteam Name' name ="`+counter+`_iteam_name" id="`+counter+`_iteam_name" required='' readonly>
+                <input type='text' placeholder='qty' name ="`+counter+`_qty" id="`+counter+`_qty" required='' readonly hidden>
             </div>
         </td>
         
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Bags' name ="`+counter+`_bags" required=''>
+                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="`+counter+`_bags" required=''>
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Net Weigth' name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
+                <input type='text' placeholder='Net Weight' class= "decimal_number_only" name ="`+counter+`_net_weight" id="`+counter+`_net_weight" required=''>
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Rates' name ="`+counter+`_rates" required='' id= "`+counter+`_rates" class="calculate_amount">
+                <input type='text' placeholder='Rates' name ="`+counter+`_rates" required='' id= "`+counter+`_rates" class="calculate_amount decimal_number_only">
             </div>
         </td>
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Amount' name ="`+counter+`_amount" id= "`+counter+`_amount" required='' readonly>
+                <input type='text' placeholder='Amount' class= "decimal_number_only" name ="`+counter+`_amount" id= "`+counter+`_amount" required='' readonly>
             </div>
         </td>
         <td>
@@ -327,7 +362,6 @@ $(document).ready(function(){
             }
         });
      
-       
         var select_option = '<option selected="true" disabled="disabled">Choose Farmer Name</option>';
         for (var index = 0; index < patti_farmer_list.length; index++) {
             select_option = select_option + "<option value='"+patti_farmer_list[index]+"'>"+patti_farmer_list[index]+"</option>";
@@ -378,12 +412,11 @@ $(document).ready(function(){
         $('#advance_amount').val(farmer_advance);
         
 
-        $('#tableWrapper').children('tbody').remove()
+        $('#tableWrapper').children('tbody').children('tr').remove()
+        $('#total_weight').val(0);
+        $('#net_amount').val(0);
                     
         for (var index = 0; index < patti_sales_entry_list.length; index++) {
-            console.log(patti_sales_entry_list[index]['iteam_name']);
-            console.log(patti_sales_entry_list[index]['net_weight']);
-            console.log(patti_sales_entry_list[index]['lot_number']);
             
                 $('#tableWrapper')
                     .children('tbody')
@@ -399,23 +432,35 @@ $(document).ready(function(){
 
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Iteam Name' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" value="`+patti_sales_entry_list[index]['lot_number']+`" required='' readonly>
+                                            <input type='text' placeholder='Bag Mark' name ="`+counter+`_lot_number" id="`+counter+`_lot_number" value="`+patti_sales_entry_list[index]['lot_number']+`" required='' readonly>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Sold Bag' name ="`+counter+`_sold_bag" id="`+counter+`_sold_bagr" value="`+patti_sales_entry_list[index]['sold_qty']+`" required='' readonly>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class='comment-your'>
+                                            <input type='text' placeholder='Balance Bag' name ="`+counter+`_balance_bag" id="`+counter+`_balance_bag" value="`+patti_sales_entry_list[index]['arrival_qty']+`" required='' readonly>
                                         </div>
                                     </td>
                                     
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Weight' name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
+                                            <input type='text' placeholder='Weight' class= "patti_weight decimal_number_only" name ="`+counter+`_weight" id ="`+counter+`_weight" value="`+patti_sales_entry_list[index]['net_weight']+`" required=''>
                                         </div>
                                     </td>
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Rate' class="patti_rate" name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
+                                            <input type='text' placeholder='Rate' class="patti_rate decimal_number_only" name ="`+counter+`_rate" id="`+counter+`_rate" required=''>
                                         </div>
                                     </td>
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Amount' name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
+                                            <input type='text' placeholder='Amount' class= "patti_amount decimal_number_only" name ="`+counter+`_amount" required='' id= "`+counter+`_amount">
                                         </div>
                                     </td>
                                 </tr>
@@ -427,14 +472,55 @@ $(document).ready(function(){
 
     });
 
+    $(document).on("keyup", ".patti_weight", function() {
+        var local_patti_weight = 0
+        $(".patti_weight").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_weight = local_patti_weight+my_value;
+        });
+        $('#total_weight').val(local_patti_weight);
+        
+    });
 
-    $(document).on("change", ".patti_rate", function() {
+    $(document).on("keyup", ".patti_rate", function() {
         var rate_id = $(this).attr("id");
         var rate_value = $(this).val();
         
         var res = rate_id.split("_");
 
+        var local_patti_weight = 0
+        $(".patti_weight").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_weight = local_patti_weight+my_value;
+        });
+
+        var local_patti_rate = 0
+        $(".patti_rate").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_rate = local_patti_rate+my_value;
+        });
+
+        var local_patti_amount = 0
+        $(".patti_amount").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_amount = local_patti_amount+my_value;
+        });
+
+
         var netweigth = $(`#`+res[0]+`_weight`).val();
+
         var amount  = ((rate_value*2)*netweigth)/100;
         $(`#`+res[0]+`_amount`).val(amount);
 
@@ -442,7 +528,7 @@ $(document).ready(function(){
         
         local_weight[`#`+res[0]+`_weight`] = netweigth;
 
-        global_amount = 0;
+        /*global_amount = 0;
         for (var [key, value] of Object.entries(local_amount)) {
             global_amount = parseFloat(global_amount) + parseFloat(value);
         }
@@ -450,12 +536,13 @@ $(document).ready(function(){
         global_weight = 0;
         for (var [key, value] of Object.entries(local_weight)) {
             global_weight = parseFloat(global_weight) + parseFloat(value);        }
-
+        */
+       
         var advance_amount = $('#advance_amount').val();
         var hamali = $('#hamali').val();
 
-        $('#total_weight').val(global_weight);
-        $('#net_amount').val(global_amount-parseFloat(advance_amount)-parseFloat(hamali));
+        $('#total_weight').val(local_patti_weight);
+        $('#net_amount').val(local_patti_amount-parseFloat(advance_amount)-parseFloat(hamali));
 
     });
 
@@ -478,8 +565,28 @@ $(document).ready(function(){
 
     });
 
+    // Code to allow only numbers
+    $(document).on("input", ".number_only", function() {
+        this.value = this.value.replace(/\D/g,'');
+    });
 
+    $(document).on("input", ".decimal_number_only", function() {
+        var position = this.selectionStart - 1;
+        //remove all but number and .
+        var fixed = this.value.replace(/[^0-9\.]/g, '');
+        if (fixed.charAt(0) === '.')                  //can't start with .
+            fixed = fixed.slice(1);
 
+        var pos = fixed.indexOf(".") + 1;
+        if (pos >= 0)               //avoid more than one .
+            fixed = fixed.substr(0, pos) + fixed.slice(pos).replace('.', '');
+
+        if (this.value !== fixed) {
+            this.value = fixed;
+            this.selectionStart = position;
+            this.selectionEnd = position;
+        }
+    });
 
 });
 
