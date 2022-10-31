@@ -277,6 +277,7 @@ def modify_sales_bill_entry(request):
         sales_bill_entry_Obj.commission = request.POST['comission']
         sales_bill_entry_Obj.cooli = request.POST['cooli']
         sales_bill_entry_Obj.total_amount = round(float(request.POST['total_amount']), 2)
+        sales_bill_entry_Obj.Empty_data = False
 
     sales_bill_entry_Obj.save()
     print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
