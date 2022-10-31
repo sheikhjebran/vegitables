@@ -473,27 +473,53 @@ $(document).ready(function(){
     });
 
     $(document).on("keyup", ".patti_weight", function() {
+        var weight_id = $(this).attr("id");
+        var weight_value = $(this).val();
+        var res = weight_id.split("_");
+
         var local_patti_weight = 0
         $(".patti_weight").each(function (index, element) {
-            var my_value =parseFloat($(element).val()); 
+            var my_value =parseFloat($(element).val());
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
             local_patti_weight = local_patti_weight+my_value;
         });
         $('#total_weight').val(local_patti_weight);
-        
+
+        var rate_value = $(`#`+res[0]+`_rate`).val();
+        var amount  = ((rate_value*2)*weight_value)/100;
+
+        $(`#`+res[0]+`_amount`).val(amount);
+
+        var advance_amount = $('#advance_amount').val();
+        var hamali = $('#hamali').val();
+
+
+        $('#total_weight').val(local_patti_weight);
+
+        var local_patti_amount = 0
+        $(".patti_amount").each(function (index, element) {
+            var my_value =parseFloat($(element).val());
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_amount = local_patti_amount+my_value;
+        });
+
+        $('#net_amount').val(local_patti_amount - parseFloat(advance_amount)) - parseFloat(hamali);
+
     });
 
     $(document).on("keyup", ".patti_rate", function() {
         var rate_id = $(this).attr("id");
         var rate_value = $(this).val();
-        
+
         var res = rate_id.split("_");
 
         var local_patti_weight = 0
         $(".patti_weight").each(function (index, element) {
-            var my_value =parseFloat($(element).val()); 
+            var my_value =parseFloat($(element).val());
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
@@ -502,47 +528,36 @@ $(document).ready(function(){
 
         var local_patti_rate = 0
         $(".patti_rate").each(function (index, element) {
-            var my_value =parseFloat($(element).val()); 
+            var my_value =parseFloat($(element).val());
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
             local_patti_rate = local_patti_rate+my_value;
         });
 
+
+
+
+        var current_weight_single_entry = $(`#`+res[0]+`_weight`).val();
+        var amount  = ((rate_value*2)*current_weight_single_entry)/100;
+
+        $(`#`+res[0]+`_amount`).val(amount);
+
+        var advance_amount = $('#advance_amount').val();
+        var hamali = $('#hamali').val();
+
+        $('#total_weight').val(local_patti_weight);
+
         var local_patti_amount = 0
         $(".patti_amount").each(function (index, element) {
-            var my_value =parseFloat($(element).val()); 
+            var my_value =parseFloat($(element).val());
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
             local_patti_amount = local_patti_amount+my_value;
         });
 
-
-        var netweigth = $(`#`+res[0]+`_weight`).val();
-
-        var amount  = ((rate_value*2)*netweigth)/100;
-        $(`#`+res[0]+`_amount`).val(amount);
-
-        local_amount[`#`+res[0]+`_amount`] = amount;
-        
-        local_weight[`#`+res[0]+`_weight`] = netweigth;
-
-        /*global_amount = 0;
-        for (var [key, value] of Object.entries(local_amount)) {
-            global_amount = parseFloat(global_amount) + parseFloat(value);
-        }
-
-        global_weight = 0;
-        for (var [key, value] of Object.entries(local_weight)) {
-            global_weight = parseFloat(global_weight) + parseFloat(value);        }
-        */
-       
-        var advance_amount = $('#advance_amount').val();
-        var hamali = $('#hamali').val();
-
-        $('#total_weight').val(local_patti_weight);
-        $('#net_amount').val(local_patti_amount-parseFloat(advance_amount)-parseFloat(hamali));
+        $('#net_amount').val(local_patti_amount - parseFloat(advance_amount)) - parseFloat(hamali);
 
     });
 
