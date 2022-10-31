@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ["*",'127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'django_forest',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -81,7 +82,7 @@ WSGI_APPLICATION = 'vegitable.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-'''
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -109,7 +110,7 @@ DATABASES = {
         }
     }
 }
-
+'''
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -158,3 +159,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+FOREST = {
+   'FOREST_URL': 'https://api.forestadmin.com',
+   'FOREST_ENV_SECRET': '074759ee036dd4374f363a6017ab6d476613fcb911ee7274330d94dd9533f92d',
+   'FOREST_AUTH_SECRET': 'ec224c9ec2d1b8a28ff796575a8b8eda4c5b8fdbd9328187'
+}
+APPEND_SLASH=False

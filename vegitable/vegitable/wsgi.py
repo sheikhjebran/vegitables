@@ -12,5 +12,7 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vegitable.settings')
+from django_forest import init_forest
 
+init_forest()
 application = get_wsgi_application()
