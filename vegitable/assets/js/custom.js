@@ -479,7 +479,7 @@ $(document).ready(function(){
 
         var local_patti_weight = 0
         $(".patti_weight").each(function (index, element) {
-            var my_value =parseFloat($(element).val());
+            var my_value =parseFloat($(element).val()); 
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
@@ -514,12 +514,12 @@ $(document).ready(function(){
     $(document).on("keyup", ".patti_rate", function() {
         var rate_id = $(this).attr("id");
         var rate_value = $(this).val();
-
+        
         var res = rate_id.split("_");
 
         var local_patti_weight = 0
         $(".patti_weight").each(function (index, element) {
-            var my_value =parseFloat($(element).val());
+            var my_value =parseFloat($(element).val()); 
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
@@ -528,7 +528,7 @@ $(document).ready(function(){
 
         var local_patti_rate = 0
         $(".patti_rate").each(function (index, element) {
-            var my_value =parseFloat($(element).val());
+            var my_value =parseFloat($(element).val()); 
             if(Number.isNaN(my_value)){
                 my_value= 0;
             }
@@ -602,6 +602,47 @@ $(document).ready(function(){
             this.selectionEnd = position;
         }
     });
+
+    $(document).on("submit", "#arrival_entry_form", function(e){
+
+        var total_bags_count = parseInt($('#total_number_of_bags').val());
+        if (total_bags_count<=0){
+            e.preventDefault();
+            alert('Cannot have total bags count ZERO !');
+            return  false;
+        }
+        else{
+            var total = 0;
+            var ZERO_FLAG = false
+            $(".qty_validation").each(function (index, element) {
+                var my_value =parseInt($(element).val()); 
+                if(Number.isNaN(my_value)){
+                    my_value= 0;
+                }
+                if(my_value == 0){
+                    ZERO_FLAG = true;
+                }
+                total = total+my_value;
+            });
+            
+            if(total==parseInt($("#total_number_of_bags").val()) && total!=0){
+                console.log("Ready to SUBMIT .. !")
+            }else{
+                e.preventDefault();
+                if(ZERO_FLAG==true){
+                    alert("Cannt have ZERO as Qty for the iteam..!")
+                }else{
+                    if(total<=parseInt($("#total_number_of_bags").val()) && total!=0){
+                        alert('Can add few more iteam');
+                        $('#add_arrivel_entry_list').trigger('click');
+                    }
+                }
+                return  false;
+            }
+        }
+        
+    });
+
 
 });
 
