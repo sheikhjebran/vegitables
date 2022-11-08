@@ -143,6 +143,16 @@ def sales_bill_entry(request, page=10, current_page=1):
 
     return render(request, 'index.html')
 
+def profile(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        
+        return render(request, 'profile.html',
+                      {
+                          'shop_details': shop_detail_object,
+                      })
+
+    return render(request, 'index.html')
 
 def misc_entry(request, page=10, current_page=1):
     if request.user.is_authenticated:

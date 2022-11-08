@@ -22,7 +22,9 @@ urlpatterns = [
     #RestAPI
     path('get_arrival_goods_iteam_name', views.get_arrival_goods_iteam_name, name='get_arrival_goods_iteam_name'),
     path('get_arrival_goods_list', views.get_arrival_goods_list, name='get_arrival_goods_list'),
-    
+
+    #Profile URL
+    path('profile', views.profile, name='profile'),    
     
     #Misc Entry URL
     path('misc_entry', views.misc_entry, name='misc_entry'),
