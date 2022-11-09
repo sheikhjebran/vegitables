@@ -2685,7 +2685,7 @@
     "liana_version": "1.4.2",
     "stack": {
       "database_type": "mysql",
-      "orm_version": "4.1.2"
+      "orm_version": "4.1.3"
     }
   }
 }

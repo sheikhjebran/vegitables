@@ -209,7 +209,7 @@ $(document).ready(function(){
         var qty = `#`+res[0]+`_qty`;
 
         if (parseInt(bag_count) > parseInt($(qty).val())){
-            alert("Please enter a bag count less than or equal to "+$(qty).val());
+            alert($(qty).val()+" : Bags in inventory");
             $(this).val("");
         }
         
@@ -494,7 +494,9 @@ $(document).ready(function(){
 
         var advance_amount = $('#advance_amount').val();
         var hamali = $('#hamali').val();
-
+        if(Number.isNaN(hamali)){
+            hamali= 0;
+        }
 
         $('#total_weight').val(local_patti_weight);
 
@@ -507,7 +509,7 @@ $(document).ready(function(){
             local_patti_amount = local_patti_amount+my_value;
         });
 
-        $('#net_amount').val(local_patti_amount - parseFloat(advance_amount)) - parseFloat(hamali);
+        $('#net_amount').val(parseFloat(local_patti_amount) - parseFloat(advance_amount)) - parseFloat(hamali);
 
     });
 
@@ -557,26 +559,35 @@ $(document).ready(function(){
             local_patti_amount = local_patti_amount+my_value;
         });
 
-        $('#net_amount').val(local_patti_amount - parseFloat(advance_amount)) - parseFloat(hamali);
+        $('#net_amount').val(parseFloat(local_patti_amount) - parseFloat(advance_amount) - parseFloat(hamali));
 
     });
 
-    $(document).on("change", "#hamali", function() {
+    $(document).on("keyup", "#hamali", function() {
 
-        global_amount = 0;
-        for (var [key, value] of Object.entries(local_amount)) {
-            global_amount = parseFloat(global_amount) + parseFloat(value);
-        }
+        var local_patti_amount = 0
+        $(".patti_amount").each(function (index, element) {
+            var my_value =parseFloat($(element).val());
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_amount = local_patti_amount+my_value;
+        });
 
-        global_weight = 0;
-        for (var [key, value] of Object.entries(local_weight)) {
-            global_weight = parseFloat(global_weight) + parseFloat(value);        }
+        var local_patti_weight = 0
+        $(".patti_weight").each(function (index, element) {
+            var my_value =parseFloat($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            local_patti_weight = local_patti_weight+my_value;
+        });
 
         var advance_amount = $('#advance_amount').val();
         var hamali = $('#hamali').val();
 
-        $('#total_weight').val(global_weight);
-        $('#net_amount').val(global_amount-parseFloat(advance_amount)-parseFloat(hamali));
+        $('#total_weight').val(local_patti_weight);
+        $('#net_amount').val(parseFloat(local_patti_amount) - parseFloat(advance_amount) - parseFloat(hamali));
 
     });
 
@@ -633,7 +644,6 @@ $(document).ready(function(){
                     alert("Cannt have ZERO as Qty for the iteam..!")
                 }else{
                     if(total<=parseInt($("#total_number_of_bags").val()) && total!=0){
-                        alert('Can add few more iteam');
                         $('#add_arrivel_entry_list').trigger('click');
                     }
                 }
