@@ -167,6 +167,7 @@ $(document).ready(function(){
         }
         if(total>parseInt($("#total_number_of_bags").val())){
             alert("Number of bags are more than Arrival bag count !");
+            $(this).val("");
         }
 
     });
@@ -652,6 +653,66 @@ $(document).ready(function(){
         }
         
     });
+
+    $(document).on("submit", "#sales_entry_form", function(e){
+        var iteam_goods_list = "";
+        'use strict';
+
+        $.ajax({
+            url: "/get_arrival_goods_api",
+            dataType: 'json',
+            data:{
+            },
+            type: 'GET',
+            async: false,
+            cache: false,
+            timeout: 90000,
+            fail: function(){
+                iteam_goods_list="";
+            },
+            success: function(data){ 
+                iteam_goods_list = data;
+            }
+        });
+
+        var balance_qty = 0
+        for (var [key, value] of Object.entries(iteam_goods_list)) {
+            balance_qty = balance_qty+value;
+        }
+
+        var bag_total = 0;
+        var ZERO_FLAG = false
+        $(".sales_bag_count").each(function (index, element) {
+            var my_value =parseInt($(element).val()); 
+            if(Number.isNaN(my_value)){
+                my_value= 0;
+            }
+            if(my_value == 0){
+                ZERO_FLAG = true;
+            }
+            bag_total = bag_total+my_value;
+        });
+
+        if(ZERO_FLAG==true){
+            alert("Cannt have ZERO as Qty for the iteam..!")
+        }else{
+            if ((balance_qty-bag_total)<=0){
+                console.log("Ready to SUBMIT .. !")
+            }else{
+                
+                if (confirm("Would you like to add more iteam ? ") == true) {
+                    e.preventDefault();    
+                    $('#add_sales_entry_list').trigger('click');
+                  } else {
+                    text = "You canceled!";
+                  }
+                
+            }
+        }
+        
+        
+    });
+
 
 
 });

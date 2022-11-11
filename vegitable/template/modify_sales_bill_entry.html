@@ -10,7 +10,7 @@
 
             <h3 style="font-size:25px; font-weight:bold; padding-top:5%;padding-bottom:3%;">Sales <span> Bill</span></h3>
 
-            <form action = "/add_sales_bill" method = "POST">
+            <form id="sales_entry_form" action = "/add_sales_bill" method = "POST">
                 {% csrf_token %}
                 <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
