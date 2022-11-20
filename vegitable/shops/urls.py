@@ -9,6 +9,9 @@ urlpatterns = [
     # Dashboard Authentication
     path('authenticate', views.get_authenticate, name="get_authenticate"),
     path('logout', views.logout, name="logout"),
+    #Api to get Authenticated
+    path('authenticate_api', views.get_authenticate_api, name="get_authenticate_api"),
+    
 
     # dashboard URL
     path('home', views.home, name='home'),

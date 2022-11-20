@@ -816,3 +816,19 @@ def edit_patti_entry(request, patti_id):
                     "NEW": False}
                     )
     return render(request, 'index.html')
+
+
+@api_view(['GET'])
+def get_authenticate_api(request):
+    user = auth.authenticate(username=request.GET['username'], password=request.GET['password'])
+    if user is not None:
+        auth.login(request, user)
+        shop_object = Shop.objects.get(shop_owner=user.id)
+        
+        data = {'u_id': user.id,'shop_id':shop_object.id}
+        return Response(data, status=status.HTTP_200_OK)
+    else:
+        data = {'error_message': "Invalid credentials"}
+        return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+        
+    
