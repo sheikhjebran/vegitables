@@ -2682,10 +2682,10 @@
   ],
   "meta": {
     "liana": "django-forestadmin",
-    "liana_version": "1.4.2",
+    "liana_version": "1.4.11",
     "stack": {
       "database_type": "mysql",
-      "orm_version": "4.1.3"
+      "orm_version": "4.2.1"
     }
   }
 }

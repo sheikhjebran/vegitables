@@ -194,18 +194,18 @@ def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_Entry_Obj = Arrival_Entry(
-            gp_no="",
-            date=getDate_from_string(today),
-            patti_name="",
-            total_bags=0,
-            lorry_no="",
-            shop=shop_detail_object
-        )
-        arrival_Entry_Obj.save()
+        # arrival_Entry_Obj = Arrival_Entry(
+        #     gp_no="",
+        #     date=getDate_from_string(today),
+        #     patti_name="",
+        #     total_bags=0,
+        #     lorry_no="",
+        #     shop=shop_detail_object
+        # )
+        # arrival_Entry_Obj.save()
 
         return render(request, 'modify_arrival_entry.html', {
-            "arrival_detail": arrival_Entry_Obj,
+            # "arrival_detail": arrival_Entry_Obj,
             "today": today,
             "NEW": True
         })

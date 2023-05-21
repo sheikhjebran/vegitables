@@ -6,3 +6,6 @@ pip-check
 pip-upgrader
 whitenoise
 mysqlclient
+reportlab
+rotation-forest
+django-forestadmin
