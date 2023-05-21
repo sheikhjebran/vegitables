@@ -20,7 +20,7 @@
                 </div>
                 <div class="comment-your" style="width:45%;margin-bottom:2%; margin-left:3%">
                     <span>Date</span>
-                    <input type="date" name = "arrival_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
+                    <input type="date" name = "arrival_entry_date" class="arrival_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
                 </div>
                 
                 <div class="clearfix"> </div>
@@ -46,7 +46,7 @@
                 
                 <div class="comment-your" style="width:45%;margin-bottom:2%">
                     <span>Lorry No</span>
-                    <input type="text" placeholder="Lorry Number" name="lorry_number" value="{{arrival_detail.lorry_no}}" required="">
+                    <input type="text" placeholder="Lorry Number" class="arrival_entry_lorry_number" name="lorry_number" value="{{arrival_detail.lorry_no}}" required="">
                 </div>
                 <div class="clearfix"> </div>
 
