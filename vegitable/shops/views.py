@@ -194,18 +194,18 @@ def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_Entry_Obj = Arrival_Entry(
-            gp_no="",
-            date=getDate_from_string(today),
-            patti_name="",
-            total_bags=0,
-            lorry_no="",
-            shop=shop_detail_object
-        )
-        arrival_Entry_Obj.save()
+        # arrival_Entry_Obj = Arrival_Entry(
+        #     gp_no="",
+        #     date=getDate_from_string(today),
+        #     patti_name="",
+        #     total_bags=0,
+        #     lorry_no="",
+        #     shop=shop_detail_object
+        # )
+        # arrival_Entry_Obj.save()
 
         return render(request, 'modify_arrival_entry.html', {
-            "arrival_detail": arrival_Entry_Obj,
+            # "arrival_detail": arrival_Entry_Obj,
             "today": today,
             "NEW": True
         })
@@ -440,7 +440,20 @@ def get_arrival_goods_api(request):
         mylist[iteam.id] = iteam.qty
 
     return JsonResponse(mylist,status=status.HTTP_200_OK)
-    #return Response(data, status=status.HTTP_200_OK)
+    
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_arrival_duplicate_validation_api(request):
+    [...]
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    respones = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(date=request.GET['date'])
+
+    if respones.count() <= 0:
+        return JsonResponse(data = {'NOT_FOUND': True},status=status.HTTP_200_OK)
+    else:
+        return JsonResponse(data = {'NOT_FOUND': False},status=status.HTTP_404_NOT_FOUND)
+    
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
