@@ -1,12 +1,9 @@
-from multiprocessing import Value
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import permissions
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
@@ -143,18 +140,18 @@ def sales_bill_entry(request, page=10, current_page=1):
 
     return render(request, 'index.html')
 
+
 def profile(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
         return render(request, 'profile.html',
-                        {
-                            'shop_details': shop_detail_object,
-                        })
+                      {
+                          'shop_details': shop_detail_object,
+                      })
     else:
         return render(request, 'index.html')
 
-    
 
 def misc_entry(request, page=10, current_page=1):
     if request.user.is_authenticated:
@@ -211,10 +208,12 @@ def add_new_arrival_entry(request):
         })
     return render(request, 'index.html')
 
+
 def add_new_misc_entry(request):
     if request.user.is_authenticated:
         return render(request, 'modify_misc_entry.html', {'misc_detail': "NEW"})
     return render(request, 'index.html')
+
 
 def add_new_patti_entry(request):
     if request.user.is_authenticated:
@@ -234,11 +233,12 @@ def add_new_patti_entry(request):
         patti_bill_detail.save()
 
         return render(request, 'modify_patti_entry.html',
-                    {'patti_bill_detail': patti_bill_detail,
-                    "today": today,
-                    "NEW": True}
-                    )
+                      {'patti_bill_detail': patti_bill_detail,
+                       "today": today,
+                       "NEW": True}
+                      )
     return render(request, 'index.html')
+
 
 def navigate_to_add_sales_bill_entry(request):
     if request.user.is_authenticated:
@@ -268,6 +268,7 @@ def navigate_to_add_sales_bill_entry(request):
             "today": today
         })
     return render(request, 'index.html')
+
 
 def modify_sales_bill_entry(request):
     if request.user.is_authenticated:
@@ -302,6 +303,7 @@ def modify_sales_bill_entry(request):
         add_sales_bill_iteam(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
+
 
 def add_sales_bill_iteam(request, request_list, sales):
     if request.user.is_authenticated:
@@ -357,7 +359,8 @@ def add_sales_bill_iteam(request, request_list, sales):
             sales_bill_entry_Obj.save()
 
             print(f"New Sales Bill Iteam  = {sales_bill_entry_Obj.id}")
-    return render(request,'index.html')
+    return render(request, 'index.html')
+
 
 @csrf_protect
 def add_misc_entry(request):
@@ -385,8 +388,9 @@ def add_misc_entry(request):
         misc_entry_Obj.save()
         print(f"New arrival entry  = {misc_entry_Obj.id}")
         return misc_entry(request)
-    
+
     return render(request, 'index.html')
+
 
 @csrf_protect
 def edit_misc_entry(request, misc_id):
@@ -395,10 +399,12 @@ def edit_misc_entry(request, misc_id):
         return render(request, 'modify_misc_entry.html', {'misc_detail': misc_detail_obj})
     return render(request, 'index.html')
 
+
 def total_amount_misc_entry(request):
     if request.user.is_authenticated:
         return render(request, 'misc_total_iframe.html')
     return render(request, 'index.html')
+
 
 @csrf_protect
 def modify_arrival(request, arrival_id):
@@ -409,8 +415,8 @@ def modify_arrival(request, arrival_id):
         today = arrival_entry_obj.date
 
         return render(request, 'modify_arrival_entry.html',
-                    {'arrival_detail': arrival_entry_obj, 'arrival_goods_objs': arrival_goods_objs, 'NEW': False,
-                    "today": today})
+                      {'arrival_detail': arrival_entry_obj, 'arrival_goods_objs': arrival_goods_objs, 'NEW': False,
+                       "today": today})
     return render(request, 'index.html')
 
 
@@ -428,32 +434,34 @@ def get_arrival_goods_iteam_name(request):
     data = {'iteam_name_list': iteam_name_list}
     return Response(data, status=status.HTTP_200_OK)
 
+
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_api(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_goods_obj = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1) 
+    arrival_goods_obj = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
     mylist = {}
     for iteam in arrival_goods_obj:
         mylist[iteam.id] = iteam.qty
 
-    return JsonResponse(mylist,status=status.HTTP_200_OK)
-    
+    return JsonResponse(mylist, status=status.HTTP_200_OK)
+
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_duplicate_validation_api(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    respones = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(date=request.GET['date'])
+    respones = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
+        date=request.GET['date'])
 
     if respones.count() <= 0:
-        return JsonResponse(data = {'NOT_FOUND': True},status=status.HTTP_200_OK)
+        return JsonResponse(data={'NOT_FOUND': True}, status=status.HTTP_200_OK)
     else:
-        return JsonResponse(data = {'NOT_FOUND': False},status=status.HTTP_404_NOT_FOUND)
-    
+        return JsonResponse(data={'NOT_FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
@@ -500,8 +508,9 @@ def add_arrival(request):
         add_arrival_goods_iteam(request, list(request.POST), arrival_Entry_Obj, shop_detail_object)
 
         return home(request)
-    
+
     return render(request, 'index.html')
+
 
 def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
     if request.user.is_authenticated:
@@ -573,6 +582,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 arrival_Goods_obj.save()
                 print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
     return render(request, 'index.html')
+
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
@@ -761,6 +771,7 @@ def add_patti_iteam_list(request, request_list, patti_entry_obj):
 
     return render(request, 'index.html')
 
+
 def generate_pdf(request):
     # Create a byte stream buffer
     buf = io.BytesIO()
@@ -796,7 +807,6 @@ def generate_pdf(request):
 
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
-    
     if request.user.is_authenticated:
         sales_obj = Sales_Bill_Entry.objects.get(pk=sales_id)
         sales_iteam_objs = Sales_Bill_Iteam.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
@@ -805,12 +815,12 @@ def edit_sales_bill_entry(request, sales_id):
         arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
         return render(request, 'modify_sales_bill_entry.html',
-                    {'sales_bill_detail': False,
-                    "arrival_goods_detail": arrival_detail_object,
-                    "sales_obj": sales_obj,
-                    "sales_iteam_objs": sales_iteam_objs
-                    }
-                    )
+                      {'sales_bill_detail': False,
+                       "arrival_goods_detail": arrival_detail_object,
+                       "sales_obj": sales_obj,
+                       "sales_iteam_objs": sales_iteam_objs
+                       }
+                      )
     return render(request, 'index.html')
 
 
@@ -823,11 +833,11 @@ def edit_patti_entry(request, patti_id):
         patti_entry_obj = Patti_entry_list.objects.filter(patti=patti_bill_detail)
 
         return render(request, 'modify_patti_entry.html',
-                    {'patti_bill_detail': patti_bill_detail,
-                    "today": today,
-                    "patti_entry_obj":patti_entry_obj,
-                    "NEW": False}
-                    )
+                      {'patti_bill_detail': patti_bill_detail,
+                       "today": today,
+                       "patti_entry_obj": patti_entry_obj,
+                       "NEW": False}
+                      )
     return render(request, 'index.html')
 
 
@@ -837,11 +847,19 @@ def get_authenticate_api(request):
     if user is not None:
         auth.login(request, user)
         shop_object = Shop.objects.get(shop_owner=user.id)
-        
-        data = {'u_id': user.id,'shop_id':shop_object.id}
+
+        data = {'u_id': user.id, 'shop_id': shop_object.id}
         return Response(data, status=status.HTTP_200_OK)
     else:
         data = {'error_message': "Invalid credentials"}
         return Response(data, status=status.HTTP_401_UNAUTHORIZED)
-        
-    
+
+
+@csrf_protect
+def report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        return render(request, 'report.html', {
+            'shop_details': shop_detail_object,
+        })
+    return render(request, 'index.html')
