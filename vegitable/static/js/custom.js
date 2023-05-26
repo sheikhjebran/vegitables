@@ -11,6 +11,10 @@ $(document).ready(function () {
     const total_amount = $("#total_amount");
     const amount_validation = $(".amount_validation");
 
+    // Report entry variable
+    const report_main_option = $(".report_choice");
+
+
     var global_amount = 0;
     var counter = 1;
     var arrival_qty_list = {};
@@ -18,16 +22,25 @@ $(document).ready(function () {
     var local_amount = {};
     var local_weight = {};
 
-    //logic to calculate rmc , commision, cooli
-    rates_input_boxs.on("keyup change",Calculate_Rmc_Commission_Cooli);
-    cooli_input_box.on("keyup change",Calculate_Cooli);
+    //logic to calculate rmc , commission, cooli
+    $(document).on("keyup change", ".calculate_amount", function () {
+        var rate_id = $(this).attr("id");
+        var rate_value = $(this).val();
+        Calculate_Rmc_Commission_Cooli(rate_id,rate_value);
+    });
 
+    $(document).on("keyup change", "#cooli", function () {
+        Calculate_Cooli();
+    });
 
-
+    $(document).on("focus", ".add_new_sales_custom_select", function () {
+        $(this).click();
+        console.log("Hello world!");
+    });
 
     function get_total_amount_from_sales_entry_form(){
         var local_total_amount = 0;
-        amount_validation.each(function (index, element) {
+        $(".amount_validation").each(function (index, element) {
           var my_value = parseFloat($(element).val());
           if (Number.isNaN(my_value)) {
             my_value = 0;
@@ -36,9 +49,9 @@ $(document).ready(function () {
         });
         return local_total_amount;
     }
-    function Calculate_Rmc_Commission_Cooli(){
-        var rate_id = $(this).attr("id");
-        var rate_value = $(this).val();
+    function Calculate_Rmc_Commission_Cooli(rate_id,rate_value){
+        var rate_id = rate_id;
+        var rate_value = rate_value;
         var res = rate_id.split("_");
         var net_weight = `#` + res[0] + `_net_weight`;
         var net_weight_value = $(net_weight).val();
@@ -46,6 +59,7 @@ $(document).ready(function () {
         var amount = parseFloat((rate_value * 2 * net_weight_value) / 100).toFixed(2);
 
         $(`#` + res[0] + `_amount`).val(amount);
+
         var global_amount = parseFloat(get_total_amount_from_sales_entry_form()).toFixed(2);
 
         rmc_input_box.val(parseFloat(global_amount * 0.006).toFixed(2));
@@ -58,11 +72,7 @@ $(document).ready(function () {
           cooli_value = 0;
         }
 
-        var final_value =
-            parseFloat(rmc_value) +
-          parseFloat(comission_value) +
-          parseFloat(cooli_value) +
-          parseFloat(global_amount);
+        var final_value = parseFloat(rmc_value) + parseFloat(comission_value) + parseFloat(cooli_value) + parseFloat(global_amount);
 
         total_amount.val(parseFloat(final_value).toFixed(2));
     }
