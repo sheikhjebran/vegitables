@@ -37,7 +37,7 @@
                 <div class="radio-bottom radio-bottom5">
 					{% if sales_bill_detail %}
                         <span class="mid-radio">
-                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" checked>
+                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash">
                             <label for="sales_enrty_cash">Cash<i></i></label>
                         </span>
                         <span class="mid-radio">
@@ -54,7 +54,10 @@
                             <label for="sales_entry_credit">Credit<i></i></label>
                         </span>
                     {% endif %}
-					
+					<span class="mid-radio">
+                            <input type="radio" id="sales_entry_upi" name="payment_mode" value = "upi">
+                            <label for="sales_entry_upi">Upi/Cheque<i></i></label>
+                    </span>
 				</div>
                 <div class="clearfix"> </div>
 
@@ -204,6 +207,16 @@
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Total Amount</span>
                     <input type="text" placeholder="0" id= "total_amount" name = "total_amount" required="" value="{{sales_obj.total_amount}}" readonly>
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Paid Amount</span>
+                    <input type="text" placeholder="0" id= "paid_amount" name = "paid_amount" required="" value="{{sales_obj.paid_amount}}" >
+                </div>
+                <div class="clearfix"> </div>
+                <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
+                    <span>Balance Amount</span>
+                    <input type="text" placeholder="0" id= "balance_amount" name = "balance_amount" required="" value="{{sales_obj.balance_amount}}" >
                 </div>
                 <div class="clearfix"> </div>
 

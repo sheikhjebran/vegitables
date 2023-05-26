@@ -88,3 +88,11 @@ input[type="date"] {
     }
 
   }
+
+.top_height_30{
+margin-top: 10%
+}
+
+.top-menu li a {
+cursor:pointer
+}
