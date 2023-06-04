@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 import mimetypes
+from decouple import config
+
 mimetypes.add_type("text/css", ".css", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -81,34 +83,34 @@ WSGI_APPLICATION = 'vegitable.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'vegitable_shop',
-        'USER': 'root',
-        'PASSWORD': 'uc472bmt',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+if config('USE_CLOUD_DB', cast=bool, default=False):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'PrashantSindhe$vegitableshop',
+            'USER': 'PrashantSindhe',
+            'PASSWORD': 'admin@123',
+            'HOST': 'PrashantSindhe.mysql.pythonanywhere-services.com',
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+            }
         }
     }
-}
-'''
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'PrashantSindhe$vegitableshop',
-        'USER': 'PrashantSindhe',
-        'PASSWORD': 'admin@123',
-        'HOST': 'PrashantSindhe.mysql.pythonanywhere-services.com',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'vegitable_shop',
+            'USER': 'root',
+            'PASSWORD': 'uc472bmt',
+            'HOST': '127.0.0.1',
+            'PORT': '3306',
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+            }
         }
     }
-}'''
+    
 
 
 # Password validation
