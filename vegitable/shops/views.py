@@ -655,6 +655,7 @@ def get_sales_list_for_arrival_iteam_list(request):
     advance = 0
 
     sales_array = []
+    arrival_entry_with_no_sales = []
     for arrival_single_goods in arrival_good_object:
         print(arrival_single_goods.id)
         if float(arrival_single_goods.advance) > 0:
@@ -663,15 +664,18 @@ def get_sales_list_for_arrival_iteam_list(request):
         sales_iteam_list = Sales_Bill_Iteam.objects.filter(
             arrival_goods=arrival_single_goods
         )
-        for sales in sales_iteam_list:
-            sales_array.append(sales)
+        if len(sales_iteam_list) <= 0:
+            arrival_entry_with_no_sales.append(arrival_single_goods)
+        else:
+            for sales in sales_iteam_list:
+                sales_array.append(sales)
 
     sales_response_list = []
     for single_sales in sales_array:
-        sales_dict = {}
-        sales_dict['iteam_name'] = single_sales.iteam_name
-        sales_dict['net_weight'] = single_sales.net_weight
-        sales_dict['sold_qty'] = single_sales.bags
+        sales_dict = {
+            'iteam_name': single_sales.iteam_name,
+            'net_weight': single_sales.net_weight,
+            'sold_qty': single_sales.bags}
 
         arrival_good_object = Arrival_Goods.objects.get(
             id=single_sales.arrival_goods.id,
@@ -679,8 +683,24 @@ def get_sales_list_for_arrival_iteam_list(request):
 
         sales_dict['lot_number'] = arrival_good_object.remarks
         sales_dict['arrival_qty'] = arrival_good_object.qty
+        sales_dict['rates'] = single_sales.rates
+        sales_dict['amount'] = single_sales.amount
 
         sales_response_list.append(sales_dict)
+
+    for single_arrival_entry in arrival_entry_with_no_sales:
+        arrival_single_entry = {
+            'iteam_name': single_arrival_entry.iteam_name,
+            'net_weight': single_arrival_entry.weight,
+            'sold_qty': 0,
+            'lot_number': single_arrival_entry.remarks,
+            'arrival_qty': single_arrival_entry.qty,
+            'rates': 0,
+            'amount': 0
+        }
+        sales_response_list.append(arrival_single_entry)
+
+    sales_response_list = grouping_sales_bill_entry(sales_response_list)
 
     data = {
         'farmer_advance': advance,
@@ -688,6 +708,25 @@ def get_sales_list_for_arrival_iteam_list(request):
     }
 
     return Response(data, status=status.HTTP_200_OK)
+
+
+def grouping_sales_bill_entry(sales_response_list: list):
+    group_list = {}
+    response = []
+    for index, single_item in enumerate(sales_response_list):
+        if single_item['lot_number'] not in group_list:
+            group_list[single_item['lot_number']] = single_item
+        else:
+            temp_dict = group_list[single_item['lot_number']]
+            temp_dict['sold_qty'] = float(temp_dict['sold_qty'])+float(single_item['sold_qty'])
+            temp_dict['amount'] = float(temp_dict['amount'])+float(single_item['amount'])
+            temp_dict['net_weight']= float(temp_dict['net_weight'])+float(single_item['net_weight'])
+            temp_dict['rates'] = (temp_dict['amount']/temp_dict['net_weight'])*float(temp_dict['sold_qty'])
+            group_list[single_item['lot_number']] = temp_dict
+
+    for value in group_list.values():
+        response.append(value)
+    return response
 
 
 def generate_patti_pdf_bill(request):
