@@ -110,7 +110,6 @@ else:
             }
         }
     }
-    
 
 
 # Password validation
