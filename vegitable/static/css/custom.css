@@ -45,6 +45,12 @@ input[type="date"] {
 .custom-table{
     width: 100%;
     border-spacing: 0px;
+    margin-top:5%;
+}
+.custom-table-div{
+    width: 100%;
+    padding-left: 20%;
+    padding-bottom:10%;
 }
 .custom-table >thead{
     width: 100%;
@@ -279,3 +285,73 @@ cursor:pointer
     }
   }
 /* End Menu Bar */
+
+.form_background{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-top:3%;
+}
+
+.form_background .card {
+  height: 500px;
+  background-color:white;
+  padding:3% 3% 3% 3%;
+  width: 40%;
+  border-radius: 5px;
+  box-shadow: 1px 2px 3px 4px rgba(12,12,12,0.2);
+}
+.form_background .result{
+    height:5%;
+    text-align: center;
+    vertical-align: middle;
+    font-size:22px;
+    font:bolder;
+    margin-bottom:3%;
+}
+.show{
+    visibility:visible;
+    position:relative;
+}
+.hidden{
+    visibility:hidden;
+    position:absolute;
+    }
+.form_background .search_text_box{
+    height:5%;
+    text-align: center;
+    vertical-align: middle;
+    font-size:22px;
+    font:bolder;
+}
+.form_background .card table{
+    border-collapse: separate;
+    border-spacing: 0 1em;
+}
+
+.form_background .card td{
+    text-align: center;
+    vertical-align: middle;
+    font-size:22px;
+}
+.form_background .card input[type="text"]{
+    height: 50px;
+    margin-left: 2%;
+    padding-left:2%;
+    font-size:22px;
+    width:100%;
+}
+.form_background .card input[type="textarea"]{
+    height: 200px;
+    margin-left: 2%;
+    padding-left:5%;
+    font-size:22px;
+    width:100%;
+}
+
+.form_background .card button[type="submit"],.form_background .card button[type="reset"]{
+    margin-right:5%;
+    margin-left:5%;
+    width:100%;
+}

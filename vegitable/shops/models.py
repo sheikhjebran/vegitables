@@ -111,3 +111,13 @@ class Patti_entry_list(models.Model):
 
     def __str__(self):
         return f"{self.iteam}- {self.lot_no}- {self.weight}- {self.amount} - {self.patti}"
+
+
+class CustomerLedger(models.Model):
+    name = CharField(max_length=100)
+    contact = CharField(max_length=100)
+    address = CharField(max_length=400)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.name}-{self.contact}-{self.address}"

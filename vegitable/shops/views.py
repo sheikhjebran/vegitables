@@ -9,7 +9,7 @@ from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
 from .models import Misc_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
-    Arrival_Goods
+    Arrival_Goods, CustomerLedger
 import datetime
 # Report import
 from django.http import FileResponse
@@ -92,6 +92,30 @@ def home(request, page=10, current_page=1):
 
                       })
 
+    return render(request, 'index.html')
+
+
+@csrf_protect
+def customer_ledger(request, page=10, current_page=1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
+                               :page * current_page]
+        return render(request, 'customer_ledger.html', {'customer_ledger_list': customer_ledger_list})
+    return render(request, 'index.html')
+
+
+@csrf_protect
+def add_customer_ledger(request):
+    if request.user.is_authenticated:
+        customer_ledger_obj = CustomerLedger(
+            name=request.POST['name'],
+            contact=request.POST['contact'],
+            address=request.POST['address'],
+            shop=Shop.objects.get(shop_owner=request.user.id)
+        )
+        customer_ledger_obj.save()
+        return customer_ledger(request)
     return render(request, 'index.html')
 
 
@@ -718,10 +742,10 @@ def grouping_sales_bill_entry(sales_response_list: list):
             group_list[single_item['lot_number']] = single_item
         else:
             temp_dict = group_list[single_item['lot_number']]
-            temp_dict['sold_qty'] = float(temp_dict['sold_qty'])+float(single_item['sold_qty'])
-            temp_dict['amount'] = float(temp_dict['amount'])+float(single_item['amount'])
-            temp_dict['net_weight']= float(temp_dict['net_weight'])+float(single_item['net_weight'])
-            temp_dict['rates'] = (temp_dict['amount']/temp_dict['net_weight'])*float(temp_dict['sold_qty'])
+            temp_dict['sold_qty'] = float(temp_dict['sold_qty']) + float(single_item['sold_qty'])
+            temp_dict['amount'] = float(temp_dict['amount']) + float(single_item['amount'])
+            temp_dict['net_weight'] = float(temp_dict['net_weight']) + float(single_item['net_weight'])
+            temp_dict['rates'] = (temp_dict['amount'] / temp_dict['net_weight']) * float(temp_dict['sold_qty'])
             group_list[single_item['lot_number']] = temp_dict
 
     for value in group_list.values():
@@ -892,6 +916,28 @@ def get_authenticate_api(request):
     else:
         data = {'error_message': "Invalid credentials"}
         return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET'])
+def search_customer_ledger(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    customerLedgerObject = CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        name__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        contact__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        address__icontains=request.GET['search_text'])
+    response = []
+    for customer in customerLedgerObject:
+        customer_dict = {
+            'id':customer.id,
+            'name':customer.name,
+            'contact':customer.contact,
+            'address':customer.address
+        }
+        response.append(customer_dict)
+    if len(response) >= 1:
+        return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
 
 @csrf_protect
