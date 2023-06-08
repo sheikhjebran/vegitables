@@ -9,7 +9,7 @@ from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
 from .models import Misc_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
-    Arrival_Goods, CustomerLedger
+    Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
 # Report import
 from django.http import FileResponse
@@ -54,11 +54,22 @@ def customer_ledger_next_page(request, page_number):
     return customer_ledger(request, current_page=page_number + 1)
 
 
+def farmer_ledger_next_page(request, page_number):
+    return farmer_ledger(request, current_page=page_number + 1)
+
+
 def customer_ledger_prev_page(request, page_number):
     if page_number > 1:
         return customer_ledger(request, current_page=page_number - 1)
     else:
         return customer_ledger(request)
+
+
+def farmer_ledger_prev_page(request, page_number):
+    if page_number > 1:
+        return farmer_ledger(request, current_page=page_number - 1)
+    else:
+        return farmer_ledger(request)
 
 
 def misc_next_page(request, page_number):
@@ -117,6 +128,16 @@ def customer_ledger(request, page=10, current_page=1):
 
 
 @csrf_protect
+def farmer_ledger(request, page=10, current_page=1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
+                             :page * current_page]
+        return render(request, 'farmer_ledger.html', {'farmer_ledger_list': farmer_ledger_list})
+    return render(request, 'index.html')
+
+
+@csrf_protect
 def add_customer_ledger(request):
     if request.user.is_authenticated:
         customer_ledger_obj = CustomerLedger(
@@ -127,6 +148,20 @@ def add_customer_ledger(request):
         )
         customer_ledger_obj.save()
         return customer_ledger(request)
+    return render(request, 'index.html')
+
+
+@csrf_protect
+def add_farmer_ledger(request):
+    if request.user.is_authenticated:
+        farmer_ledger_obj = FarmerLedger(
+            name=request.POST['name'],
+            contact=request.POST['contact'],
+            address=request.POST['place'],
+            shop=Shop.objects.get(shop_owner=request.user.id)
+        )
+        farmer_ledger_obj.save()
+        return farmer_ledger(request)
     return render(request, 'index.html')
 
 
@@ -945,6 +980,28 @@ def search_customer_ledger(request):
             'address': customer.address
         }
         response.append(customer_dict)
+    if len(response) >= 1:
+        return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def search_farmer_ledger(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    farmerLedgerObject = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+        name__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        contact__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        place__icontains=request.GET['search_text'])
+    response = []
+    for farmer in farmerLedgerObject:
+        farmer_dict = {
+            'id': farmer.id,
+            'name': farmer.name,
+            'contact': farmer.contact,
+            'place': farmer.place
+        }
+        response.append(farmer_dict)
     if len(response) >= 1:
         return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
     else:

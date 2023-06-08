@@ -121,3 +121,13 @@ class CustomerLedger(models.Model):
 
     def __str__(self):
         return f"{self.id}-{self.name}-{self.contact}-{self.address}"
+
+
+class FarmerLedger(models.Model):
+    name = CharField(max_length=100)
+    contact = CharField(max_length=100)
+    place = CharField(max_length=400)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.name}-{self.contact}-{self.place}"
