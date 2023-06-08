@@ -71,4 +71,6 @@ urlpatterns = [
     path('customer_ledger', views.customer_ledger, name='customer_ledger'),
     path('add_customer_ledger', views.add_customer_ledger, name='add_customer_ledger'),
     path('search_customer_ledger', views.search_customer_ledger, name='search_customer_ledger'),
+    path('customer_ledger/prev/<int:page_number>', views.customer_ledger_prev_page, name="customer_ledger_prev_page"),
+    path('customer_ledger/next/<int:page_number>', views.customer_ledger_next_page, name="customer_ledger_next_page"),
 ]

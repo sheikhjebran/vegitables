@@ -50,6 +50,17 @@ def home_prev_page(request, page_number):
         return home(request)
 
 
+def customer_ledger_next_page(request, page_number):
+    return customer_ledger(request, current_page=page_number + 1)
+
+
+def customer_ledger_prev_page(request, page_number):
+    if page_number > 1:
+        return customer_ledger(request, current_page=page_number - 1)
+    else:
+        return customer_ledger(request)
+
+
 def misc_next_page(request, page_number):
     return misc_entry(request, current_page=page_number + 1)
 
@@ -928,10 +939,10 @@ def search_customer_ledger(request):
     response = []
     for customer in customerLedgerObject:
         customer_dict = {
-            'id':customer.id,
-            'name':customer.name,
-            'contact':customer.contact,
-            'address':customer.address
+            'id': customer.id,
+            'name': customer.name,
+            'contact': customer.contact,
+            'address': customer.address
         }
         response.append(customer_dict)
     if len(response) >= 1:
