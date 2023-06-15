@@ -31,14 +31,14 @@ urlpatterns = [
     # Profile URL
     path('profile', views.profile, name='profile'),
 
-    # Misc Entry URL
-    path('misc_entry', views.misc_entry, name='misc_entry'),
-    path('misc/prev/<int:page_number>', views.misc_prev_page, name="misc_prev_page"),
-    path('misc/next/<int:page_number>', views.misc_next_page, name="misc_next_page"),
-    path('add_misc_entry', views.add_new_misc_entry, name='add_new_misc_entry'),
-    path('add_misc', views.add_misc_entry, name='add_misc_entry'),
-    path('edit_misc_entry/<int:misc_id>', views.edit_misc_entry, name='edit_misc_entry'),
-    path('misc_total_iframe', views.total_amount_misc_entry, name='total_amount_misc_entry'),
+    # expenditure_entry Entry URL
+    path('expenditure_entry', views.expenditure_entry, name='expenditure_entry'),
+    path('expenditure/prev/<int:page_number>', views.expenditure_prev_page, name="expenditure_prev_page"),
+    path('expenditure/next/<int:page_number>', views.expenditure_next_page, name="expenditure_next_page"),
+    path('add_expenditure_entry', views.add_new_expenditure_entry, name='add_new_expenditure_entry'),
+    path('add_expenditure', views.add_expenditure_entry, name='add_expenditure_entry'),
+    path('edit_expenditure_entry/<int:expenditure_id>', views.edit_expenditure_entry, name='edit_expenditure_entry'),
+    path('expenditure_total_iframe', views.total_amount_expenditure_entry, name='total_amount_expenditure_entry'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),

@@ -8,9 +8,9 @@
 <div class="container">
 
     <div class="comment">
-        <form action = "add_misc_entry">
+        <form action = "add_expenditure_entry">
             <div>
-                <button type="button" class=" btn-l btn-2 " onclick="location.href = 'add_misc_entry';" style="float:right;">Add New Miscelenious Entry</button>
+                <button type="button" class=" btn-l btn-2 " onclick="location.href = 'add_expenditure_entry';" style="float:right;">Add New Expenditure Entry</button>
                 <div class="clearfix"> </div>
             </div>
         </form>
@@ -34,13 +34,13 @@
             </tr>
         </thead>
         <tbody>
-            {%for misc in misc_detail %}
+            {%for expenditure in expenditure_detail %}
             <tr>
-                <td><a href="/edit_misc_entry/{{misc.id}}">{{ misc.id}}</a></td>
-                <td>{{misc.date}}</td>
-                <td>{{misc.expense_type}}</td>
-                <td>{{misc.remark}}</td>
-                <td>{{misc.amount}}</td>
+                <td><a href="/edit_expenditure_entry/{{expenditure.id}}">{{ expenditure.id}}</a></td>
+                <td>{{expenditure.date}}</td>
+                <td>{{expenditure.expense_type}}</td>
+                <td>{{expenditure.remark}}</td>
+                <td>{{expenditure.amount}}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -50,8 +50,8 @@
 
     <div class="page-top-mid1">
             <ul class="page-mid2">
-                <li><span class="pre1"  onclick="location.href = '/misc/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
-                <li><a class="next-top1" href="/misc/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
+                <li><span class="pre1"  onclick="location.href = '/expenditure/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
+                <li><a class="next-top1" href="/expenditure/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
             </ul>
     </div>
     <div class="clearfix"> </div>
