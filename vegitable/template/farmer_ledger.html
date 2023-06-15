@@ -1,5 +1,7 @@
-{% extends 'base.html' %} {% load static %} {% block content %} {% include
-'menubar.html' %}
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'menubar.html' %}
 
 <div class="container">
   <h1 class="heading">Farmer Ledger</h1>
@@ -73,16 +75,16 @@
         </tr>
       </thead>
       <tbody>
-        {%for customer in customer_ledger_list %}
+        {%for farmer in farmer_ledger_list %}
         <tr>
           <td>
-            <a href="/edit_farmer_ledger_entry/{{customer.id}}"
-              >{{ customer.id}}</a
+            <a href="/edit_farmer_ledger_entry/{{farmer.id}}"
+              >{{ farmer.id}}</a
             >
           </td>
-          <td>{{customer.name}}</td>
-          <td>{{customer.contact}}</td>
-          <td>{{customer.place}}</td>
+          <td>{{farmer.name}}</td>
+          <td>{{farmer.contact}}</td>
+          <td>{{farmer.place}}</td>
         </tr>
         {% endfor %}
       </tbody>

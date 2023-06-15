@@ -925,6 +925,23 @@ $(document).ready(function () {
     }
   }
 
+  function update_farmer_ledger_table(result){
+    $("#tableWrapper").children("tbody").children("tr").remove();
+    for (var index = 0; index < result.length; index++) {
+        $("#tableWrapper")
+          .children("tbody")
+          .last()
+          .append(`
+            <tr>
+                    <td><a href="/edit_farmer_ledger_entry/`+result[index].id+`">`+result[index].id+`</a></td>
+                    <td>`+result[index].name+`</td>
+                    <td>`+result[index].contact+`</td>
+                    <td>`+result[index].place+`</td>
+            </tr>
+          `);
+    }
+  }
+
 
 
   $(document).on("keyup", ".customer_ledger_search_text", function () {
@@ -941,6 +958,31 @@ $(document).ready(function () {
         console.log("AJAX request successful");
         hide_show_customer_ledger_table(response.FOUND);
         update_customer_ledger_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+        hide_show_customer_ledger_table(null)
+      },
+    });
+    }
+  });
+
+  $(document).on("keyup", ".farmer_ledger_search_text", function () {
+    var search_text = $(this).val();
+    if(search_text.length >= 3){
+    $.ajax({
+      url: "/search_farmer_ledger",
+      method: "GET",
+      async: true,
+      data: {
+        search_text: search_text,
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        hide_show_customer_ledger_table(response.FOUND);
+        update_farmer_ledger_table(response.result);
       },
       error: function (xhr, status, error) {
         console.log("AJAX request failed");

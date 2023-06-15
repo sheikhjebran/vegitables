@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
-from .models import Misc_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
+from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
 # Report import
@@ -72,15 +72,15 @@ def farmer_ledger_prev_page(request, page_number):
         return farmer_ledger(request)
 
 
-def misc_next_page(request, page_number):
-    return misc_entry(request, current_page=page_number + 1)
+def expenditure_next_page(request, page_number):
+    return expenditure_entry(request, current_page=page_number + 1)
 
 
-def misc_prev_page(request, page_number):
+def expenditure_prev_page(request, page_number):
     if page_number > 1:
-        return misc_entry(request, current_page=page_number - 1)
+        return expenditure_entry(request, current_page=page_number - 1)
     else:
-        return misc_entry(request)
+        return expenditure_entry(request)
 
 
 def sales_bill_next_page(request, page_number):
@@ -157,7 +157,7 @@ def add_farmer_ledger(request):
         farmer_ledger_obj = FarmerLedger(
             name=request.POST['name'],
             contact=request.POST['contact'],
-            address=request.POST['place'],
+            place=request.POST['place'],
             shop=Shop.objects.get(shop_owner=request.user.id)
         )
         farmer_ledger_obj.save()
@@ -223,28 +223,28 @@ def profile(request):
         return render(request, 'index.html')
 
 
-def misc_entry(request, page=10, current_page=1):
+def expenditure_entry(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        misc_entry_detail = None
+        expenditure_entry_detail = None
         try:
-            misc_entry_detail = Misc_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
+            expenditure_entry_detail = Expenditure_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
                                 :page * current_page]
 
-            misc_events_today = Misc_Entry.objects.filter(shop=shop_detail_object).filter(
+            expenditure_events_today = Expenditure_Entry.objects.filter(shop=shop_detail_object).filter(
                 date=datetime.datetime.today())
             total_amount = 0
-            for entry in misc_events_today:
+            for entry in expenditure_events_today:
                 total_amount += entry.amount
                 print(entry.amount)
 
         except Exception as error:
             print(error)
 
-        return render(request, 'misc_entry.html',
+        return render(request, 'expenditure_entry.html',
                       {
                           'shop_details': shop_detail_object,
-                          'misc_detail': misc_entry_detail,
+                          'expenditure_detail': expenditure_entry_detail,
                           'current_page': current_page,
                           'total_amount': total_amount
                       })
@@ -279,9 +279,9 @@ def add_new_arrival_entry(request):
     return render(request, 'index.html')
 
 
-def add_new_misc_entry(request):
+def add_new_expenditure_entry(request):
     if request.user.is_authenticated:
-        return render(request, 'modify_misc_entry.html', {'misc_detail': "NEW"})
+        return render(request, 'modify_expenditure_entry.html', {'expenditure_detail': "NEW"})
     return render(request, 'index.html')
 
 
@@ -433,13 +433,13 @@ def add_sales_bill_iteam(request, request_list, sales):
 
 
 @csrf_protect
-def add_misc_entry(request):
+def add_expenditure_entry(request):
     if request.user.is_authenticated:
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if len(request.POST['misc_id']) <= 0:
+        if len(request.POST['expenditure_id']) <= 0:
 
-            misc_entry_Obj = Misc_Entry(
+            expenditure_entry_Obj = Expenditure_Entry(
                 date=datetime.datetime.today(),
                 expense_type=request.POST['expense_type'],
                 amount=request.POST['amount'],
@@ -448,31 +448,31 @@ def add_misc_entry(request):
 
         else:
 
-            misc_entry_Obj = Misc_Entry.objects.get(id=request.POST['misc_id'])  # object to update
-            misc_entry_Obj.date = datetime.datetime.today()
-            misc_entry_Obj.expense_type = request.POST['expense_type']
-            misc_entry_Obj.amount = request.POST['amount']
-            misc_entry_Obj.remark = request.POST['remark']
-            misc_entry_Obj.shop = shop_detail_object
+            expenditure_entry_Obj = Expenditure_Entry.objects.get(id=request.POST['expenditure_id'])  # object to update
+            expenditure_entry_Obj.date = datetime.datetime.today()
+            expenditure_entry_Obj.expense_type = request.POST['expense_type']
+            expenditure_entry_Obj.amount = request.POST['amount']
+            expenditure_entry_Obj.remark = request.POST['remark']
+            expenditure_entry_Obj.shop = shop_detail_object
 
-        misc_entry_Obj.save()
-        print(f"New arrival entry  = {misc_entry_Obj.id}")
-        return misc_entry(request)
+        expenditure_entry_Obj.save()
+        print(f"New arrival entry  = {expenditure_entry_Obj.id}")
+        return expenditure_entry(request)
 
     return render(request, 'index.html')
 
 
 @csrf_protect
-def edit_misc_entry(request, misc_id):
+def edit_expenditure_entry(request, expenditure_id):
     if request.user.is_authenticated:
-        misc_detail_obj = Misc_Entry.objects.get(pk=misc_id)
-        return render(request, 'modify_misc_entry.html', {'misc_detail': misc_detail_obj})
+        expenditure_detail_obj = Expenditure_Entry.objects.get(pk=expenditure_id)
+        return render(request, 'modify_expenditure_entry.html', {'expenditure_detail': expenditure_detail_obj})
     return render(request, 'index.html')
 
 
-def total_amount_misc_entry(request):
+def total_amount_expenditure_entry(request):
     if request.user.is_authenticated:
-        return render(request, 'misc_total_iframe.html')
+        return render(request, 'expenditure_total_iframe.html')
     return render(request, 'index.html')
 
 

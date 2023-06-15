@@ -18,7 +18,7 @@ class Shop(models.Model):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
 
-class Misc_Entry(models.Model):
+class Expenditure_Entry(models.Model):
     date = DateField()
     expense_type = CharField(max_length=50)
     amount = FloatField(max_length=100)

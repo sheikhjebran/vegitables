@@ -308,7 +308,7 @@ cursor:pointer
     vertical-align: middle;
     font-size:22px;
     font:bolder;
-
+    margin-bottom:3%;
 }
 .show{
     visibility:visible;
