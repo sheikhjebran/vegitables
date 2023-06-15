@@ -9,6 +9,7 @@
     <div class="card">
       <form action="/add_farmer_ledger" method="POST">
         {% csrf_token %}
+        <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
         <table>
           <tr>
             <td><span class="form_text">Farmer Name</span></td>
@@ -29,6 +30,7 @@
                 placeholder="+91 XXXXXXXXXX"
                 name="contact"
                 required=""
+                class="mobile"
               />
             </td>
           </tr>
@@ -64,8 +66,9 @@
       </div>
     </div>
   </div>
+
   <div class="custom-table-div">
-    <table class="custom-table" id="tableWrapper">
+        <table class="custom-table" id="tableWrapper">
       <thead>
         <tr>
           <td>Si No</td>

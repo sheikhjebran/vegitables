@@ -8,6 +8,8 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
+
+from . import util
 from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
@@ -121,6 +123,7 @@ def home(request, page=10, current_page=1):
 def customer_ledger(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = util.generate_unique_number()
         customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
                                :page * current_page]
         return render(request, 'customer_ledger.html', {'customer_ledger_list': customer_ledger_list})
@@ -131,6 +134,7 @@ def customer_ledger(request, page=10, current_page=1):
 def farmer_ledger(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = util.generate_unique_number()
         farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
                              :page * current_page]
         return render(request, 'farmer_ledger.html', {'farmer_ledger_list': farmer_ledger_list})
@@ -140,27 +144,38 @@ def farmer_ledger(request, page=10, current_page=1):
 @csrf_protect
 def add_customer_ledger(request):
     if request.user.is_authenticated:
-        customer_ledger_obj = CustomerLedger(
-            name=request.POST['name'],
-            contact=request.POST['contact'],
-            address=request.POST['address'],
-            shop=Shop.objects.get(shop_owner=request.user.id)
-        )
-        customer_ledger_obj.save()
+        if request.method == 'POST':
+            if request.POST.get('form_token') == str(request.session.get('form_token')):
+                del request.session['form_token']  # Remove the token from the session
+
+                customer_ledger_obj = CustomerLedger(
+                    name=request.POST['name'],
+                    contact=request.POST['contact'],
+                    address=request.POST['address'],
+                    shop=Shop.objects.get(shop_owner=request.user.id)
+                )
+                customer_ledger_obj.save()
+        request.session['form_token'] = util.generate_unique_number()
         return customer_ledger(request)
+
     return render(request, 'index.html')
 
 
 @csrf_protect
 def add_farmer_ledger(request):
     if request.user.is_authenticated:
-        farmer_ledger_obj = FarmerLedger(
-            name=request.POST['name'],
-            contact=request.POST['contact'],
-            place=request.POST['place'],
-            shop=Shop.objects.get(shop_owner=request.user.id)
-        )
-        farmer_ledger_obj.save()
+        if request.method == 'POST':
+            if request.POST.get('form_token') == str(request.session.get('form_token')):
+                del request.session['form_token']  # Remove the token from the session
+                farmer_ledger_obj = FarmerLedger(
+                    name=request.POST['name'],
+                    contact=request.POST['contact'],
+                    place=request.POST['place'],
+                    shop=Shop.objects.get(shop_owner=request.user.id)
+                )
+                farmer_ledger_obj.save()
+                
+        request.session['form_token'] = util.generate_unique_number()
         return farmer_ledger(request)
     return render(request, 'index.html')
 

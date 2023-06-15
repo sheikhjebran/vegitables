@@ -733,6 +733,13 @@ $(document).ready(function () {
     this.value = this.value.replace(/\D/g, "");
   });
 
+  $(document).on("input", ".mobile", function () {
+    this.value = this.value.replace(/\D/g, "");
+    if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10);
+    }
+  });
+
   $(document).on("input", ".decimal_number_only", function () {
     var position = this.selectionStart - 1;
     //remove all but number and .
