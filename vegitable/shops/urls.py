@@ -80,4 +80,9 @@ urlpatterns = [
     path('search_farmer_ledger', views.search_farmer_ledger, name='search_farmer_ledger'),
     path('farmer_ledger/prev/<int:page_number>', views.farmer_ledger_prev_page, name="farmer_ledger_prev_page"),
     path('farmer_ledger/next/<int:page_number>', views.farmer_ledger_next_page, name="farmer_ledger_next_page"),
+
+    # Inventory
+    path('inventory', views.inventory, name='inventory'),
+    path('inventory/prev/<int:page_number>', views.inventory_prev_page, name="inventory_prev_page"),
+    path('inventory/next/<int:page_number>', views.inventory_next_page, name="inventory_next_page"),
 ]

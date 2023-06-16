@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'menubar.html' %}
+
+<div class="container">
+  <h1 class="heading">Inventory</h1>
+  <div class="custom-table-div">
+    <table class="custom-table" id="tableWrapper">
+      <thead>
+        <tr>
+          <td>Date</td>
+          <td>Lot Number</td>
+          <td>Iteam Name</td>
+          <td>Qty</td>
+          <td>Sold</td>
+          <td>Balance</td>
+        </tr>
+      </thead>
+      <tbody>
+        {%for entry in entries_list %}
+        <tr>
+          <td>{{entry.date}}</td>
+          <td>{{entry.remarks}}</td>
+          <td>{{entry.iteam_name}}</td>
+          <td>{{entry.initial_qty}}</td>
+          <td>{{entry.sold_qty}}</td>
+          <td>{{entry.qty}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="page-top-mid1">
+      <ul class="page-mid2">
+        <li>
+          <span
+            class="pre1"
+            onclick="location.href = '/inventory/prev/{{current_page}}';"
+            style="cursor: pointer"
+            >PREV<i class="fa fa-arrow-left"></i
+          ></span>
+        </li>
+        <li>
+          <a class="next-top1" href="/inventory/next/{{current_page}}"
+            >NEXT<i class="fa fa-arrow-right next1"></i
+          ></a>
+        </li>
+      </ul>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+
+</div>
+
+{% endblock %}

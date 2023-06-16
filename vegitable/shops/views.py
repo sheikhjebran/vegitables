@@ -8,9 +8,11 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
+from django.db import models
 
-from . import util
-from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
+from . import utility
+from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
+    Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
 # Report import
@@ -74,6 +76,16 @@ def farmer_ledger_prev_page(request, page_number):
         return farmer_ledger(request)
 
 
+def inventory_next_page(request, page_number):
+    return inventory(request, current_page=page_number + 1)
+
+
+def inventory_prev_page(request, page_number):
+    if page_number > 1:
+        return inventory(request, current_page=page_number - 1)
+    else:
+        return inventory(request)
+
 def expenditure_next_page(request, page_number):
     return expenditure_entry(request, current_page=page_number + 1)
 
@@ -123,10 +135,10 @@ def home(request, page=10, current_page=1):
 def customer_ledger(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        request.session['form_token'] = util.generate_unique_number()
+        request.session['form_token'] = utility.generate_unique_number()
         customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
                                :page * current_page]
-        return render(request, 'customer_ledger.html', {'customer_ledger_list': customer_ledger_list})
+        return render(request, 'customer_ledger.html', {'customer_ledger_list': customer_ledger_list,'current_page':current_page})
     return render(request, 'index.html')
 
 
@@ -134,10 +146,30 @@ def customer_ledger(request, page=10, current_page=1):
 def farmer_ledger(request, page=10, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        request.session['form_token'] = util.generate_unique_number()
+        request.session['form_token'] = utility.generate_unique_number()
         farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
                              :page * current_page]
-        return render(request, 'farmer_ledger.html', {'farmer_ledger_list': farmer_ledger_list})
+        return render(request, 'farmer_ledger.html',
+                      {'farmer_ledger_list': farmer_ledger_list,
+                       'current_page': current_page})
+    return render(request, 'index.html')
+
+
+def inventory(request, page=10, current_page=1):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('date') \
+                      .annotate(
+            qty=models.F('arrival_goods__qty'),
+            remarks=models.F('arrival_goods__remarks'),
+            initial_qty=models.F('arrival_goods__initial_qty'),
+            sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
+            iteam_name=models.F('arrival_goods__iteam_name')
+        ).filter(arrival_goods__shop_id=shop_detail_object)[
+                  :page * current_page]
+
+        return render(request, 'inventory.html', {'entries_list': entries,
+                                                  'current_page':current_page})
     return render(request, 'index.html')
 
 
@@ -155,7 +187,7 @@ def add_customer_ledger(request):
                     shop=Shop.objects.get(shop_owner=request.user.id)
                 )
                 customer_ledger_obj.save()
-        request.session['form_token'] = util.generate_unique_number()
+        request.session['form_token'] = utility.generate_unique_number()
         return customer_ledger(request)
 
     return render(request, 'index.html')
@@ -174,8 +206,8 @@ def add_farmer_ledger(request):
                     shop=Shop.objects.get(shop_owner=request.user.id)
                 )
                 farmer_ledger_obj.save()
-                
-        request.session['form_token'] = util.generate_unique_number()
+
+        request.session['form_token'] = utility.generate_unique_number()
         return farmer_ledger(request)
     return render(request, 'index.html')
 
@@ -244,7 +276,7 @@ def expenditure_entry(request, page=10, current_page=1):
         expenditure_entry_detail = None
         try:
             expenditure_entry_detail = Expenditure_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
-                                :page * current_page]
+                                       :page * current_page]
 
             expenditure_events_today = Expenditure_Entry.objects.filter(shop=shop_detail_object).filter(
                 date=datetime.datetime.today())
@@ -643,6 +675,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 arrival_Goods_obj = Arrival_Goods.objects.get(id=int(local_id))
                 arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]]
                 arrival_Goods_obj.former_name = request.POST[former_name_list[i]]
+                arrival_Goods_obj.initial_qty = request.POST[qty_list[i]]
                 arrival_Goods_obj.qty = request.POST[qty_list[i]]
                 arrival_Goods_obj.advance = request.POST[advance_amount_list[i]]
                 arrival_Goods_obj.weight = request.POST[weight_list[i]]
@@ -659,6 +692,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                     arrival_entry=arrival,
                     former_name=request.POST[former_name_list[i]],
                     advance=request.POST[advance_amount_list[i]],
+                    initial_qty=request.POST[qty_list[i]],
                     qty=request.POST[qty_list[i]],
                     weight=request.POST[weight_list[i]],
                     remarks=request.POST[remarks_list[i]],
