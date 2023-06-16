@@ -8,9 +8,12 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
+from django.db import models
+from django.core.paginator import Paginator
 
-from . import util
-from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, Arrival_Entry, \
+from . import utility
+from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
+    Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
 # Report import
@@ -74,6 +77,17 @@ def farmer_ledger_prev_page(request, page_number):
         return farmer_ledger(request)
 
 
+def inventory_next_page(request, page_number):
+    return inventory(request, current_page=page_number + 1)
+
+
+def inventory_prev_page(request, page_number):
+    if page_number > 1:
+        return inventory(request, current_page=page_number - 1)
+    else:
+        return inventory(request)
+
+
 def expenditure_next_page(request, page_number):
     return expenditure_entry(request, current_page=page_number + 1)
 
@@ -97,14 +111,18 @@ def sales_bill_prev_page(request, page_number):
 
 
 @csrf_protect
-def home(request, page=10, current_page=1):
+def home(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         arrival_entry_detail = None
         try:
+
             arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(
-                Empty_data=False).order_by('-id')[
-                                   :page * current_page]
+                Empty_data=False).order_by('-id')
+            items_per_page = 10
+            paginator = Paginator(arrival_entry_detail, items_per_page)
+            arrival_entry_detail = paginator.get_page(current_page)
+
         except Exception as error:
             print(error)
 
@@ -120,24 +138,55 @@ def home(request, page=10, current_page=1):
 
 
 @csrf_protect
-def customer_ledger(request, page=10, current_page=1):
+def customer_ledger(request, current_page=1):
     if request.user.is_authenticated:
+        items_per_page = 10
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        request.session['form_token'] = util.generate_unique_number()
-        customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
-                               :page * current_page]
-        return render(request, 'customer_ledger.html', {'customer_ledger_list': customer_ledger_list})
+        request.session['form_token'] = utility.generate_unique_number()
+        customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')
+        paginator = Paginator(customer_ledger_list, items_per_page)
+        customer_ledger_list = paginator.get_page(current_page)
+        return render(request, 'customer_ledger.html',
+                      {'customer_ledger_list': customer_ledger_list, 'current_page': current_page})
     return render(request, 'index.html')
 
 
 @csrf_protect
-def farmer_ledger(request, page=10, current_page=1):
+def farmer_ledger(request, current_page=1):
+    if request.user.is_authenticated:
+        items_per_page = 10
+
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = utility.generate_unique_number()
+        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object)
+
+        paginator = Paginator(farmer_ledger_list, items_per_page)
+        farmer_ledger_list = paginator.get_page(current_page)
+
+        return render(request, 'farmer_ledger.html',
+                      {'farmer_ledger_list': farmer_ledger_list,
+                       'current_page': current_page})
+    return render(request, 'index.html')
+
+
+def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        request.session['form_token'] = util.generate_unique_number()
-        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object).order_by('-id')[
-                             :page * current_page]
-        return render(request, 'farmer_ledger.html', {'farmer_ledger_list': farmer_ledger_list})
+        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('date') \
+            .annotate(
+            qty=models.F('arrival_goods__qty'),
+            remarks=models.F('arrival_goods__remarks'),
+            initial_qty=models.F('arrival_goods__initial_qty'),
+            sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
+            iteam_name=models.F('arrival_goods__iteam_name')
+        ).filter(arrival_goods__shop_id=shop_detail_object)
+
+        items_per_page = 10
+        paginator = Paginator(entries, items_per_page)
+        entries = paginator.get_page(current_page)
+
+        return render(request, 'inventory.html', {'entries_list': entries,
+                                                  'current_page': current_page})
     return render(request, 'index.html')
 
 
@@ -155,7 +204,7 @@ def add_customer_ledger(request):
                     shop=Shop.objects.get(shop_owner=request.user.id)
                 )
                 customer_ledger_obj.save()
-        request.session['form_token'] = util.generate_unique_number()
+        request.session['form_token'] = utility.generate_unique_number()
         return customer_ledger(request)
 
     return render(request, 'index.html')
@@ -174,20 +223,22 @@ def add_farmer_ledger(request):
                     shop=Shop.objects.get(shop_owner=request.user.id)
                 )
                 farmer_ledger_obj.save()
-                
-        request.session['form_token'] = util.generate_unique_number()
+
+        request.session['form_token'] = utility.generate_unique_number()
         return farmer_ledger(request)
     return render(request, 'index.html')
 
 
-def patti_list(request, page=10, current_page=1):
+def patti_list(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         patti_entry_detail = None
         try:
             patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by(
-                '-id')[
-                                 :page * current_page]
+                '-id')
+            items_per_page = 10
+            paginator = Paginator(patti_entry_detail, items_per_page)
+            patti_entry_detail = paginator.get_page(current_page)
         except Exception as error:
             print(error)
 
@@ -201,17 +252,17 @@ def patti_list(request, page=10, current_page=1):
     return render(request, 'index.html')
 
 
-def sales_bill_entry(request, page=10, current_page=1):
+def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
         sales_entry_detail = None
         try:
             sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).filter(
-                Empty_data=False).order_by('-id')[
-                                 :page * current_page]
-
-
+                Empty_data=False).order_by('-id')
+            items_per_page = 10
+            paginator = Paginator(sales_entry_detail, items_per_page)
+            sales_entry_detail = paginator.get_page(current_page)
 
         except Exception as error:
             print(error)
@@ -238,13 +289,12 @@ def profile(request):
         return render(request, 'index.html')
 
 
-def expenditure_entry(request, page=10, current_page=1):
+def expenditure_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         expenditure_entry_detail = None
         try:
-            expenditure_entry_detail = Expenditure_Entry.objects.filter(shop=shop_detail_object).order_by('-id')[
-                                :page * current_page]
+            expenditure_entry_detail = Expenditure_Entry.objects.filter(shop=shop_detail_object).order_by('-id')
 
             expenditure_events_today = Expenditure_Entry.objects.filter(shop=shop_detail_object).filter(
                 date=datetime.datetime.today())
@@ -252,7 +302,10 @@ def expenditure_entry(request, page=10, current_page=1):
             for entry in expenditure_events_today:
                 total_amount += entry.amount
                 print(entry.amount)
-
+                
+            items_per_page = 10
+            paginator = Paginator(expenditure_entry_detail, items_per_page)
+            expenditure_entry_detail = paginator.get_page(current_page)
         except Exception as error:
             print(error)
 
@@ -643,6 +696,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 arrival_Goods_obj = Arrival_Goods.objects.get(id=int(local_id))
                 arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]]
                 arrival_Goods_obj.former_name = request.POST[former_name_list[i]]
+                arrival_Goods_obj.initial_qty = request.POST[qty_list[i]]
                 arrival_Goods_obj.qty = request.POST[qty_list[i]]
                 arrival_Goods_obj.advance = request.POST[advance_amount_list[i]]
                 arrival_Goods_obj.weight = request.POST[weight_list[i]]
@@ -659,6 +713,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                     arrival_entry=arrival,
                     former_name=request.POST[former_name_list[i]],
                     advance=request.POST[advance_amount_list[i]],
+                    initial_qty=request.POST[qty_list[i]],
                     qty=request.POST[qty_list[i]],
                     weight=request.POST[weight_list[i]],
                     remarks=request.POST[remarks_list[i]],
