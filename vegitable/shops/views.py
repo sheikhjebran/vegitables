@@ -289,32 +289,41 @@ def profile(request):
         return render(request, 'index.html')
 
 
-def expenditure_entry(request, current_page=1):
+def expenditure_entry(request, current_page=1, expenditure_detail=None):
+    total_amount = 0
+    expenditure_events_today = None
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        expenditure_entry_detail = None
         try:
-            expenditure_entry_detail = Expenditure_Entry.objects.filter(shop=shop_detail_object).order_by('-id')
 
             expenditure_events_today = Expenditure_Entry.objects.filter(shop=shop_detail_object).filter(
                 date=datetime.datetime.today())
             total_amount = 0
             for entry in expenditure_events_today:
                 total_amount += entry.amount
-                print(entry.amount)
-                
+
             items_per_page = 10
-            paginator = Paginator(expenditure_entry_detail, items_per_page)
-            expenditure_entry_detail = paginator.get_page(current_page)
+            if len(expenditure_events_today) > 0:
+                paginator = Paginator(expenditure_events_today, items_per_page)
+                expenditure_events_today = paginator.get_page(current_page)
+
         except Exception as error:
             print(error)
-
-        return render(request, 'expenditure_entry.html',
+        if expenditure_detail is None:
+            expenditure_detail = {
+                "id": None,
+                "expense_type": "Cash",
+                "amount": 0,
+                "remark": "",
+                "shop": shop_detail_object
+            }
+        return render(request, 'Entry/Expense/expenditure.html',
                       {
                           'shop_details': shop_detail_object,
-                          'expenditure_detail': expenditure_entry_detail,
+                          'expenditure_detail': expenditure_events_today,
                           'current_page': current_page,
-                          'total_amount': total_amount
+                          'total_amount': total_amount,
+                          'expenditure': expenditure_detail,
                       })
 
     return render(request, 'index.html')
@@ -503,38 +512,49 @@ def add_sales_bill_iteam(request, request_list, sales):
 @csrf_protect
 def add_expenditure_entry(request):
     if request.user.is_authenticated:
+        if request.method == 'POST':
+            if request.POST.get('form_token') == str(request.session.get('form_token')):
+                del request.session['form_token']  # Remove the token from the session
+                shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+                if request.POST['expenditure_id'] == "None":
 
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if len(request.POST['expenditure_id']) <= 0:
+                    expenditure_entry_Obj = Expenditure_Entry(
+                        date=datetime.datetime.today(),
+                        expense_type=str(request.POST['expense_type']).upper(),
+                        amount=request.POST['expense_amount'],
+                        remark=request.POST['expense_remark'],
+                        shop=shop_detail_object)
+                else:
+                    expenditure_entry_Obj = Expenditure_Entry.objects.get(
+                        id=request.POST['expenditure_id'])  # object to update
+                    expenditure_entry_Obj.date = datetime.datetime.today()
+                    expenditure_entry_Obj.expense_type = str(request.POST['expense_type']).upper()
+                    expenditure_entry_Obj.amount = request.POST['expense_amount']
+                    expenditure_entry_Obj.remark = request.POST['expense_remark']
+                    expenditure_entry_Obj.shop = shop_detail_object
 
-            expenditure_entry_Obj = Expenditure_Entry(
-                date=datetime.datetime.today(),
-                expense_type=request.POST['expense_type'],
-                amount=request.POST['amount'],
-                remark=request.POST['remark'],
-                shop=shop_detail_object)
-
-        else:
-
-            expenditure_entry_Obj = Expenditure_Entry.objects.get(id=request.POST['expenditure_id'])  # object to update
-            expenditure_entry_Obj.date = datetime.datetime.today()
-            expenditure_entry_Obj.expense_type = request.POST['expense_type']
-            expenditure_entry_Obj.amount = request.POST['amount']
-            expenditure_entry_Obj.remark = request.POST['remark']
-            expenditure_entry_Obj.shop = shop_detail_object
-
-        expenditure_entry_Obj.save()
-        print(f"New arrival entry  = {expenditure_entry_Obj.id}")
-        return expenditure_entry(request)
+                expenditure_entry_Obj.save()
+                print(f"New arrival entry  = {expenditure_entry_Obj.id}")
+            request.session['form_token'] = utility.generate_unique_number()
+            return expenditure_entry(request)
 
     return render(request, 'index.html')
 
 
 @csrf_protect
-def edit_expenditure_entry(request, expenditure_id):
+def edit_expense(request, expenditure_id):
     if request.user.is_authenticated:
-        expenditure_detail_obj = Expenditure_Entry.objects.get(pk=expenditure_id)
-        return render(request, 'modify_expenditure_entry.html', {'expenditure_detail': expenditure_detail_obj})
+        expenditure_entry_detail = Expenditure_Entry.objects.get(pk=expenditure_id)
+        return expenditure_entry(request, expenditure_detail=expenditure_entry_detail)
+    return render(request, 'index.html')
+
+
+@csrf_protect
+def delete_expense(request, expenditure_id):
+    if request.user.is_authenticated:
+        expenditure_entry_detail = Expenditure_Entry.objects.get(pk=expenditure_id)
+        expenditure_entry_detail.delete()
+        return expenditure_entry(request)
     return render(request, 'index.html')
 
 

@@ -355,3 +355,21 @@ cursor:pointer
     margin-left:5%;
     width:100%;
 }
+
+.edit_button, .delete_button{
+    border:0px;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    color:white;
+    font-size: 20px;
+
+}
+
+.edit_button{
+    background:#4b5254;
+}
+
+.delete_button{
+    background:#fe513f;
+}

@@ -33,12 +33,9 @@ urlpatterns = [
 
     # expenditure_entry Entry URL
     path('expenditure_entry', views.expenditure_entry, name='expenditure_entry'),
-    path('expenditure/prev/<int:page_number>', views.expenditure_prev_page, name="expenditure_prev_page"),
-    path('expenditure/next/<int:page_number>', views.expenditure_next_page, name="expenditure_next_page"),
-    path('add_expenditure_entry', views.add_new_expenditure_entry, name='add_new_expenditure_entry'),
     path('add_expenditure', views.add_expenditure_entry, name='add_expenditure_entry'),
-    path('edit_expenditure_entry/<int:expenditure_id>', views.edit_expenditure_entry, name='edit_expenditure_entry'),
-    path('expenditure_total_iframe', views.total_amount_expenditure_entry, name='total_amount_expenditure_entry'),
+    path('edit_expense/<int:expenditure_id>', views.edit_expense, name='edit_expense'),
+    path('delete_expense/<int:expenditure_id>', views.delete_expense, name='delete_expense'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
