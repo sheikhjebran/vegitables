@@ -1,11 +1,9 @@
-from datetime import date, timedelta, timezone
-from email.policy import default
 from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
-from django.db.models import CharField, IntegerField, FileField, ForeignKey, TextField, DateField, BooleanField, \
-    EmailField, FloatField
+from django.db.models import CharField, IntegerField, ForeignKey, DateField, BooleanField, \
+     FloatField
 
 
 class Shop(models.Model):

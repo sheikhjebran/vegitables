@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'menubar.html' %}
+
+<div class="container">
+  <h1 class="heading">Expenditure</h1>
+  <div class="form_background">
+    <div class="card">
+      <form action="/add_expenditure" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
+        <input type="hidden" name="expenditure_id" value="{{ expenditure.id }}">
+        <table>
+          <tr>
+            <td><span class="form_text">Expense Type</span></td>
+            <td>
+              <select class="custom-select" name="expense_type">
+                {% if  expenditure_id is not "None" %}
+                  <option value ="{{expenditure.expense_type}}" selected="selected">{{expenditure.expense_type}}</option>
+                {% endif %}
+                  <option value ="cash">Cash</option>
+                  <option value ="cheque">Cheque</option>
+                  <option value ="credit card">Credit Card</option>
+                  <option value ="upi">UPI</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="form_text">Expense Remark</span></td>
+            <td>
+              <input
+                type="text"
+                placeholder="Expense Remark"
+                name="expense_remark"
+                required=""
+                value="{{expenditure.remark}}"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><span class="form_text">Amount</span></td>
+            <td><input
+                    type="text"
+                    name="expense_amount"
+                    placeholder="Expense Amount"
+                    required=""
+                    class="decimal_number_only"
+                    value="{{expenditure.amount}}"
+                />
+            </td>
+          </tr>
+          <tr>
+            <td><button type="reset" class="btn-l btn-14">Clear</button></td>
+            <td><button type="submit" class="btn-l">Submit</button></td>
+          </tr>
+        </table>
+      </form>
+      <input
+                    type="text"
+                    name="today_total_amount"
+                    placeholder="{{total_amount}}"
+                    value="Total Expense = {{total_amount}} /-"
+                    class="decimal_number_only"
+                />
+    </div>
+  </div>
+  <div class="clearfix"></div>
+  <div class="search-result hidden">
+    <div class="form_background">
+      <div class="card result">
+        <h1>No Result Found ...!</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="custom-table-div">
+        <table class="custom-table" id="tableWrapper">
+      <thead>
+        <tr>
+          <td>Si No</td>
+          <td>Expense Type</td>
+          <td>Amount</td>
+          <td>Remarks</td>
+        </tr>
+      </thead>
+      <tbody>
+        {%for expenditure in expenditure_detail%}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{expenditure.expense_type}}</td>
+          <td>{{expenditure.amount}}</td>
+          <td>{{expenditure.remark}}</td>
+          <td>
+            <input type="button" value="Edit" class="edit_button" onclick="location.href = '/edit_expense/{{expenditure.id}}';"/>&nbsp;
+            <input type="button" value="Delete" class="delete_button" onclick="location.href = '/delete_expense/{{expenditure.id}}';"/>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
