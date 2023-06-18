@@ -281,9 +281,17 @@ def profile(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        return render(request, 'profile.html',
+        profile_data = {
+            "username": request.user.username,
+            "email": request.user.email,
+            "firstname": request.user.first_name,
+            "lastname": request.user.last_name,
+        }
+
+        return render(request, 'Profile/profile.html',
                       {
                           'shop_details': shop_detail_object,
+                          "profile":profile_data
                       })
     else:
         return render(request, 'index.html')
