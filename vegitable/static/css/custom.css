@@ -373,3 +373,29 @@ cursor:pointer
 .delete_button{
     background:#fe513f;
 }
+
+.profile {
+  width: 30%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  height: 30%;
+  padding-left:35%;
+}
+.profile_detail{
+  margin-top:5%;
+}
+.profile_detail  input{
+border:0;
+padding-right: inherit;
+padding-right:2%;
+}
+.td_right{
+width: 20%; /* Adjust the width as needed */
+overflow-x: auto;
+}
+.td_space{
+    width: 40%; /* Adjust the width as needed */
+    overflow-x: auto;
+}

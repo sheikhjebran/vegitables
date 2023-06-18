@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+<div class="container">
+
+    <div class="search-result">
+    <div class="form_background">
+      <div class="card profile_screen">
+
+		<div class="profile">
+            <img src="{% static 'images/profile.jpeg'%}">
+		</div>
+
+		<div class="profile_detail">
+            <table>
+                <tr>
+                    <td class="td_right">User Name </td>
+                    <td class="td_space">
+                        <input
+                            type="text"
+                            placeholder="User Name"
+                            value=" : {{profile.username|upper}}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td_right">First Name </td>
+                    <td class="td_space">
+                        <input
+                            type="text"
+                            placeholder="First Name"
+                            value=" : {{profile.firstname|upper}}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td_right">Last Name </td>
+                    <td class="td_space">
+                        <input
+                            type="text"
+                            placeholder="Last Name"
+                            value=" : {{profile.lastname|upper}}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td_right">Email </td>
+                    <td class="td_space">
+                        <input
+                            type="text"
+                            placeholder="Email "
+                            value=" : {{profile.email|upper}}"/>
+                    </td>
+                </tr>
+            </table>
+
+		</div>
+      </div>
+    </div>
+  </div>
+    
+</div>
+
+{% endblock %}
