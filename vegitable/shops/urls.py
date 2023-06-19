@@ -63,6 +63,8 @@ urlpatterns = [
 
     # Report
     path('report', views.report, name='report'),
+    path('sales_bill_report', views.sales_bill_report, name='sales_bill_report'),
+    path('report_sales_bill', views.report_sales_bill, name='report_sales_bill'),
 
     # Customer Ledger
     path('customer_ledger', views.customer_ledger, name='customer_ledger'),

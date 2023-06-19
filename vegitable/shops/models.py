@@ -66,6 +66,8 @@ class Sales_Bill_Entry(models.Model):
     commission = FloatField(max_length=50)
     cooli = FloatField(max_length=50)
     total_amount = FloatField(max_length=50)
+    paid_amount = FloatField(max_length=50)
+    balance_amount = FloatField(max_length=50)
     Empty_data = BooleanField(default=True)
 
     def __str__(self):

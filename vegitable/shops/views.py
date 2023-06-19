@@ -23,6 +23,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 
+from .utility import consolidate_result_for_report
+
 
 def index(request):
     return render(request, 'index.html')
@@ -126,7 +128,7 @@ def home(request, current_page=1):
         except Exception as error:
             print(error)
 
-        return render(request, 'home.html',
+        return render(request, 'Entry/Arrival/home.html',
                       {
                           'shop_details': shop_detail_object,
                           'arrival_detail': arrival_entry_detail,
@@ -146,7 +148,7 @@ def customer_ledger(request, current_page=1):
         customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')
         paginator = Paginator(customer_ledger_list, items_per_page)
         customer_ledger_list = paginator.get_page(current_page)
-        return render(request, 'customer_ledger.html',
+        return render(request, 'Ledger/customer_ledger.html',
                       {'customer_ledger_list': customer_ledger_list, 'current_page': current_page})
     return render(request, 'index.html')
 
@@ -163,7 +165,7 @@ def farmer_ledger(request, current_page=1):
         paginator = Paginator(farmer_ledger_list, items_per_page)
         farmer_ledger_list = paginator.get_page(current_page)
 
-        return render(request, 'farmer_ledger.html',
+        return render(request, 'Ledger/farmer_ledger.html',
                       {'farmer_ledger_list': farmer_ledger_list,
                        'current_page': current_page})
     return render(request, 'index.html')
@@ -185,8 +187,8 @@ def inventory(request, current_page=1):
         paginator = Paginator(entries, items_per_page)
         entries = paginator.get_page(current_page)
 
-        return render(request, 'inventory.html', {'entries_list': entries,
-                                                  'current_page': current_page})
+        return render(request, 'Inventory/inventory.html', {'entries_list': entries,
+                                                            'current_page': current_page})
     return render(request, 'index.html')
 
 
@@ -242,7 +244,7 @@ def patti_list(request, current_page=1):
         except Exception as error:
             print(error)
 
-        return render(request, 'patti.html',
+        return render(request, 'Entry/Patti/patti.html',
                       {
                           'shop_details': shop_detail_object,
                           'patti_entry_detail': patti_entry_detail,
@@ -267,7 +269,7 @@ def sales_bill_entry(request, current_page=1):
         except Exception as error:
             print(error)
 
-        return render(request, 'sales_bill_entry.html',
+        return render(request, 'Entry/Sales/sales_bill_entry.html',
                       {
                           'shop_details': shop_detail_object,
                           'sales_bill_detail': sales_entry_detail,
@@ -291,7 +293,7 @@ def profile(request):
         return render(request, 'Profile/profile.html',
                       {
                           'shop_details': shop_detail_object,
-                          "profile":profile_data
+                          "profile": profile_data
                       })
     else:
         return render(request, 'index.html')
@@ -356,7 +358,7 @@ def add_new_arrival_entry(request):
         # )
         # arrival_Entry_Obj.save()
 
-        return render(request, 'modify_arrival_entry.html', {
+        return render(request, 'Entry/Arrival/modify_arrival_entry.html', {
             # "arrival_detail": arrival_Entry_Obj,
             "today": today,
             "NEW": True
@@ -387,7 +389,7 @@ def add_new_patti_entry(request):
         )
         patti_bill_detail.save()
 
-        return render(request, 'modify_patti_entry.html',
+        return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {'patti_bill_detail': patti_bill_detail,
                        "today": today,
                        "NEW": True}
@@ -401,23 +403,22 @@ def navigate_to_add_sales_bill_entry(request):
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        sales_obj = Sales_Bill_Entry(
-            payment_type="",
-            customer_name="",
-            date=getDate_from_string(today),
-            shop=shop_detail_object,
-            rmc=0,
-            commission=0,
-            cooli=0,
-            total_amount=0
-        )
-        sales_obj.save()
+        # sales_obj = Sales_Bill_Entry(
+        #     payment_type="",
+        #     customer_name="",
+        #     date=getDate_from_string(today),
+        #     shop=shop_detail_object,
+        #     rmc=0,
+        #     commission=0,
+        #     cooli=0,
+        #     total_amount=0
+        # )
+        # sales_obj.save()
 
         arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
-        return render(request, 'modify_sales_bill_entry.html', {
+        return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
             'sales_bill_detail': True,
-            'sales_obj': sales_obj,
             'NEW': True,
             "arrival_goods_detail": arrival_detail_object,
             "today": today
@@ -438,6 +439,8 @@ def modify_sales_bill_entry(request):
                 commission=request.POST['comission'],
                 cooli=request.POST['cooli'],
                 total_amount=round(float(request.POST['total_amount']), 2),
+                paid_amount=round(float(request.POST['paid_amount']), 2),
+                balance_amount=round(float(request.POST['balance_amount']), 2),
                 Empty_data=False
             )
         else:
@@ -450,6 +453,8 @@ def modify_sales_bill_entry(request):
             sales_bill_entry_Obj.commission = request.POST['comission']
             sales_bill_entry_Obj.cooli = request.POST['cooli']
             sales_bill_entry_Obj.total_amount = round(float(request.POST['total_amount']), 2)
+            sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
+            sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
             sales_bill_entry_Obj.Empty_data = False
 
         sales_bill_entry_Obj.save()
@@ -580,7 +585,7 @@ def modify_arrival(request, arrival_id):
 
         today = arrival_entry_obj.date
 
-        return render(request, 'modify_arrival_entry.html',
+        return render(request, 'Entry/Arrival/modify_arrival_entry.html',
                       {'arrival_detail': arrival_entry_obj, 'arrival_goods_objs': arrival_goods_objs, 'NEW': False,
                        "today": today})
     return render(request, 'index.html')
@@ -1021,7 +1026,7 @@ def edit_sales_bill_entry(request, sales_id):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
-        return render(request, 'modify_sales_bill_entry.html',
+        return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,
                        "arrival_goods_detail": arrival_detail_object,
                        "sales_obj": sales_obj,
@@ -1039,7 +1044,7 @@ def edit_patti_entry(request, patti_id):
 
         patti_entry_obj = Patti_entry_list.objects.filter(patti=patti_bill_detail)
 
-        return render(request, 'modify_patti_entry.html',
+        return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {'patti_bill_detail': patti_bill_detail,
                        "today": today,
                        "patti_entry_obj": patti_entry_obj,
@@ -1106,11 +1111,57 @@ def search_farmer_ledger(request):
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
 
+@api_view(['GET'])
+def report_sales_bill(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    date = request.GET['date']
+    selected_date = getDate_from_string(date)
+
+    response = Sales_Bill_Entry.objects.filter(
+        date=selected_date,
+        shop=shop_detail_object,
+    ). \
+        values('id', 'customer_name', 'payment_type', 'total_amount', 'balance_amount'). \
+        annotate(
+        iteam_name=models.F('sales_bill_iteam__iteam_name'),
+        bags=models.F('sales_bill_iteam__bags'),
+    )
+
+    if len(response) <= 0:
+        response = None
+    else:
+        result = []
+        for single_response in response:
+            my_dict = {
+                'id': single_response.get('id'),
+                'customer_name': single_response.get('customer_name'),
+                'iteam_name': single_response.get('iteam_name'),
+                'bags': single_response.get('bags'),
+                'amount': single_response.get('total_amount'),
+                'payment_type': single_response.get('payment_type'),
+                'balance': single_response.get('balance_amount')
+            }
+            result.append(my_dict)
+        response = consolidate_result_for_report(result)
+        print(result)
+    return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+
+
 @csrf_protect
 def report(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         return render(request, 'report.html', {
+            'shop_details': shop_detail_object,
+        })
+    return render(request, 'index.html')
+
+
+@csrf_protect
+def sales_bill_report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        return render(request, 'Report/sales_bill_report.html', {
             'shop_details': shop_detail_object,
         })
     return render(request, 'index.html')

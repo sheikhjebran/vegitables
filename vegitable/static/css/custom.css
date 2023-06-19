@@ -32,8 +32,9 @@ padding:1em;
 }
 
 #tableWrapper  tr td{
-width:10%;
+    width: 13%;
 }
+
 #tableWrapper .comment-your{
 width:80%;
 }
@@ -387,15 +388,36 @@ cursor:pointer
   margin-top:5%;
 }
 .profile_detail  input{
-border:0;
-padding-right: inherit;
-padding-right:2%;
+    border:0;
+    padding-right: inherit;
+    padding-right:2%;
 }
 .td_right{
-width: 20%; /* Adjust the width as needed */
-overflow-x: auto;
+    width: 20%; /* Adjust the width as needed */
+    overflow-x: auto;
+    font-weight:bolder;
+    font-size:32px;
+    text-align:center;
 }
 .td_space{
     width: 40%; /* Adjust the width as needed */
     overflow-x: auto;
+    padding-right:5%;
+}
+
+.custom input[type="date"]{
+    height: 50px;
+    margin-left: 2%;
+    padding-left:2%;
+    font-size:22px;
+    width:100%;
+}
+.custom table{
+margin-top:5%;
+width:100%;
+}
+.custom tr{
+    display: flex;
+    align-items: center;
+    text-align: center;
 }

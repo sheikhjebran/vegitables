@@ -32,8 +32,9 @@ padding:1em;
 }
 
 #tableWrapper  tr td{
-width:10%;
+    width: 13%;
 }
+
 #tableWrapper .comment-your{
 width:80%;
 }
@@ -358,16 +359,65 @@ cursor:pointer
 
 .edit_button, .delete_button{
     border:0px;
-    pointer:cursor;
-    font-size: 0.5em;
-    padding: 0.5em 2.3em;
+    cursor: pointer;
     outline: none;
     border: none;
     color:white;
+    font-size: 20px;
+
 }
+
 .edit_button{
-background:#4b5254;
+    background:#4b5254;
 }
+
 .delete_button{
-background:#fe513f;
+    background:#fe513f;
+}
+
+.profile {
+  width: 30%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  height: 30%;
+  padding-left:35%;
+}
+.profile_detail{
+  margin-top:5%;
+}
+.profile_detail  input{
+    border:0;
+    padding-right: inherit;
+    padding-right:2%;
+}
+.td_right{
+    width: 20%; /* Adjust the width as needed */
+    overflow-x: auto;
+    font-weight:bolder;
+    font-size:32px;
+    text-align:center;
+}
+.td_space{
+    width: 40%; /* Adjust the width as needed */
+    overflow-x: auto;
+    padding-right:5%;
+}
+
+.custom input[type="date"]{
+    height: 50px;
+    margin-left: 2%;
+    padding-left:2%;
+    font-size:22px;
+    width:100%;
+}
+.custom table{
+margin-top:5%;
+width:100%;
+}
+.custom tr{
+    display: flex;
+    align-items: center;
+    text-align: center;
 }
