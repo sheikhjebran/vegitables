@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
@@ -10,19 +10,17 @@ from datetime import date
 import re
 from django.db import models
 from django.core.paginator import Paginator
-
 from . import utility
 from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
     Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger
 import datetime
-# Report import
 from django.http import FileResponse
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
-
+from .report.report import Report
 from .utility import consolidate_result_for_report
 
 
@@ -30,7 +28,7 @@ def index(request):
     return render(request, 'index.html')
 
 
-def getDate_from_string(stringDate):
+def getDate_from_string(stringDate: str):
     mystringDate = str(stringDate).split("-")
     return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
 
@@ -1111,10 +1109,7 @@ def search_farmer_ledger(request):
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['GET'])
-def report_sales_bill(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    date = request.GET['date']
+def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
 
     response = Sales_Bill_Entry.objects.filter(
@@ -1143,7 +1138,15 @@ def report_sales_bill(request):
             }
             result.append(my_dict)
         response = consolidate_result_for_report(result)
-        print(result)
+    return response
+
+
+@api_view(['GET'])
+def report_sales_bill(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    date = request.GET['date']
+    response = get_sales_bill_detail_from_db(shop_detail_object, date)
+    print(response)
     return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
 
 
@@ -1164,4 +1167,21 @@ def sales_bill_report(request):
         return render(request, 'Report/sales_bill_report.html', {
             'shop_details': shop_detail_object,
         })
+    return render(request, 'index.html')
+
+
+def extract_dictionary_into_list_container(response):
+    list_container = []
+    for single_item in response:
+        value_list = list(single_item.values())
+        list_container.append(value_list)
+    return list_container
+
+
+def generate_sales_bill_report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        response = get_sales_bill_detail_from_db(shop_detail_object, request.POST['sales_bill_date'])
+        response = extract_dictionary_into_list_container(response)
+        return Report.generate_table_report(response)
     return render(request, 'index.html')

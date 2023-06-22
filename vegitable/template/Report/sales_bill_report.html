@@ -4,33 +4,47 @@
 {% include 'menubar.html' %}
 
 <div class="container">
-<h1 class="heading">Sales Bill Report</h1>
+  <h1 class="heading">Sales Bill Report</h1>
+  <form method="POST" action="/generate_sales_bill_report">
+    {% csrf_token %}
     <div class="custom">
-        <table>
-            <tr>
-                <td class="td_right">Date </td>
-                <td class="td_space"><input type="date" class="sales_bill_report"/></td>
-            </tr>
-        </table>
+      <table>
+        <tr>
+          <td class="td_right">Date</td>
+          <td class="td_space">
+            <input
+              type="date"
+              id="sales_bill_date"
+              name="sales_bill_date"
+              class="sales_bill_report"
+            />
+          </td>
+        </tr>
+      </table>
     </div>
 
     <table class="custom-table" id="tableWrapper">
-        <thead>
-            <tr>
-                <td>Bill No</td>
-                <td>Customer&nbsp;Name</td>
-                <td>Item</td>
-                <td>Bags</td>
-                <td>Amount</td>
-                <td>Balance</td>
-                <td>Mode</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <td>Bill No</td>
+          <td>Customer&nbsp;Name</td>
+          <td>Item</td>
+          <td>Bags</td>
+          <td>Amount</td>
+          <td>Balance</td>
+          <td>Mode</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr></tr>
+      </tbody>
     </table>
-
+    <div class="clearfix"><br /></div>
+    <button type="submit" class="btn-l float_right">
+      Generate Sales Report
+    </button>
+    <div class="clearfix"></div>
+  </form>
 </div>
 
 {% endblock %}

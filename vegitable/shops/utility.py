@@ -1,6 +1,5 @@
 import random
-
-from json_decoder import JsonParser
+import time
 
 existing_numbers = set()
 
@@ -30,3 +29,7 @@ def consolidate_result_for_report(result: list):
     for key, value in response.items():
         format_response.append(value)
     return format_response
+
+
+def get_epoch():
+    return str(time.time()).split(".")[0]
