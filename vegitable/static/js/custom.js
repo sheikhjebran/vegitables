@@ -8,6 +8,8 @@ $(document).ready(function () {
   const cooli_input_box = $("#cooli");
   const total_amount = $("#total_amount");
   const amount_validation = $(".amount_validation");
+  const paid_amount = $("#paid_amount");
+  const balance_amount = $("#balance_amount");
 
   // Report entry variable
   const report_main_option = $(".report_choice");
@@ -30,10 +32,6 @@ $(document).ready(function () {
     Calculate_Cooli();
   });
 
-  $(document).on("focus", ".add_new_sales_custom_select", function () {
-    $(this).click();
-    console.log("Hello world!");
-  });
 
   function get_total_amount_from_sales_entry_form() {
     var local_total_amount = 0;
@@ -54,9 +52,7 @@ $(document).ready(function () {
     var net_weight = `#` + res[0] + `_net_weight`;
     var net_weight_value = $(net_weight).val();
 
-    var amount = parseFloat((rate_value * 2 * net_weight_value) / 100).toFixed(
-      2
-    );
+    var amount = parseFloat((rate_value * 2 * net_weight_value) / 100).toFixed(2);
 
     $(`#` + res[0] + `_amount`).val(amount);
 
@@ -70,7 +66,7 @@ $(document).ready(function () {
     var rmc_value = parseFloat(rmc_input_box.val()).toFixed(2);
     var comission_value = parseFloat(commission_input_box.val()).toFixed(2);
     var cooli_value = parseFloat(cooli_input_box.val()).toFixed(2);
-    if (cooli_value.length <= 0) {
+    if (cooli_value.length <= 0 || isNaN(cooli_value)) {
       cooli_value = 0;
     }
 
@@ -81,6 +77,8 @@ $(document).ready(function () {
       parseFloat(global_amount);
 
     total_amount.val(parseFloat(final_value).toFixed(2));
+    paid_amount.val(parseFloat(final_value).toFixed(2));
+    balance_amount.val(0);
   }
 
   function Calculate_Cooli() {
@@ -105,7 +103,16 @@ $(document).ready(function () {
       parseFloat(global_amount);
 
     total_amount.val(parseFloat(final_value).toFixed(2));
+    paid_amount.val(parseFloat(final_value).toFixed(2));
+    balance_amount.val(0);
   }
+
+  $(document).on("keyup change,", "#paid_amount", function () {
+    var paid_amount = $(this).val();
+    var total_amount = $("#total_amount").val();
+    var result = parseFloat(total_amount).toFixed(2) - parseFloat(paid_amount).toFixed(2);
+    balance_amount.val(parseFloat(result).toFixed(2));
+  });
 
   $(document).on("change", ".add_new_sales_custom_select", function () {
     var lot_number_Id = $(this).attr("id");
@@ -1001,6 +1008,50 @@ $(document).ready(function () {
     }
   });
 
+  // Report
+  const report_sales_entry_selected = $(".sales_bill_report");
+
+  function update_sales_bill_report_table(result){
+      $("#tableWrapper").children("tbody").children("tr").remove();
+        for (var index = 0; index < result.length; index++) {
+            $("#tableWrapper")
+              .children("tbody")
+              .last()
+              .append(`
+                <tr>
+                        <td>`+result[index].id+`</td>
+                        <td>`+result[index].customer_name+`</td>
+                        <td>`+result[index].iteam_name+`</td>
+                        <td>`+result[index].bags+`</td>
+                        <td>`+result[index].amount+`</td>
+                        <td>`+result[index].balance+`</td>
+                        <td>`+result[index].payment_type+`</td>
+                </tr>
+              `);
+        }
+    }
+  function CheckSalesBill_Report(){
+    $.ajax({
+      url: "/report_sales_bill",
+      method: "GET",
+      async: true,
+      data: {
+        date: $(this).val()
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+//hide_show_customer_ledger_table(response.FOUND);
+        update_sales_bill_report_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+
+      },
+    });
+  }
+  report_sales_entry_selected.on("keyup change", CheckSalesBill_Report);
 
 });
 
