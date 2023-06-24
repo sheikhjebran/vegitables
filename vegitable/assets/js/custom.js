@@ -845,17 +845,17 @@ $(document).ready(function () {
     });
 
     if (ZERO_FLAG == true) {
-      alert("Cannt have ZERO as Qty for the iteam..!");
+      alert("Cannot have ZERO as Qty for the item..!");
     } else {
       if (balance_qty - bag_total <= 0) {
         console.log("Ready to SUBMIT .. !");
       } else {
-        if (confirm("Would you like to add more iteam ? ") == true) {
-          e.preventDefault();
-          $("#add_sales_entry_list").trigger("click");
-        } else {
-          text = "You canceled!";
-        }
+        //if (confirm("Would you like to add more item ? ") == true) {
+          //e.preventDefault();
+          //$("#add_sales_entry_list").trigger("click");
+        //} else {
+          //text = "You canceled!";
+        //}
       }
     }
   });

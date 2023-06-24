@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 from django.db.models import CharField, IntegerField, ForeignKey, DateField, BooleanField, \
-     FloatField
+    FloatField
 
 
 class Shop(models.Model):
@@ -132,3 +132,18 @@ class FarmerLedger(models.Model):
 
     def __str__(self):
         return f"{self.id}-{self.name}-{self.contact}-{self.place}"
+
+
+class CreditBillEntry(models.Model):
+    customer_name = CharField(max_length=100)
+    sales_bill = ForeignKey(Sales_Bill_Entry, on_delete=models.CASCADE)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.customer_name}"
+
+
+class CreditBillHistory(models.Model):
+    date = DateField()
+    amount = FloatField(max_length=100)
+    credit_bill = ForeignKey(CreditBillEntry, on_delete=models.CASCADE)
