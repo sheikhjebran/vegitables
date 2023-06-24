@@ -454,7 +454,7 @@ def modify_sales_bill_entry(request):
             sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
             sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
             sales_bill_entry_Obj.Empty_data = False
-
+            
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
 
