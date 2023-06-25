@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from . import utility
 from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
     Arrival_Entry, \
-    Arrival_Goods, CustomerLedger, FarmerLedger
+    Arrival_Goods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory
 import datetime
 from django.http import FileResponse
 import io
@@ -166,6 +166,41 @@ def farmer_ledger(request, current_page=1):
         return render(request, 'Ledger/farmer_ledger.html',
                       {'farmer_ledger_list': farmer_ledger_list,
                        'current_page': current_page})
+    return render(request, 'index.html')
+
+
+def credit_bill_entry(request):
+    if request.user.is_authenticated:
+        return render(request, 'Entry/CreditBill/credit_bill.html')
+    return render(request, 'index.html')
+
+
+def search_credit(request, current_page=1):
+    if request.user.is_authenticated:
+        search_name = request.GET['name']
+        search_date = request.GET['date']
+        if search_name is None or len(search_name) is 0:
+            search_name = ""
+        if search_date is None or len(search_date) is 0:
+            search_date = None
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        credit_obj = CreditBillEntry.objects.filter(
+            customer_name__icontains=search_name,
+            shop_id=shop_detail_object
+        )
+        result = []
+        for credit in credit_obj:
+            myDict = {
+                "id":credit.id,
+                "date":credit.sales_bill.date,
+                "bill_no":credit.sales_bill.id,
+                "amount":credit.sales_bill.total_amount,
+                "paid":credit.sales_bill.paid_amount,
+                "balance":credit.sales_bill.balance_amount
+            }
+            result.append(myDict)
+
+        return render(request, 'Entry/CreditBill/credit_bill.html',{'results':result,'current_page': current_page})
     return render(request, 'index.html')
 
 
@@ -454,13 +489,30 @@ def modify_sales_bill_entry(request):
             sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
             sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
             sales_bill_entry_Obj.Empty_data = False
-            
+
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
-
+        if sales_bill_entry_Obj.balance_amount > 0.0:
+            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name)
         add_sales_bill_iteam(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
+
+
+def add_to_credit_bill_db(sales, shop, customer_name):
+    credit_bill_entry = CreditBillEntry(
+        customer_name=customer_name,
+        sales_bill=sales,
+        shop=shop
+    )
+    credit_bill_entry.save()
+
+    credit_bill_history = CreditBillHistory(
+        date=datetime.datetime.today(),
+        amount=0.0,
+        credit_bill=credit_bill_entry
+    )
+    credit_bill_history.save()
 
 
 def add_sales_bill_iteam(request, request_list, sales):
