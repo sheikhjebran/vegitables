@@ -767,6 +767,30 @@ $(document).ready(function () {
     }
   });
 
+    function validate_credit_bill_amount_received(){
+        var balance = parseFloat($(".balance_amount").val());
+        var amountReceived = parseFloat($(".amount_received").val());
+        var discount = parseFloat($(".discount").val());
+
+        // Set discount to 0 if it's empty
+        if (isNaN(discount)) {
+          discount = 0;
+        }
+
+        if(discount+amountReceived>balance){
+            $(".amount_received").val("");
+            $(".discount").val("");
+            alert("Received amount cannot exceed Balance Amount ..!");
+        }
+    }
+   $(document).on("input",".amount_received",function(){
+        validate_credit_bill_amount_received();
+   });
+
+   $(document).on("input",".discount",function(){
+        validate_credit_bill_amount_received();
+   });
+
   $(document).on("submit", "#arrival_entry_form", function (e) {
     var total_bags_count = parseInt($("#total_number_of_bags").val());
     if (total_bags_count <= 0) {
@@ -982,6 +1006,33 @@ $(document).ready(function () {
     });
     }
   });
+
+   $(document).on("mouseenter", ".credit_id", function () {
+        var text = $(this).attr("value");
+        var amount_balance = $(this).attr("amount_balance");
+        console.log(text);
+        console.log(amount_balance);
+        $("#popup").css({
+            'display':"block"
+        });
+
+        $(".overlay").css({
+            'display':"block"
+        });
+        $(".sales_bill_id").val(text);
+        $(".balance_amount").val(amount_balance);
+   });
+
+   $(document).on("click", ".popup_close", function () {
+        $(".overlay").css({
+            'display':"none",
+            'position': "fixed"
+        });
+        $("#popup").css({
+            'display':"none"
+        });
+   });
+
 
   $(document).on("keyup", ".farmer_ledger_search_text", function () {
     var search_text = $(this).val();

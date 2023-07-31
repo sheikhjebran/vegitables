@@ -146,4 +146,8 @@ class CreditBillEntry(models.Model):
 class CreditBillHistory(models.Model):
     date = DateField()
     amount = FloatField(max_length=100)
+    payment_mode = CharField(max_length=100)
     credit_bill = ForeignKey(CreditBillEntry, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.date}-{self.amount}-{self.credit_bill}"

@@ -13,7 +13,7 @@ pip-check
 ```
 pip install pip-upgrader
 pip-upgrade requirements.txt
-```
+```[README.md](README.md)
 
 ### To migrate the sql
 ```

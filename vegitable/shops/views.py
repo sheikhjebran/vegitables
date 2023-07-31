@@ -21,7 +21,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from .report.report import Report
-from .utility import consolidate_result_for_report
+from .utility import consolidate_result_for_report, get_float_number
 
 
 def index(request):
@@ -175,6 +175,32 @@ def credit_bill_entry(request):
     return render(request, 'index.html')
 
 
+def add_new_credit_bill_entry(request):
+    balance_amount = get_float_number(request.POST['credit_bill_balance_amount'])
+    sales_bill_id = request.POST['credit_bill_sales_bill_id']
+    payment_mode = request.POST['credit_bill_payment_option']
+    amount_received = get_float_number(request.POST['credit_bill_amount_received'])
+    bill_discount = get_float_number(request.POST['credit_bill_discount'])
+
+    amount = round(amount_received + bill_discount, 2)
+    balance_amount -= amount
+    sales_bill = Sales_Bill_Entry.objects.get(id=sales_bill_id)
+    sales_bill.paid_amount = round(sales_bill.paid_amount + amount,2)
+    sales_bill.balance_amount = round(balance_amount,2)
+    sales_bill.save()
+
+    credit_bill = CreditBillEntry.objects.get(sales_bill=sales_bill_id)
+
+    creditBillHistory = CreditBillHistory(
+        amount=round(float(amount),2),
+        payment_mode=payment_mode,
+        credit_bill=credit_bill,
+        date=datetime.datetime.today()
+    )
+    creditBillHistory.save()
+    return credit_bill_entry(request)
+
+
 def search_credit(request, current_page=1):
     if request.user.is_authenticated:
         search_name = request.GET['name']
@@ -191,16 +217,16 @@ def search_credit(request, current_page=1):
         result = []
         for credit in credit_obj:
             myDict = {
-                "id":credit.id,
-                "date":credit.sales_bill.date,
-                "bill_no":credit.sales_bill.id,
-                "amount":credit.sales_bill.total_amount,
-                "paid":credit.sales_bill.paid_amount,
-                "balance":credit.sales_bill.balance_amount
+                "id": credit.id,
+                "date": credit.sales_bill.date,
+                "bill_no": credit.sales_bill.id,
+                "amount": credit.sales_bill.total_amount,
+                "paid": credit.sales_bill.paid_amount,
+                "balance": credit.sales_bill.balance_amount
             }
             result.append(myDict)
 
-        return render(request, 'Entry/CreditBill/credit_bill.html',{'results':result,'current_page': current_page})
+        return render(request, 'Entry/CreditBill/credit_bill.html', {'results': result, 'current_page': current_page})
     return render(request, 'index.html')
 
 

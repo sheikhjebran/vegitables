@@ -45,11 +45,13 @@
         <tbody>
             {%for credit in results %}
                 <tr>
-                    <td>{{credit.bill_no}}</td>
+                    <td>
+                        <span class="no_border credit_id" value="{{credit.bill_no}}" amount_balance="{{credit.balance}}">{{credit.bill_no}}</span>
+                    </td>
                     <td>{{credit.date}}</td>
                     <td>{{credit.amount}}</td>
                     <td>{{credit.paid}}</td>
-                    <td>{{credit.balance}}</td>
+                    <td>{{credit.balance}}<img class="small_icon" src="{% static 'images/exclamation.png'%}"></td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -61,7 +63,51 @@
             </ul>
     </div>
     <div class="clearfix"> </div>
+    </div>
+
+
+
+    <div class="overlay">
+        <div id="popup" class="popup">
+            <form action = "/add_credit_bill_amount" id="popup-table" class="popup-table" method = "POST">
+                {% csrf_token %}
+                    <table>
+                        <tr>
+                            <td><span class="form_text">Balance Amount</span></td>
+                            <td>
+                                <input type="text" placeholder="Balance Amount" name="credit_bill_balance_amount" class="balance_amount" readonly/>
+                                <input type="hidden" class="sales_bill_id" name="credit_bill_sales_bill_id" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Payment Mode</span></td>
+                            <td>
+                                <select name="credit_bill_payment_option">
+                                    <option value="cash">CASH</option>
+                                    <option value="cheque">CHEQUE</option>
+                                    <option value="upi">UPI</option>
+                                    <option value="bank_transfer">BANK TRANSFER</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Amount Received</span></td>
+                            <td><input type="text" placeholder="Amount Received" name="credit_bill_amount_received" class="decimal_number_only amount_received"/></td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Discount</span></td>
+                            <td><input type="text" placeholder="Discount" name="credit_bill_discount" class="decimal_number_only discount"/></td>
+                        </tr>
+                        <tr>
+                            <td><button type="button" class=" btn-l btn-14 popup_close">Close</button></td>
+                            <td><button type="submit" class=" btn-l">Go</button></td>
+                        </tr>
+
+                    </table>
+            </form>
         </div>
+    </div>
+
 
 </div>
 

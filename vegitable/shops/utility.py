@@ -33,3 +33,10 @@ def consolidate_result_for_report(result: list):
 
 def get_epoch():
     return str(time.time()).split(".")[0]
+
+
+def get_float_number(number):
+    try:
+        return float(number)
+    except ValueError:
+        return 0
