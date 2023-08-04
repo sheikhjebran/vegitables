@@ -295,6 +295,8 @@ cursor:pointer
     padding-top:3%;
 }
 
+
+
 .form_background .card {
   height: 500px;
   background-color:white;
@@ -487,4 +489,54 @@ height:20px;
 width:20px;
 float:right;
 margin-right:20%;
+}
+
+.card_background{
+    padding:0.5%;
+}
+
+/* styles.css */
+.tooltip-container {
+    position: relative;
+}
+
+.tooltip {
+    position: absolute;
+    z-index: 1;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.tooltip.active {
+    opacity: 1;
+}
+
+.tooltip-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.tooltip-table {
+    margin-top: 10px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tooltip-table th,
+.tooltip-table td {
+    border: 1px solid #fff;
+    padding: 5px;
+}
+
+.tooltip-table th {
+    background-color: #555;
+}
+
+.tooltip-table td {
+    background-color: #777;
 }

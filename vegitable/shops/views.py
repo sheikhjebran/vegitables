@@ -185,20 +185,40 @@ def add_new_credit_bill_entry(request):
     amount = round(amount_received + bill_discount, 2)
     balance_amount -= amount
     sales_bill = Sales_Bill_Entry.objects.get(id=sales_bill_id)
-    sales_bill.paid_amount = round(sales_bill.paid_amount + amount,2)
-    sales_bill.balance_amount = round(balance_amount,2)
+    sales_bill.paid_amount = round(sales_bill.paid_amount + amount, 2)
+    sales_bill.balance_amount = round(balance_amount, 2)
     sales_bill.save()
 
     credit_bill = CreditBillEntry.objects.get(sales_bill=sales_bill_id)
 
     creditBillHistory = CreditBillHistory(
-        amount=round(float(amount),2),
+        amount=round(float(amount), 2),
         payment_mode=payment_mode,
         credit_bill=credit_bill,
         date=datetime.datetime.today()
     )
     creditBillHistory.save()
     return credit_bill_entry(request)
+
+
+@api_view(('GET',))
+@renderer_classes((JSONRenderer,))
+def get_credit_bill_entry_list(request):
+    [...]
+
+    credit_bill_entry_object = CreditBillEntry.objects.get(id=request.GET['id'])
+    credit_bill_history_list = CreditBillHistory.objects.filter(credit_bill=credit_bill_entry_object).order_by('-id')
+
+    data = []
+    for single_credit in credit_bill_history_list:
+
+        credit = {
+            'date': single_credit.date,
+            'amount': single_credit.amount,
+            'payment_mode': single_credit.payment_mode
+        }
+        data.append(credit)
+    return Response(data=data, status=status.HTTP_200_OK)
 
 
 def search_credit(request, current_page=1):
@@ -671,14 +691,14 @@ def modify_arrival(request, arrival_id):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_iteam_name(request):
     [...]
-    iteam_name_list = {}
+    item_name_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
 
     for arrival_entry in arrival_detail_object:
-        iteam_name_list[arrival_entry.iteam_name] = arrival_entry.qty
+        item_name_list[arrival_entry.iteam_name] = arrival_entry.qty
 
-    data = {'iteam_name_list': iteam_name_list}
+    data = {'iteam_name_list': item_name_list}
     return Response(data, status=status.HTTP_200_OK)
 
 

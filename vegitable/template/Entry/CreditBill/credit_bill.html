@@ -5,7 +5,7 @@
 {% include "menubar.html" %}
 
 <div class="container">
-    
+
     <h1 class="heading">Credit Bill Entry</h1>
     <div class="form_background">
         <div class="card">
@@ -51,7 +51,12 @@
                     <td>{{credit.date}}</td>
                     <td>{{credit.amount}}</td>
                     <td>{{credit.paid}}</td>
-                    <td>{{credit.balance}}<img class="small_icon" src="{% static 'images/exclamation.png'%}"></td>
+                    <td>
+                        <div class="tooltip-container">
+                            {{credit.balance}}
+                            <img class="small_icon tooltip-trigger" data-tooltip="{{credit.id}}" src="{% static 'images/exclamation.png'%}">
+                        </div>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -64,9 +69,6 @@
     </div>
     <div class="clearfix"> </div>
     </div>
-
-
-
     <div class="overlay">
         <div id="popup" class="popup">
             <form action = "/add_credit_bill_amount" id="popup-table" class="popup-table" method = "POST">
@@ -83,10 +85,10 @@
                             <td><span class="form_text">Payment Mode</span></td>
                             <td>
                                 <select name="credit_bill_payment_option">
-                                    <option value="cash">CASH</option>
-                                    <option value="cheque">CHEQUE</option>
-                                    <option value="upi">UPI</option>
-                                    <option value="bank_transfer">BANK TRANSFER</option>
+                                    <option value="CASH">CASH</option>
+                                    <option value="CHEQUE">CHEQUE</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="BANK TRANSFER">BANK TRANSFER</option>
                                 </select>
                             </td>
                         </tr>

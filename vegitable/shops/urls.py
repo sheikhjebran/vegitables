@@ -89,5 +89,7 @@ urlpatterns = [
     # Credit Bill Entry
     path('credit_bill_entry',views.credit_bill_entry,name="credit_bill_entry"),
     path('search_credit',views.search_credit,name="search_credit"),
-    path('add_credit_bill_amount', views.add_new_credit_bill_entry,name="add_new_credit_bill_entry")
+    path('add_credit_bill_amount', views.add_new_credit_bill_entry,name="add_new_credit_bill_entry"),
+    path('get_credit_bill_entry_list', views.get_credit_bill_entry_list, name="get_credit_bill_entry_list")
+
 ]

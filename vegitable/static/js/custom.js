@@ -515,7 +515,7 @@ $(document).ready(function () {
     $("#total_weight").val(0);
     $("#net_amount").val(0);
 
-    for (var index = 0; index < patti_sales_entry_list.length; index++) {
+        for (var index = 0; index < patti_sales_entry_list.length; index++) {
       $("#tableWrapper")
         .children("tbody")
         .last()
@@ -1091,7 +1091,6 @@ $(document).ready(function () {
       },
       success: function (response) {
         console.log("AJAX request successful");
-//hide_show_customer_ledger_table(response.FOUND);
         update_sales_bill_report_table(response.result);
       },
       error: function (xhr, status, error) {
@@ -1113,3 +1112,100 @@ function removeElement(el) {
 
   element.remove();
 }
+
+
+// Tool tip Text
+document.addEventListener("DOMContentLoaded", function() {
+    const tooltipTriggers = document.querySelectorAll(".tooltip-trigger");
+
+    tooltipTriggers.forEach(trigger => {
+        trigger.addEventListener("mouseover", showTooltip);
+        trigger.addEventListener("mouseout", hideTooltip);
+    });
+
+    async function showTooltip(event) {
+        const id = event.target.getAttribute("data-tooltip");
+        var tableData="";
+        try {
+            const response = await createTableData(id);
+            console.log("Table HTML:", response);
+            tableData= response;
+            // Here you can use the 'response' to append the table to your desired element in the DOM or perform other operations
+        } catch (error) {
+            console.error("Error:", error);
+            // Handle the error if necessary
+        }
+
+
+        const tooltipContent = document.createElement("div");
+        tooltipContent.classList.add("tooltip-content");
+
+        const table = document.createElement("table");
+        table.classList.add("tooltip-table");
+        table.innerHTML = tableData;
+
+        tooltipContent.appendChild(table);
+
+        const tooltip = document.createElement("div");
+        tooltip.classList.add("tooltip");
+        tooltip.appendChild(tooltipContent);
+
+        const container = event.target.closest(".tooltip-container");
+        container.appendChild(tooltip);
+        setTimeout(() => tooltip.classList.add("active"), 10);
+    }
+
+    function hideTooltip(event) {
+        const tooltip = event.target.closest(".tooltip-container").querySelector(".tooltip");
+        if (tooltip) {
+            tooltip.classList.remove("active");
+            setTimeout(() => tooltip.remove(), 200);
+        }
+    }
+
+    function getCreditBillEntryList(id) {
+        return new Promise(function(resolve, reject) {
+            $.ajax({
+                url: "/get_credit_bill_entry_list",
+                method: "GET",
+                async: true,
+                data: {
+                    id: id
+                },
+                success: function (response) {
+                    console.log("AJAX request successful");
+                    console.log(response);
+                    resolve(response);
+                },
+                error: function (xhr, status, error) {
+                    console.log("Get Credit Bill Entry request failed");
+                    console.log("Status: " + status);
+                    console.log("Error: " + error);
+                    reject(error);
+                },
+            });
+        });
+    }
+
+    async function createTableData(id) {
+    try {
+            const response = await getCreditBillEntryList(id);
+            // Use the response data here
+            console.log("Response from AJAX call:", response);
+            const creditData = response;
+            const data = response;
+
+            let tableHTML = "<thead><tr><th>Payment&nbsp;Date</th><th>Amount</th><th>PaymentMode</th></tr></thead><tbody>";
+
+            data.forEach(item => {
+                tableHTML += `<tr><td>${item.date}</td><td>${item.amount}/-</td><td>${item.payment_mode}</td></tr>`;
+            });
+
+            tableHTML += "</tbody>";
+            return tableHTML;
+        } catch (error) {
+            console.error("Error from AJAX call:", error);
+            throw error; // Re-throw the error so the caller can handle it
+        }
+    }
+});
