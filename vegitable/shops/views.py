@@ -253,14 +253,14 @@ def search_credit(request, current_page=1):
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('date') \
+        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('id','date') \
             .annotate(
             qty=models.F('arrival_goods__qty'),
             remarks=models.F('arrival_goods__remarks'),
             initial_qty=models.F('arrival_goods__initial_qty'),
             sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
             iteam_name=models.F('arrival_goods__iteam_name')
-        ).filter(arrival_goods__shop_id=shop_detail_object)
+        ).filter(arrival_goods__shop_id=shop_detail_object).distinct()
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
@@ -1231,8 +1231,8 @@ def get_sales_bill_detail_from_db(shop_detail_object, date):
                 'iteam_name': single_response.get('iteam_name'),
                 'bags': single_response.get('bags'),
                 'amount': single_response.get('total_amount'),
-                'payment_type': single_response.get('payment_type'),
-                'balance': single_response.get('balance_amount')
+                'balance': single_response.get('balance_amount'),
+                'payment_type': single_response.get('payment_type')
             }
             result.append(my_dict)
         response = consolidate_result_for_report(result)
