@@ -1189,8 +1189,8 @@ def search_customer_ledger(request):
 def search_farmer_ledger(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     farmerLedgerObject = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        name__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
-        contact__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
+        name__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+        contact__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
         place__icontains=request.GET['search_text'])
     response = []
     for farmer in farmerLedgerObject:
