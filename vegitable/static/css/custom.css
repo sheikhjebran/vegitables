@@ -50,7 +50,7 @@ input[type="date"] {
 }
 .custom-table-div{
     width: 100%;
-    padding-left: 27%;
+    padding-left: 20%;
     padding-bottom:10%;
 }
 .custom-table >thead{
@@ -298,10 +298,10 @@ cursor:pointer
 
 
 .form_background .card {
-  height: 500px;
+  height: 550px;
   background-color:white;
   padding:3% 3% 3% 3%;
-  width: 40%;
+  width: 50%;
   border-radius: 5px;
   box-shadow: 1px 2px 3px 4px rgba(12,12,12,0.2);
 }
@@ -343,7 +343,7 @@ cursor:pointer
     margin-left: 2%;
     padding-left:2%;
     font-size:22px;
-    width:100%;
+    width:90%;
 }
 .form_background .card input[type="date"]{
     height: 50px;
