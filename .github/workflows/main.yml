@@ -15,7 +15,7 @@ jobs:
 
       - name: Install Chrome
         run: |
-          ./install_chrome.sh
+          install_chrome.sh
 
       - name: Set up Python
         uses: actions/setup-python@v2
