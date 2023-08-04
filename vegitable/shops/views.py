@@ -253,14 +253,14 @@ def search_credit(request, current_page=1):
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('date') \
+        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('id','date') \
             .annotate(
             qty=models.F('arrival_goods__qty'),
             remarks=models.F('arrival_goods__remarks'),
             initial_qty=models.F('arrival_goods__initial_qty'),
             sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
             iteam_name=models.F('arrival_goods__iteam_name')
-        ).filter(arrival_goods__shop_id=shop_detail_object)
+        ).filter(arrival_goods__shop_id=shop_detail_object).distinct()
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
