@@ -1231,8 +1231,8 @@ def get_sales_bill_detail_from_db(shop_detail_object, date):
                 'iteam_name': single_response.get('iteam_name'),
                 'bags': single_response.get('bags'),
                 'amount': single_response.get('total_amount'),
-                'payment_type': single_response.get('payment_type'),
-                'balance': single_response.get('balance_amount')
+                'balance': single_response.get('balance_amount'),
+                'payment_type': single_response.get('payment_type')
             }
             result.append(my_dict)
         response = consolidate_result_for_report(result)
