@@ -68,11 +68,11 @@ class PythonAnyWhereConsole:
 class BuildCloud(PythonAnyWhereConsole):
 
     def execute(self):
-        self.delete_all_existing_console()
-        console_id = self.create_new_console(ConsoleType.bash)
-        print(f"NewConsole Id : {console_id}")
-        self.load_console_browser(console_id)
-        self.pull_latest_changes_on_pythonanywhere(console_id)
+        # self.delete_all_existing_console()
+        # console_id = self.create_new_console(ConsoleType.bash)
+        # print(f"NewConsole Id : {console_id}")
+        # self.load_console_browser(console_id)
+        self.pull_latest_changes_on_pythonanywhere(console_id=29719796)
 
     def load_console_browser(self, console_id):
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
