@@ -16,7 +16,7 @@ jobs:
       - name: Install Chrome
         run: |
           ls
-          cd scripts
+          cd script
           chmod +x install_chrome.sh
           ./install_chrome.sh
 
