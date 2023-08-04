@@ -85,4 +85,11 @@ urlpatterns = [
     path('inventory', views.inventory, name='inventory'),
     path('inventory/prev/<int:page_number>', views.inventory_prev_page, name="inventory_prev_page"),
     path('inventory/next/<int:page_number>', views.inventory_next_page, name="inventory_next_page"),
+
+    # Credit Bill Entry
+    path('credit_bill_entry',views.credit_bill_entry,name="credit_bill_entry"),
+    path('search_credit',views.search_credit,name="search_credit"),
+    path('add_credit_bill_amount', views.add_new_credit_bill_entry,name="add_new_credit_bill_entry"),
+    path('get_credit_bill_entry_list', views.get_credit_bill_entry_list, name="get_credit_bill_entry_list")
+
 ]

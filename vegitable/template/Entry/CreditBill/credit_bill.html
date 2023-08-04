@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "menubar.html" %}
+
+<div class="container">
+
+    <h1 class="heading">Credit Bill Entry</h1>
+    <div class="form_background">
+        <div class="card">
+            <form action = "/search_credit" method = "GET">
+            {% csrf_token %}
+                <table>
+                    <tr>
+                        <td><span class="form_text">Customer Name</span></td>
+                        <td><input type="date" name="date" /></td>
+                    </tr>
+                    <tr>
+                        <td><span class="form_text">Customer Name</span></td>
+                        <td><input type="text" placeholder="Customer Name" name="name" /></td>
+                    </tr>
+                    <tr>
+                        <td><button type="reset" class=" btn-l btn-14">Clear</button></td>
+                        <td><button type="submit" class=" btn-l">Go</button></td>
+                    </tr>
+
+                </table>
+            </form>
+        </div>
+
+    </div>
+    <div class="clearfix"> </div>
+    <div class="custom-table-div">
+    <table class="custom-table" id="tableWrapper">
+        <thead>
+            <tr>
+                <td>Bill No</td>
+                <td>Bill Date</td>
+                <td>Amount</td>
+                <td>Paid</td>
+                <td>Balance</td>
+            </tr>
+        </thead>
+        <tbody>
+            {%for credit in results %}
+                <tr>
+                    <td>
+                        <span class="no_border credit_id" value="{{credit.bill_no}}" amount_balance="{{credit.balance}}">{{credit.bill_no}}</span>
+                    </td>
+                    <td>{{credit.date}}</td>
+                    <td>{{credit.amount}}</td>
+                    <td>{{credit.paid}}</td>
+                    <td>
+                        <div class="tooltip-container">
+                            {{credit.balance}}
+                            <img class="small_icon tooltip-trigger" data-tooltip="{{credit.id}}" src="{% static 'images/exclamation.png'%}">
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+        <div class="page-top-mid1">
+            <ul class="page-mid2">
+                <li><span class="pre1"  onclick="location.href = '/credit/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
+                <li><a class="next-top1" href="/credit/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
+            </ul>
+    </div>
+    <div class="clearfix"> </div>
+    </div>
+    <div class="overlay">
+        <div id="popup" class="popup">
+            <form action = "/add_credit_bill_amount" id="popup-table" class="popup-table" method = "POST">
+                {% csrf_token %}
+                    <table>
+                        <tr>
+                            <td><span class="form_text">Balance Amount</span></td>
+                            <td>
+                                <input type="text" placeholder="Balance Amount" name="credit_bill_balance_amount" class="balance_amount" readonly/>
+                                <input type="hidden" class="sales_bill_id" name="credit_bill_sales_bill_id" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Payment Mode</span></td>
+                            <td>
+                                <select name="credit_bill_payment_option">
+                                    <option value="CASH">CASH</option>
+                                    <option value="CHEQUE">CHEQUE</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="BANK TRANSFER">BANK TRANSFER</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Amount Received</span></td>
+                            <td><input type="text" placeholder="Amount Received" name="credit_bill_amount_received" class="decimal_number_only amount_received"/></td>
+                        </tr>
+                        <tr>
+                            <td><span class="form_text">Discount</span></td>
+                            <td><input type="text" placeholder="Discount" name="credit_bill_discount" class="decimal_number_only discount"/></td>
+                        </tr>
+                        <tr>
+                            <td><button type="button" class=" btn-l btn-14 popup_close">Close</button></td>
+                            <td><button type="submit" class=" btn-l">Go</button></td>
+                        </tr>
+
+                    </table>
+            </form>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock %}

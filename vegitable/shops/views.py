@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from . import utility
 from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
     Arrival_Entry, \
-    Arrival_Goods, CustomerLedger, FarmerLedger
+    Arrival_Goods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory
 import datetime
 from django.http import FileResponse
 import io
@@ -21,7 +21,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from .report.report import Report
-from .utility import consolidate_result_for_report
+from .utility import consolidate_result_for_report, get_float_number
 
 
 def index(request):
@@ -166,6 +166,87 @@ def farmer_ledger(request, current_page=1):
         return render(request, 'Ledger/farmer_ledger.html',
                       {'farmer_ledger_list': farmer_ledger_list,
                        'current_page': current_page})
+    return render(request, 'index.html')
+
+
+def credit_bill_entry(request):
+    if request.user.is_authenticated:
+        return render(request, 'Entry/CreditBill/credit_bill.html')
+    return render(request, 'index.html')
+
+
+def add_new_credit_bill_entry(request):
+    balance_amount = get_float_number(request.POST['credit_bill_balance_amount'])
+    sales_bill_id = request.POST['credit_bill_sales_bill_id']
+    payment_mode = request.POST['credit_bill_payment_option']
+    amount_received = get_float_number(request.POST['credit_bill_amount_received'])
+    bill_discount = get_float_number(request.POST['credit_bill_discount'])
+
+    amount = round(amount_received + bill_discount, 2)
+    balance_amount -= amount
+    sales_bill = Sales_Bill_Entry.objects.get(id=sales_bill_id)
+    sales_bill.paid_amount = round(sales_bill.paid_amount + amount, 2)
+    sales_bill.balance_amount = round(balance_amount, 2)
+    sales_bill.save()
+
+    credit_bill = CreditBillEntry.objects.get(sales_bill=sales_bill_id)
+
+    creditBillHistory = CreditBillHistory(
+        amount=round(float(amount), 2),
+        payment_mode=payment_mode,
+        credit_bill=credit_bill,
+        date=datetime.datetime.today()
+    )
+    creditBillHistory.save()
+    return credit_bill_entry(request)
+
+
+@api_view(('GET',))
+@renderer_classes((JSONRenderer,))
+def get_credit_bill_entry_list(request):
+    [...]
+
+    credit_bill_entry_object = CreditBillEntry.objects.get(id=request.GET['id'])
+    credit_bill_history_list = CreditBillHistory.objects.filter(credit_bill=credit_bill_entry_object).order_by('-id')
+
+    data = []
+    for single_credit in credit_bill_history_list:
+
+        credit = {
+            'date': single_credit.date,
+            'amount': single_credit.amount,
+            'payment_mode': single_credit.payment_mode
+        }
+        data.append(credit)
+    return Response(data=data, status=status.HTTP_200_OK)
+
+
+def search_credit(request, current_page=1):
+    if request.user.is_authenticated:
+        search_name = request.GET['name']
+        search_date = request.GET['date']
+        if search_name is None or len(search_name) is 0:
+            search_name = ""
+        if search_date is None or len(search_date) is 0:
+            search_date = None
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        credit_obj = CreditBillEntry.objects.filter(
+            customer_name__icontains=search_name,
+            shop_id=shop_detail_object
+        )
+        result = []
+        for credit in credit_obj:
+            myDict = {
+                "id": credit.id,
+                "date": credit.sales_bill.date,
+                "bill_no": credit.sales_bill.id,
+                "amount": credit.sales_bill.total_amount,
+                "paid": credit.sales_bill.paid_amount,
+                "balance": credit.sales_bill.balance_amount
+            }
+            result.append(myDict)
+
+        return render(request, 'Entry/CreditBill/credit_bill.html', {'results': result, 'current_page': current_page})
     return render(request, 'index.html')
 
 
@@ -454,13 +535,30 @@ def modify_sales_bill_entry(request):
             sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
             sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
             sales_bill_entry_Obj.Empty_data = False
-            
+
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
-
+        if sales_bill_entry_Obj.balance_amount > 0.0:
+            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name)
         add_sales_bill_iteam(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
+
+
+def add_to_credit_bill_db(sales, shop, customer_name):
+    credit_bill_entry = CreditBillEntry(
+        customer_name=customer_name,
+        sales_bill=sales,
+        shop=shop
+    )
+    credit_bill_entry.save()
+
+    credit_bill_history = CreditBillHistory(
+        date=datetime.datetime.today(),
+        amount=0.0,
+        credit_bill=credit_bill_entry
+    )
+    credit_bill_history.save()
 
 
 def add_sales_bill_iteam(request, request_list, sales):
@@ -593,14 +691,14 @@ def modify_arrival(request, arrival_id):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_iteam_name(request):
     [...]
-    iteam_name_list = {}
+    item_name_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
 
     for arrival_entry in arrival_detail_object:
-        iteam_name_list[arrival_entry.iteam_name] = arrival_entry.qty
+        item_name_list[arrival_entry.iteam_name] = arrival_entry.qty
 
-    data = {'iteam_name_list': iteam_name_list}
+    data = {'iteam_name_list': item_name_list}
     return Response(data, status=status.HTTP_200_OK)
 
 
