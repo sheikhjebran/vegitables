@@ -611,6 +611,8 @@ $(document).ready(function () {
         );
       counter = counter + 1;
     }
+    calculate_patti_total_weight_and_amount();
+
   });
 
   $(document).on("keyup", ".patti_weight", function () {
@@ -705,34 +707,37 @@ $(document).ready(function () {
     );
   });
 
+    function calculate_patti_total_weight_and_amount(){
+        var local_patti_amount = 0;
+        $(".patti_amount").each(function (index, element) {
+          var my_value = parseFloat($(element).val());
+          if (Number.isNaN(my_value)) {
+            my_value = 0;
+          }
+          local_patti_amount = local_patti_amount + my_value;
+        });
+
+        var local_patti_weight = 0;
+        $(".patti_weight").each(function (index, element) {
+          var my_value = parseFloat($(element).val());
+          if (Number.isNaN(my_value)) {
+            my_value = 0;
+          }
+          local_patti_weight = local_patti_weight + my_value;
+        });
+
+        var advance_amount = $("#advance_amount").val();
+        var hamali = $("#hamali").val();
+
+        $("#total_weight").val(local_patti_weight);
+        $("#net_amount").val(
+          parseFloat(local_patti_amount) -
+            parseFloat(advance_amount) -
+            parseFloat(hamali)
+        );
+    }
   $(document).on("keyup", "#hamali", function () {
-    var local_patti_amount = 0;
-    $(".patti_amount").each(function (index, element) {
-      var my_value = parseFloat($(element).val());
-      if (Number.isNaN(my_value)) {
-        my_value = 0;
-      }
-      local_patti_amount = local_patti_amount + my_value;
-    });
-
-    var local_patti_weight = 0;
-    $(".patti_weight").each(function (index, element) {
-      var my_value = parseFloat($(element).val());
-      if (Number.isNaN(my_value)) {
-        my_value = 0;
-      }
-      local_patti_weight = local_patti_weight + my_value;
-    });
-
-    var advance_amount = $("#advance_amount").val();
-    var hamali = $("#hamali").val();
-
-    $("#total_weight").val(local_patti_weight);
-    $("#net_amount").val(
-      parseFloat(local_patti_amount) -
-        parseFloat(advance_amount) -
-        parseFloat(hamali)
-    );
+    calculate_patti_total_weight_and_amount();
   });
 
   // Code to allow only numbers
