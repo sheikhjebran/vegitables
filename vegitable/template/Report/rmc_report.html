@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'menubar.html' %}
+<div class="container">
+  <h1 class="heading">RMC Report</h1>
+    <div class="rmc_button_choice">
+        <button type="button" class=" btn-l btn-13 rmc_weekly_button">Weekly</button>
+        <button type="button" class=" btn-l btn-13 rmc_daily_button">Daily</button>
+    </div>
+    <div class="daily_report_date">
+        <div class="form_background">
+            <div class="small_card">
+                <span>
+                    <h1>Select Date : </h1><input type="date" name="daily_rmc_date" class="daily_rmc_date">
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="weekly_report_date">
+        <div class="form_background">
+            <div class="small_card">
+                <span>
+                    <h1>Start Date : </h1><input type="date" name="weekly_rmc_start_date" class="weekly_rmc_start_date">
+                    &nbsp;
+                    &nbsp;
+                    &nbsp;
+                    <h1>End Date : </h1><input type="date" name="weekly_rmc_end_date" class="weekly_rmc_end_date">
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="daily_report_container">
+        <h1 class="small_heading_left">Cash Bill</h1>
+        <table class="custom-table daily_report_table_cash">
+            <thead>
+                <tr>
+                    <td>Bill No</td>
+                    <td>Bags</td>
+                    <td>Amount</td>
+                    <td>RMC</td>
+                </tr>
+            </thead>
+        </table>
+        <h1 class="small_heading_left">Credit Bill</h1>
+        <table class="custom-table daily_report_table_credit">
+            <thead>
+                <tr>
+                    <td>Bill No</td>
+                    <td>Bags</td>
+                    <td>Amount</td>
+                    <td>RMC</td>
+                </tr>
+            </thead>
+        </table>
+    </br></br></br></br>
+    </div>
+
+    <div class="weekly_report_container">
+        <h1 class="small_heading_left">Weekly Report</h1>
+        <table class="custom-table weekly_rmc_report_table">
+            <thead>
+                <tr>
+                    <td>Date</td>
+                    <td>Total Bags</td>
+                    <td>Total Amount</td>
+                    <td>Total Paid</td>
+                    <td>Total Balance</td>
+                    <td>Total RMC</td>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+{% endblock %}
