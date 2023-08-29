@@ -66,6 +66,7 @@ urlpatterns = [
     path('sales_bill_report', views.sales_bill_report, name='sales_bill_report'),
     path('report_sales_bill', views.report_sales_bill, name='report_sales_bill'),
     path('generate_sales_bill_report', views.generate_sales_bill_report, name='generate_sales_bill_report'),
+    path('rmc_report',views.rmc_report,name='rmc_report'),
 
     # Customer Ledger
     path('customer_ledger', views.customer_ledger, name='customer_ledger'),
@@ -90,6 +91,9 @@ urlpatterns = [
     path('credit_bill_entry',views.credit_bill_entry,name="credit_bill_entry"),
     path('search_credit',views.search_credit,name="search_credit"),
     path('add_credit_bill_amount', views.add_new_credit_bill_entry,name="add_new_credit_bill_entry"),
-    path('get_credit_bill_entry_list', views.get_credit_bill_entry_list, name="get_credit_bill_entry_list")
+    path('get_credit_bill_entry_list', views.get_credit_bill_entry_list, name="get_credit_bill_entry_list"),
 
+    # RMC
+    path('get_daily_rmc_selected_date', views.get_daily_rmc_selected_date, name="get_daily_rmc_selected_date"),
+    path('get_daily_rmc_start_and_end_date', views.get_daily_rmc_start_and_end_date, name="get_daily_rmc_start_and_end_date")
 ]

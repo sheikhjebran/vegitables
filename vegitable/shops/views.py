@@ -15,13 +15,9 @@ from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill
     Arrival_Entry, \
     Arrival_Goods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory
 import datetime
-from django.http import FileResponse
-import io
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
-from reportlab.lib.pagesizes import letter
 from .report.report import Report
 from .utility import consolidate_result_for_report, get_float_number
+from django.db.models import Sum, F
 
 
 def index(request):
@@ -211,7 +207,6 @@ def get_credit_bill_entry_list(request):
 
     data = []
     for single_credit in credit_bill_history_list:
-
         credit = {
             'date': single_credit.date,
             'amount': single_credit.amount,
@@ -225,9 +220,9 @@ def search_credit(request, current_page=1):
     if request.user.is_authenticated:
         search_name = request.GET['name']
         search_date = request.GET['date']
-        if search_name is None or len(search_name) is 0:
+        if search_name is None or len(search_name) == 0:
             search_name = ""
-        if search_date is None or len(search_date) is 0:
+        if search_date is None or len(search_date) == 0:
             search_date = None
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         credit_obj = CreditBillEntry.objects.filter(
@@ -253,7 +248,7 @@ def search_credit(request, current_page=1):
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('id','date') \
+        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
             .annotate(
             qty=models.F('arrival_goods__qty'),
             remarks=models.F('arrival_goods__remarks'),
@@ -871,6 +866,70 @@ def get_lorry_number_for_date(request, lorry_date):
 
 
 @api_view(('GET',))
+def get_daily_rmc_selected_date(request):
+    [...]
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        rmc_date = getDate_from_string(request.GET['date'])
+        # Perform the query
+        queryset = Sales_Bill_Entry.objects.filter(shop=shop_detail_object, date=rmc_date).annotate(
+            total_bags=Sum('sales_bill_iteam__bags'),
+            total_paid_amount=F('paid_amount'),
+            total_rmc=F('rmc')
+        ).values('id', 'payment_type', 'total_bags', 'total_paid_amount', 'total_rmc')
+
+        # Iterate through the results
+        data = []
+        for entry in queryset:
+            single_entry = {
+                'entry_id': entry['id'],
+                'payment_type': entry['payment_type'],
+                'bags': entry['total_bags'],
+                'paid_amount': entry['total_paid_amount'],
+                'rmc': entry['total_rmc']}
+            data.append(single_entry)
+
+        if len(data) > 0:
+            return JsonResponse(data={'FOUND': True, 'result': data}, status=status.HTTP_200_OK)
+        return JsonResponse(data={'FOUND': False, 'result': data}, status=status.HTTP_200_OK)
+    except Exception as error:
+        return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(('GET',))
+def get_daily_rmc_start_and_end_date(request):
+    [...]
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        start_date = getDate_from_string(request.GET['start_date'])
+        end_date = getDate_from_string(request.GET['end_date'])
+
+        combined_data = Sales_Bill_Entry.objects.filter(date__range=(start_date, end_date),shop=shop_detail_object).values('date').annotate(
+            total_rmc=Sum('rmc'),
+            total_bags=Sum('sales_bill_iteam__bags'),
+            total_total_amount=Sum('total_amount'),
+            total_paid_amount=Sum('paid_amount'),
+            total_balance_amount=Sum('balance_amount')
+        )
+
+        data = []
+        # Loop through and print the combined data
+        for entry in combined_data:
+            single_entry = {
+                "Date":entry['date'],
+                "Total_RMC":entry['total_rmc'],
+                "Total_Amount":entry['total_total_amount'],
+                "Total_Paid":entry['total_paid_amount'],
+                "Total_Balance":entry['total_balance_amount'],
+                "Total_Bags": entry['total_bags'],
+            }
+            data.append(single_entry)
+        return JsonResponse(data={'FOUND': True, 'result': data}, status=status.HTTP_200_OK)
+    except Exception as error:
+        return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_all_farmer_name(request):
     [...]
@@ -1031,8 +1090,8 @@ def generate_patti_pdf_bill(request):
         arrival_good_object.save()
 
         add_patti_iteam_list(request, list(request.POST), patti_entry_obj)
-        generate_pdf(request)
-        return patti_list(request)
+        return Report.patti_report_view(request)
+        # return patti_list(request)
     return render(request, 'index.html')
 
 
@@ -1078,39 +1137,6 @@ def add_patti_iteam_list(request, request_list, patti_entry_obj):
             patti_obj.save()
 
     return render(request, 'index.html')
-
-
-def generate_pdf(request):
-    # Create a byte stream buffer
-    buf = io.BytesIO()
-
-    # Create a canvas
-    c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-
-    # Text object
-    textOb = c.beginText()
-    textOb.setTextOrigin(inch, inch)
-    textOb.setFont("Helvetica", 14)
-
-    # Add some lines of text
-    lines = [
-        "This is line 1",
-        "This is line 2",
-        "This is line 3"
-    ]
-
-    # loops
-    for line in lines:
-        textOb.textLine(line)
-
-    c.drawText(textOb)
-    c.showPage()
-    c.save()
-
-    buf.seek(0)
-
-    # Return something
-    return FileResponse(buf, as_attachment=True, filename="dummy.pdf")
 
 
 @csrf_protect
@@ -1268,6 +1294,16 @@ def sales_bill_report(request):
     return render(request, 'index.html')
 
 
+@csrf_protect
+def rmc_report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        return render(request, 'Report/rmc_report.html', {
+            'shop_details': shop_detail_object,
+        })
+    return render(request, 'index.html')
+
+
 def extract_dictionary_into_list_container(response):
     list_container = []
     for single_item in response:
@@ -1281,5 +1317,12 @@ def generate_sales_bill_report(request):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         response = get_sales_bill_detail_from_db(shop_detail_object, request.POST['sales_bill_date'])
         response = extract_dictionary_into_list_container(response)
-        return Report.generate_table_report(response)
+        return Report.generate_sales_bill_table_report(response)
+    return render(request, 'index.html')
+
+
+def generate_patti_bill_report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+
     return render(request, 'index.html')

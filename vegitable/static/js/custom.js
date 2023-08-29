@@ -1108,6 +1108,164 @@ $(document).ready(function () {
   }
   report_sales_entry_selected.on("keyup change", CheckSalesBill_Report);
 
+
+   $(document).on("change", ".daily_rmc_date", function () {
+        var selected_date = this.value;
+        getDailyRmcForSelectedDate(selected_date);
+   });
+
+    function getDailyRmcForSelectedDate(selectedDate){
+    $.ajax({
+      url: "/get_daily_rmc_selected_date",
+      method: "GET",
+      async: true,
+      data: {
+        date: selectedDate
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        update_daily_rmc_container(response);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+
+      },
+    });
+  }
+
+  function update_daily_rmc_container(response){
+    if(response.FOUND){
+        $(".daily_report_container").show();
+        $(".weekly_report_container").hide();
+        $(".daily_report_table_cash").children("tbody").children("tr").remove();
+        $(".daily_report_table_credit").children("tbody").children("tr").remove();
+
+        var data = response.result;
+        let tableHTMLCash = "<tbody>";
+        let tableHTMLCredit = "<tbody>";
+        let cash_counter = 0;
+        let credit_counter = 0;
+
+        if(data.length==0){
+        $(".daily_report_container").css("visibility", "hidden");
+        }else{
+        data.forEach(item => {
+            if(item.payment_type=="credit"){
+            tableHTMLCredit += `
+            <tr>
+                <td>${item.entry_id}</td>
+                <td>${item.bags}/-</td>
+                <td>${item.paid_amount}</td>
+                <td>${item.rmc}</td>
+            </tr>`;
+            credit_counter = credit_counter + 1;
+            }else{
+            tableHTMLCash += `
+            <tr>
+                <td>${item.entry_id}</td>
+                <td>${item.bags}/-</td>
+                <td>${item.paid_amount}</td>
+                <td>${item.rmc}</td>
+            </tr>`;
+            cash_counter = cash_counter + 1;
+            }
+        });
+        tableHTMLCash += "</tbody>";
+        tableHTMLCredit += "</tbody>";
+         $(".daily_report_table_cash").append(tableHTMLCash);
+         $('.daily_report_table_credit').append(tableHTMLCredit);
+        }
+
+    }else{
+        $(".daily_report_container").css("visibility", "hidden");
+        $(".daily_report_table_cash").children("tbody").children("tr").remove();
+        $(".daily_report_table_credit").children("tbody").children("tr").remove();
+    }
+  }
+
+    $(document).on("click",".rmc_daily_button",function(){
+        $(".daily_report_date").show();
+        $(".daily_report_container").show();
+
+        $(".weekly_report_date").hide();
+    });
+    $(document).on("click",".rmc_weekly_button",function(){
+        $(".daily_report_date").hide();
+        $(".daily_report_container").hide();
+
+        $(".weekly_report_date").show();
+    });
+
+    $(document).on("change", ".weekly_rmc_start_date", function () {
+        var start_date = this.value;
+        var end_date = $(".weekly_rmc_end_date").val();
+        if (end_date == "") {
+            console.log("The EndDate value is undefined");
+        }else{
+            getWeeklyRmcForSelectedDate(start_date, end_date);
+        }
+
+
+   });
+   $(document).on("change", ".weekly_rmc_end_date", function () {
+        var end_date = this.value;
+        var start_date = $(".weekly_rmc_start_date").val();
+        if (start_date == "") {
+            console.log("The StartDate value is undefined");
+        }else{
+            getWeeklyRmcForSelectedDate(start_date, end_date);
+        }
+   });
+
+    function getWeeklyRmcForSelectedDate(start_date=null, end_date=null){
+        $.ajax({
+              url: "/get_daily_rmc_start_and_end_date",
+              method: "GET",
+              async: true,
+              data: {
+                start_date: start_date,
+                end_date: end_date
+              },
+              success: function (response) {
+                console.log("AJAX request successful");
+                update_weekly_rmc_container(response);
+              },
+              error: function (xhr, status, error) {
+                console.log("AJAX request failed");
+                console.log("Status: " + status);
+                console.log("Error: " + error);
+
+              },
+            });
+    }
+
+    function update_weekly_rmc_container(response){
+        if(response.FOUND){
+            $(".daily_report_container").hide();
+            $(".weekly_report_container").show();
+
+            $(".weekly_rmc_report_table").children("tbody").children("tr").remove();
+
+            var data = response.result;
+            let tableHTML = "<tbody>";
+            data.forEach(item => {
+                tableHTML += `
+                <tr>
+                    <td>${item.Date}</td>
+                    <td>${item.Total_Bags}</td>
+                    <td>${item.Total_Amount}/-</td>
+                    <td>${item.Total_Paid}/-</td>
+                    <td>${item.Total_Balance}/-</td>
+                    <td>${item.Total_RMC}</td>
+                </tr>`;
+            });
+            tableHTML += "</tbody>";
+            $(".weekly_rmc_report_table").append(tableHTML);
+        }
+    }
+// Main code end's here
 });
 
 function removeElement(el) {
