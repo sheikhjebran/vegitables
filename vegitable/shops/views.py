@@ -255,7 +255,7 @@ def inventory(request, current_page=1):
             initial_qty=models.F('arrival_goods__initial_qty'),
             sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
             iteam_name=models.F('arrival_goods__iteam_name')
-        ).filter(arrival_goods__shop_id=shop_detail_object).distinct()
+        ).filter(arrival_goods__shop_id=shop_detail_object).order_by('-id').distinct()
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
