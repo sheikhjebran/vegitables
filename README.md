@@ -17,7 +17,7 @@ pip-upgrade requirements.txt
 
 ### To migrate the sql
 ```
-python3 manage.py sqlmigrate shops 0002
+python3 manage.py sqlmigrate shops 0003
 ```
 
 ### necessary plugin for django
