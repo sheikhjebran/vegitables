@@ -904,7 +904,8 @@ def get_daily_rmc_start_and_end_date(request):
         start_date = getDate_from_string(request.GET['start_date'])
         end_date = getDate_from_string(request.GET['end_date'])
 
-        combined_data = Sales_Bill_Entry.objects.filter(date__range=(start_date, end_date),shop=shop_detail_object).values('date').annotate(
+        combined_data = Sales_Bill_Entry.objects.filter(date__range=(start_date, end_date),
+                                                        shop=shop_detail_object).values('date').annotate(
             total_rmc=Sum('rmc'),
             total_bags=Sum('sales_bill_iteam__bags'),
             total_total_amount=Sum('total_amount'),
@@ -916,11 +917,11 @@ def get_daily_rmc_start_and_end_date(request):
         # Loop through and print the combined data
         for entry in combined_data:
             single_entry = {
-                "Date":entry['date'],
-                "Total_RMC":entry['total_rmc'],
-                "Total_Amount":entry['total_total_amount'],
-                "Total_Paid":entry['total_paid_amount'],
-                "Total_Balance":entry['total_balance_amount'],
+                "Date": entry['date'],
+                "Total_RMC": entry['total_rmc'],
+                "Total_Amount": entry['total_total_amount'],
+                "Total_Paid": entry['total_paid_amount'],
+                "Total_Balance": entry['total_balance_amount'],
                 "Total_Bags": entry['total_bags'],
             }
             data.append(single_entry)
@@ -1325,4 +1326,10 @@ def generate_patti_bill_report(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
+    return render(request, 'index.html')
+
+
+def shilk_entry(request):
+    if request.user.is_authenticated:
+        return render(request, 'Entry/Shilk/shilk.html')
     return render(request, 'index.html')
