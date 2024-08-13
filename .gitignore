@@ -6,3 +6,6 @@ vegitable/shops/__pycache__/*
 .env
 
 /vegitable/assets
+/venv
+.idea/misc.xml
+.idea/vegitables.iml

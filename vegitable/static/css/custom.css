@@ -594,3 +594,23 @@ margin-top:0;
 .daily_report_date, .weekly_report_date{
 display:none;
 }
+
+.shilk_container{
+    margin-top:3%;
+    font-size: 2em;
+    font-weight: bolder;
+}
+.shilk_legend, .shilk_legend_value{
+    float: left;
+    margin-left:3%;
+}
+.shilk_legend_value{
+    margin-left:1%;
+}
+
+.shilk_container input[type="date"], .shilk_container input[type="text"]{
+    width:100%;
+    height:35px;
+    padding-left:7%;
+    font-weight:bolder;
+}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include "menubar.html" %}
+<div class="container">
+    <h1 class="heading">Shilk Entry</h1>
+    <div class="clearfix"> </div>
+
+    <div class="shilk_container">
+        <div class="shilk_legend">Date</div>
+        <div class="shilk_legend_value">
+            <input type="date" name="shilk_date" id="shilk_date">
+        </div>
+    </div>
+    <div class="clearfix"> </div>
+    <div class="shilk_container">
+        <div class="shilk_legend">Arrival</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_arrival" id="shilk_arrival" readonly>
+        </div>
+        <div class="shilk_legend">Bags Sold</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_bags_sold" id="shilk_bags_sold" readonly>
+        </div>
+        <div class="shilk_legend">Balance</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_balance" id="shilk_balance" readonly>
+        </div>
+    </div>
+    <div class="clearfix"> </div>
+    <h3 class="heading">Cash Flow</h3>
+    <div class="clearfix"> </div>
+    <div class="shilk_container">
+        <div class="shilk_legend">Cash Bill Amount</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_cash_bill_amount" id="shilk_cash_bill_amount" readonly>
+        </div>
+        <div class="shilk_legend">Collection</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_collection" id="shilk_collection" readonly>
+        </div>
+        <div class="shilk_legend">Total Sales</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_total_sales" id="shilk_total_sales" readonly>
+        </div>
+    </div>
+
+    <div class="clearfix"> </div>
+    <h3 class="heading">Credits</h3>
+    <div class="clearfix"> </div>
+    <div class="shilk_container">
+        <div class="shilk_legend">Credit Bill Amount</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_credit_bill_amount" id="shilk_credit_bill_amount" readonly>
+        </div>
+        <div class="shilk_legend">PhonePay/Banking</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_phone_pay" id="shilk_phone_pay" readonly>
+        </div>
+        <div class="shilk_legend">Expenses</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_expenses" id="shilk_expenses" readonly>
+        </div>
+    </div>
+    <div class="clearfix"> </div>
+    <div class="shilk_container">
+        <div class="shilk_legend">Net Amount</div>
+        <div class="shilk_legend_value">
+            <input type="text" name="shilk_net_amount" id="shilk_net_amount" readonly>
+        </div>
+    </div>
+    <div class="clearfix"> </div>
+</div>
+{% endblock %}

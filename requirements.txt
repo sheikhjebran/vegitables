@@ -11,4 +11,3 @@ pipreqs
 python-decouple
 JsonDecoder
 selenium
-webdriver_manager
