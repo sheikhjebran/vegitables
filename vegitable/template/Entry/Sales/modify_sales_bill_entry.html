@@ -79,7 +79,7 @@
                     <tbody>
                         <tr>
                             <td>Lot No</td>
-                            <td>Iteam Name</td>
+                            <td>item Name</td>
                             <td>Bags</td>
                             <td>Net Weight</td>
                             <td>Rates</td>
@@ -102,7 +102,7 @@
 
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Iteam Name' name ="0_iteam_name" id="0_iteam_name" required='' readonly>
+                                <input type='text' placeholder='item Name' name ="0_item_name" id="0_item_name" required='' readonly>
                                 <input type='text' placeholder='qty' name ="0_qty" id="0_qty" required='' readonly hidden>
                             </div>
                         </td>
@@ -134,14 +134,14 @@
                         </td>
                     </tr>
                     {% else %}
-                    {% for iteam in sales_iteam_objs %}
-                    <tr style='margin-top:3%;margin-bottom:3%;' id ="{{iteam.id}}_modify_child">
+                    {% for item in sales_item_objs %}
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="{{item.id}}_modify_child">
                         <td class="custom-select">
                             <div class='comment-your'>
-                                <select class="add_new_sales_custom_select" name="{{iteam.id}}_modify_lot_number" id ="{{iteam.id}}_modify_lot_number">
+                                <select class="add_new_sales_custom_select" name="{{item.id}}_modify_lot_number" id ="{{item.id}}_modify_lot_number">
                                     
                                     {% for arrival_detail in arrival_goods_detail%}
-                                    <option value="{{arrival_detail.id}}" {% if iteam.iteam_name == "{{arrival_detail.iteam_name}}" %}selected{% endif %}>{{arrival_detail.remarks}}</option>
+                                    <option value="{{arrival_detail.id}}" {% if item.item_name == "{{arrival_detail.item_name}}" %}selected{% endif %}>{{arrival_detail.remarks}}</option>
                                     {%endfor%}
                                 </select>
                                 
@@ -150,10 +150,10 @@
 
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Iteam Name' name ="{{iteam.id}}_modify_iteam_name" id="{{iteam.id}}_modify_iteam_name" required='' value = "{{iteam.iteam_name}}" readonly>
+                                <input type='text' placeholder='item Name' name ="{{item.id}}_modify_item_name" id="{{item.id}}_modify_item_name" required='' value = "{{item.item_name}}" readonly>
                                 {% for arrival_detail in arrival_goods_detail%}
-                                    {% if arrival_detail.id == iteam.arrival_goods.id%}
-                                        <input type='text' placeholder='qty' name ="{{iteam.id}}_modify_qty" id="{{iteam.id}}_modify_qty" value= "{{arrival_detail.qty}}" required=''  readonly hidden>
+                                    {% if arrival_detail.id == item.arrival_goods.id%}
+                                        <input type='text' placeholder='qty' name ="{{item.id}}_modify_qty" id="{{item.id}}_modify_qty" value= "{{arrival_detail.qty}}" required=''  readonly hidden>
                                     {%endif%}
                                 {%endfor%}
                             </div>
@@ -161,22 +161,22 @@
 						
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Bags' name ="{{iteam.id}}_modify_bags" class= "sales_bag_count number_only" value= "{{iteam.bags}}" required=''>
+                                <input type='text' placeholder='Bags' name ="{{item.id}}_modify_bags" class= "sales_bag_count number_only" value= "{{item.bags}}" required=''>
                             </div>
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Net Weigth' name ="{{iteam.id}}_modify_net_weight" id="{{iteam.id}}_modify_net_weight" class= "decimal_number_only" value="{{iteam.net_weight}}" required=''>
+                                <input type='text' placeholder='Net Weigth' name ="{{item.id}}_modify_net_weight" id="{{item.id}}_modify_net_weight" class= "decimal_number_only" value="{{item.net_weight}}" required=''>
                             </div>
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Rates' name ="{{iteam.id}}_modify_rates" required='' id= "{{iteam.id}}_modify_rates" value="{{iteam.rates}}" class="calculate_amount decimal_number_only">
+                                <input type='text' placeholder='Rates' name ="{{item.id}}_modify_rates" required='' id= "{{item.id}}_modify_rates" value="{{item.rates}}" class="calculate_amount decimal_number_only">
                             </div>
                         </td>
                         <td>
                             <div class='comment-your'>
-                                <input type='text' placeholder='Amount' name ="{{iteam.id}}_modify_amount" id= "{{iteam.id}}_modify_amount" class= " amount_validation decimal_number_only" value= "{{iteam.amount}}" required='' readonly>
+                                <input type='text' placeholder='Amount' name ="{{item.id}}_modify_amount" id= "{{item.id}}_modify_amount" class= " amount_validation decimal_number_only" value= "{{item.amount}}" required='' readonly>
                             </div>
                         </td>
                        

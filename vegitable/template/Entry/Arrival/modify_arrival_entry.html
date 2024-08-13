@@ -63,7 +63,7 @@
                     <tbody>
                         <tr>
                             <td>Former Name</td>
-                            <td>Iteam Name</td>
+                            <td>item Name</td>
                             <td>Qty</td>
                             <td>Weight</td>
                             <td>Lot Number</td>
@@ -79,7 +79,7 @@
                         </td>
 						<td>
                             <div class='comment-your'>
-                                <select  name ="0_iteam_name" id ="0_iteam_name">
+                                <select  name ="0_item_name" id ="0_item_name">
                                     <option value="Onion">Onion</option>
                                     <option selected="true" value="Potato">Potato</option>
                                     <option value="Ginger">Ginger</option>
@@ -115,48 +115,48 @@
                     </tr>
                     {% else %}
 
-                        {% for iteam in arrival_goods_objs %}
-                        <tr style='margin-top:3%;margin-bottom:3%;' id ="{{iteam.id}}_modify_child">
+                        {% for item in arrival_goods_objs %}
+                        <tr style='margin-top:3%;margin-bottom:3%;' id ="{{item.id}}_modify_child">
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Former Name' name ="{{iteam.id}}_modify_farmer_name" value="{{iteam.former_name}}" required=''>
+                                    <input type='text' placeholder='Former Name' name ="{{item.id}}_modify_farmer_name" value="{{item.former_name}}" required=''>
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <select  name ="{{iteam.id}}_modify_iteam_name" id ="{{iteam.id}}_modify_iteam_name">
-                                        <option value="Onion" {% if iteam.iteam_name == 'Onion' %}selected{% endif %}>Onion</option>
-                                        <option value="Potato" {% if iteam.iteam_name == 'Potato' %}selected{% endif %}>Potato</option>
-                                        <option value="Ginger" {% if iteam.iteam_name == 'Ginger' %}selected{% endif %}>Ginger</option>
-                                        <option value="Garlic" {% if iteam.iteam_name == 'Garlic' %}selected{% endif %}>Garlic</option>
+                                    <select  name ="{{item.id}}_modify_item_name" id ="{{item.id}}_modify_item_name">
+                                        <option value="Onion" {% if item.item_name == 'Onion' %}selected{% endif %}>Onion</option>
+                                        <option value="Potato" {% if item.item_name == 'Potato' %}selected{% endif %}>Potato</option>
+                                        <option value="Ginger" {% if item.item_name == 'Ginger' %}selected{% endif %}>Ginger</option>
+                                        <option value="Garlic" {% if item.item_name == 'Garlic' %}selected{% endif %}>Garlic</option>
                                     </select>
 
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Qty' id ="{{iteam.id}}_modify_qty" name ="{{iteam.id}}_modify_qty" value="{{iteam.qty}}" class="qty_validation number_only" required=''>
+                                    <input type='text' placeholder='Qty' id ="{{item.id}}_modify_qty" name ="{{item.id}}_modify_qty" value="{{item.qty}}" class="qty_validation number_only" required=''>
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Weight' name ="{{iteam.id}}_modify_weight" value="{{iteam.weight}}" >
+                                    <input type='text' placeholder='Weight' name ="{{item.id}}_modify_weight" value="{{item.weight}}" >
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Mark' name ="{{iteam.id}}_modify_remark" value = "{{iteam.remarks}}" required=''>
+                                    <input type='text' placeholder='Mark' name ="{{item.id}}_modify_remark" value = "{{item.remarks}}" required=''>
                                 </div>
                             </td>
                             <td>
                                 <div class='comment-your'>
-                                    <input type='text' placeholder='Advance Amount' name ="{{iteam.id}}_modify_advance_amount" value = "{{iteam.advance}}" required=''>
+                                    <input type='text' placeholder='Advance Amount' name ="{{item.id}}_modify_advance_amount" value = "{{item.advance}}" required=''>
                                 </div>
                             </td>
                             <td>
                                 <div class='tog-top-4'>
-                                    <!--<img class='close_button' src="{% static 'images/remove.png' %}" name="{{iteam.id}}_modify" />-->
-                                    <input type="hidden" name="{{iteam.id}}_arrival_goods_id" value="{{iteam.id}}">
+                                    <!--<img class='close_button' src="{% static 'images/remove.png' %}" name="{{item.id}}_modify" />-->
+                                    <input type="hidden" name="{{item.id}}_arrival_goods_id" value="{{item.id}}">
                                  </div>
                             </td>
                         </tr>

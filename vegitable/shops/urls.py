@@ -22,7 +22,7 @@ urlpatterns = [
     path('add_arrival', views.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>', views.modify_arrival, name='modify_arrival'),
     # RestAPI
-    path('get_arrival_goods_iteam_name', views.get_arrival_goods_iteam_name, name='get_arrival_goods_iteam_name'),
+    path('get_arrival_goods_item_name', views.get_arrival_goods_item_name, name='get_arrival_goods_item_name'),
     path('get_arrival_goods_list', views.get_arrival_goods_list, name='get_arrival_goods_list'),
     path('get_arrival_goods_api', views.get_arrival_goods_api, name='get_arrival_goods_api'),
     path('get_arrival_duplicate_validation_api', views.get_arrival_duplicate_validation_api,
@@ -47,8 +47,8 @@ urlpatterns = [
     path('edit_sales_bill_entry/<int:sales_id>', views.edit_sales_bill_entry, name='edit_sales_bill_entry'),
 
     # Rest Api for sales entry list
-    path('get_sales_list_for_arrival_iteam_list', views.get_sales_list_for_arrival_iteam_list,
-         name='get_sales_list_for_arrival_iteam_list'),
+    path('get_sales_list_for_arrival_item_list', views.get_sales_list_for_arrival_item_list,
+         name='get_sales_list_for_arrival_item_list'),
 
     # patti Entry URL
     path('patti_list', views.patti_list, name="patti_list"),
@@ -95,6 +95,7 @@ urlpatterns = [
 
     # Shilk Entry
     path('shilk_entry', views.shilk_entry, name="shilk_entry"),
+    path('retrieve_shilk', views.retrieve_shilk, name="retrieve_shilk"),
 
     # RMC
     path('get_daily_rmc_selected_date', views.get_daily_rmc_selected_date, name="get_daily_rmc_selected_date"),

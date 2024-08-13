@@ -65,7 +65,7 @@
                 <table id="tableWrapper" style="display:block;border-collapse: separate;border-spacing: 0 1em;">
                     <thead>
                         <tr>
-                            <td>Iteam Name</td>
+                            <td>item Name</td>
                             <td>Lot Number</td>
                             <td>Sold Qty</td>
                             <td>Balance Qty</td>
@@ -78,15 +78,15 @@
                     {% if NEW %}
                         <tr><td></td></tr>
                     {% else %}
-                        {% for patti_entry_iteam in patti_entry_obj %}
+                        {% for patti_entry_item in patti_entry_obj %}
                         <tr>
-                            <td>{{patti_entry_iteam.iteam}}</td>
-                            <td>{{patti_entry_iteam.lot_no}}</td>
+                            <td>{{patti_entry_item.item}}</td>
+                            <td>{{patti_entry_item.lot_no}}</td>
                             <td></td>
                             <td></td>
-                            <td>{{patti_entry_iteam.weight}}</td>
-                            <td>{{patti_entry_iteam.rate}}</td>
-                            <td>{{patti_entry_iteam.amount}}</td>
+                            <td>{{patti_entry_item.weight}}</td>
+                            <td>{{patti_entry_item.rate}}</td>
+                            <td>{{patti_entry_item.amount}}</td>
                         </tr>
                         {% endfor %}
                     {% endif %}

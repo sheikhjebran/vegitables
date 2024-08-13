@@ -16,7 +16,7 @@ class Shop(models.Model):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
 
-class Expenditure_Entry(models.Model):
+class ExpenditureEntry(models.Model):
     date = DateField()
     expense_type = CharField(max_length=50)
     amount = FloatField(max_length=100)
@@ -28,7 +28,7 @@ class Expenditure_Entry(models.Model):
         return f"{self.id}-{self.expense_type}-{self.amount}-{self.remark}"
 
 
-class Arrival_Entry(models.Model):
+class ArrivalEntry(models.Model):
     gp_no = CharField(max_length=100)
     lorry_no = CharField(max_length=100, default='')
     date = DateField()
@@ -41,15 +41,15 @@ class Arrival_Entry(models.Model):
         return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
 
 
-class Arrival_Goods(models.Model):
+class ArrivalGoods(models.Model):
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
-    arrival_entry = ForeignKey(Arrival_Entry, on_delete=models.CASCADE)
+    arrival_entry = ForeignKey(ArrivalEntry, on_delete=models.CASCADE)
     former_name = CharField(max_length=50)
     initial_qty = IntegerField()
     qty = IntegerField()
     weight = FloatField(max_length=100)
     remarks = CharField(max_length=50)
-    iteam_name = CharField(max_length=100)
+    item_name = CharField(max_length=100)
     advance = FloatField(max_length=100, default=0)
     patti_status = BooleanField(default=False)
 
@@ -57,7 +57,7 @@ class Arrival_Goods(models.Model):
         return f"{self.id} - {self.shop} -{self.former_name}"
 
 
-class Sales_Bill_Entry(models.Model):
+class SalesBillEntry(models.Model):
     payment_type = CharField(max_length=10)
     customer_name = CharField(max_length=50)
     date = DateField()
@@ -74,20 +74,20 @@ class Sales_Bill_Entry(models.Model):
         return f"{self.id}-{self.customer_name}-{self.total_amount}"
 
 
-class Sales_Bill_Iteam(models.Model):
-    iteam_name = CharField(max_length=10)
-    arrival_goods = ForeignKey(Arrival_Goods, on_delete=models.CASCADE)
+class SalesBillItem(models.Model):
+    item_name = CharField(max_length=10)
+    arrival_goods = ForeignKey(ArrivalGoods, on_delete=models.CASCADE)
     bags = CharField(max_length=50)
     net_weight = FloatField(max_length=50)
     rates = FloatField(max_length=50)
     amount = FloatField(max_length=50)
-    Sales_Bill_Entry = ForeignKey(Sales_Bill_Entry, on_delete=models.CASCADE)
+    Sales_Bill_Entry = ForeignKey(SalesBillEntry, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id}-{self.iteam_name}-{self.bags}-{self.net_weight}-{self.amount}"
+        return f"{self.id}-{self.item_name}-{self.bags}-{self.net_weight}-{self.amount}"
 
 
-class Patti_entry(models.Model):
+class PattiEntry(models.Model):
     lorry_no = CharField(max_length=100)
     date = DateField()
     advance = FloatField(max_length=100)
@@ -102,16 +102,16 @@ class Patti_entry(models.Model):
         return f"{self.lorry_no}- {self.farmer_name} - {self.total_weight} - {self.net_amount} -{self.shop}"
 
 
-class Patti_entry_list(models.Model):
-    iteam = CharField(max_length=100)
+class PattiEntryList(models.Model):
+    item = CharField(max_length=100)
     lot_no = CharField(max_length=100)
     weight = CharField(max_length=100)
     rate = CharField(max_length=100)
     amount = FloatField(max_length=100)
-    patti = ForeignKey(Patti_entry, on_delete=models.CASCADE)
+    patti = ForeignKey(PattiEntry, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.iteam}- {self.lot_no}- {self.weight}- {self.amount} - {self.patti}"
+        return f"{self.item}- {self.lot_no}- {self.weight}- {self.amount} - {self.patti}"
 
 
 class CustomerLedger(models.Model):
@@ -136,7 +136,7 @@ class FarmerLedger(models.Model):
 
 class CreditBillEntry(models.Model):
     customer_name = CharField(max_length=100)
-    sales_bill = ForeignKey(Sales_Bill_Entry, on_delete=models.CASCADE)
+    sales_bill = ForeignKey(SalesBillEntry, on_delete=models.CASCADE)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
 
     def __str__(self):
