@@ -141,6 +141,9 @@ $(document).ready(function () {
     $("#shilk_arrival").val(result["total_bags_sum"]);
     $("#shilk_bags_sold").val(result["bags_sold_sum"]);
     $("#shilk_balance").val(result["balance_bags_sum"]);
+    $("#shilk_total_sales").val(result["total_sales"]);
+    $("#shilk_cash_bill_amount").val(result["cash_bill_amount"]);
+    $("#shilk_collection").val(result["credit_bill_amount"]);
    }
 
 

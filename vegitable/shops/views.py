@@ -17,7 +17,7 @@ from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry
 import datetime
 from .report.report import Report
 from .utility import consolidate_result_for_report, get_float_number
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 
 
 def index(request):
@@ -1338,26 +1338,44 @@ def shilk_entry(request):
 def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
     selected_date = getDate_from_string(selected_date)
 
+    # Aggregate total bags
     arrival_entries = ArrivalEntry.objects.filter(
         date=selected_date,
         shop=shop_id
     )
-    total_bags_sum = arrival_entries.aggregate(total_bags_sum=models.Sum('total_bags'))['total_bags_sum']
-    if total_bags_sum is None:
-        total_bags_sum = 0
+    total_bags_sum = arrival_entries.aggregate(total_bags_sum=models.Sum('total_bags'))['total_bags_sum'] or 0
 
+    # Aggregate balance bags
     goods = ArrivalGoods.objects.filter(arrival_entry__in=arrival_entries)
-    balance_bags_sum = goods.aggregate(balance_bags_sum=models.Sum('qty'))['balance_bags_sum']
-    if balance_bags_sum is None:
-        balance_bags_sum = 0
+    balance_bags_sum = goods.aggregate(balance_bags_sum=models.Sum('qty'))['balance_bags_sum'] or 0
+
+    # Calculate bags sold
     bags_sold_sum = total_bags_sum - balance_bags_sum
 
-    data = {
+    # Aggregate sales data
+    sales_data = SalesBillEntry.objects.filter(
+        shop_id=shop_id,
+        date=selected_date,
+    ).aggregate(
+        cash_bill_amount=Sum('paid_amount', filter=Q(payment_type='cash')),
+        credit_bill_amount=Sum('paid_amount', filter=Q(payment_type='credit')),
+        total_sales=Sum('total_amount')
+    )
+
+    # Set default values to zero if None
+    cash_bill_amount = sales_data.get('cash_bill_amount') or 0
+    credit_bill_amount = sales_data.get('credit_bill_amount') or 0
+    total_sales = sales_data.get('total_sales') or 0
+
+    return {
         'total_bags_sum': total_bags_sum,
         'bags_sold_sum': bags_sold_sum,
-        'balance_bags_sum': balance_bags_sum
+        'balance_bags_sum': balance_bags_sum,
+        'cash_bill_amount': cash_bill_amount,
+        'total_sales': total_sales,
+        'credit_bill_amount': credit_bill_amount
     }
-    return data
+
 
 
 @api_view(['GET'])
