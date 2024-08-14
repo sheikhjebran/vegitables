@@ -1358,14 +1358,29 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         date=selected_date,
     ).aggregate(
         cash_bill_amount=Sum('paid_amount', filter=Q(payment_type='cash')),
+        upi_amount=Sum('paid_amount', filter=Q(payment_type='upi')),
         credit_bill_amount=Sum('paid_amount', filter=Q(payment_type='credit')),
         total_sales=Sum('total_amount')
     )
+
+    collection = CreditBillHistory.objects.filter(
+        credit_bill__shop_id=shop_id,
+        date=selected_date
+    ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+
+    total_expenditure = ExpenditureEntry.objects.filter(
+        shop=shop_id,
+        date=selected_date
+    ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
 
     # Set default values to zero if None
     cash_bill_amount = sales_data.get('cash_bill_amount') or 0
     credit_bill_amount = sales_data.get('credit_bill_amount') or 0
     total_sales = sales_data.get('total_sales') or 0
+    upi_amount = sales_data.get('upi_amount') or 0
+    patti = 0
+
+    net_amount = (total_sales + collection) - (credit_bill_amount + upi_amount + patti + total_expenditure)
 
     return {
         'total_bags_sum': total_bags_sum,
@@ -1373,9 +1388,12 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         'balance_bags_sum': balance_bags_sum,
         'cash_bill_amount': cash_bill_amount,
         'total_sales': total_sales,
-        'credit_bill_amount': credit_bill_amount
+        'credit_bill_amount': credit_bill_amount,
+        'collection': collection,
+        'upi_amount': upi_amount,
+        'total_expenditure': total_expenditure,
+        'net_amount': round(net_amount, 2)
     }
-
 
 
 @api_view(['GET'])

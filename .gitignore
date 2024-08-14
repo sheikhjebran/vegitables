@@ -10,3 +10,4 @@ vegitable/shops/__pycache__/*
 .idea/misc.xml
 .idea/vegitables.iml
 /.idea
+.env
