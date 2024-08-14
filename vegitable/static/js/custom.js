@@ -143,7 +143,12 @@ $(document).ready(function () {
     $("#shilk_balance").val(result["balance_bags_sum"]);
     $("#shilk_total_sales").val(result["total_sales"]);
     $("#shilk_cash_bill_amount").val(result["cash_bill_amount"]);
-    $("#shilk_collection").val(result["credit_bill_amount"]);
+    $("#shilk_collection").val(result["collection"]);
+    $("#shilk_credit_bill_amount").val(result["credit_bill_amount"]);
+    $("#shilk_expenses").val(result["total_expenditure"]);
+    $("#shilk_net_amount").val(result["net_amount"]);
+    $("#shilk_phone_pay").val(result["upi_amount"]);
+
    }
 
 
