@@ -114,17 +114,47 @@ $(document).ready(function () {
     balance_amount.val(parseFloat(result).toFixed(2));
   });
 
+
+
+   $(document).on("change keyup","#shilk_date", function () {
+        var selected_date = $(this).val();
+        $.ajax({
+          url: "/retrieve_shilk",
+          method: "GET",
+          async: true,
+          data: {
+            selected_date: selected_date,
+          },
+          success: function (response) {
+            console.log("AJAX request successful");
+            update_shilk_form(response.result)
+          },
+          error: function (xhr, status, error) {
+            console.log("AJAX request failed");
+            console.log("Status: " + status);
+            console.log("Error: " + error);
+          },
+        });
+   });
+
+   function update_shilk_form(result){
+    $("#shilk_arrival").val(result["total_bags_sum"]);
+    $("#shilk_bags_sold").val(result["bags_sold_sum"]);
+    $("#shilk_balance").val(result["balance_bags_sum"]);
+   }
+
+
   $(document).on("change", ".add_new_sales_custom_select", function () {
     var lot_number_Id = $(this).attr("id");
     var selected_lot = $(this).val();
 
     var res = lot_number_Id.split("_");
-    var iteam_name = `#` + res[0] + `_iteam_name`;
-    var iteam_qty = `#` + res[0] + `_qty`;
-    var iteam_list = "";
+    var item_name = `#` + res[0] + `_item_name`;
+    var item_qty = `#` + res[0] + `_qty`;
+    var item_list = "";
 
     $.ajax({
-      url: "/get_arrival_goods_iteam_name",
+      url: "/get_arrival_goods_item_name",
       dataType: "json",
       data: {
         selected_lot: selected_lot,
@@ -134,16 +164,16 @@ $(document).ready(function () {
       cache: false,
       timeout: 90000,
       success: function (data) {
-        iteam_list = data.iteam_name_list;
+        item_list = data.item_name_list;
       },
       error: function () {
         console.log("error");
       },
     });
 
-    for (var [key, value] of Object.entries(iteam_list)) {
-      $(iteam_name).val(key);
-      $(iteam_qty).val(value);
+    for (var [key, value] of Object.entries(item_list)) {
+      $(item_name).val(key);
+      $(item_qty).val(value);
     }
   });
 
@@ -168,9 +198,9 @@ $(document).ready(function () {
 
                         <select  name ="` +
           counter +
-          `_iteam_name" id ="` +
+          `_item_name" id ="` +
           counter +
-          `_iteam_name">
+          `_item_name">
                                     <option value="Onion">Onion</option>
                                     <option selected="true"value="Potato">Potato</option>
                                     <option value="Ginger">Ginger</option>
@@ -284,7 +314,7 @@ $(document).ready(function () {
   });
 
   $(document).on("click", "#add_sales_entry_list", function () {
-    var iteam_goods_list = "";
+    var item_goods_list = "";
     ("use strict");
 
     $.ajax({
@@ -296,16 +326,16 @@ $(document).ready(function () {
       cache: false,
       timeout: 90000,
       fail: function () {
-        iteam_goods_list = "";
+        item_goods_list = "";
       },
       success: function (data) {
-        iteam_goods_list = data.iteam_goods_list;
+        item_goods_list = data.item_goods_list;
       },
     });
 
     var select_option =
       '<option selected="true" disabled="disabled">Choose Lot No</option>';
-    for (var [key, value] of Object.entries(iteam_goods_list)) {
+    for (var [key, value] of Object.entries(item_goods_list)) {
       select_option =
         select_option + "<option value='" + key + "'>" + value + "</option>";
     }
@@ -335,11 +365,11 @@ $(document).ready(function () {
 
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Iteam Name' name ="` +
+                <input type='text' placeholder='item Name' name ="` +
           counter +
-          `_iteam_name" id="` +
+          `_item_name" id="` +
           counter +
-          `_iteam_name" required='' readonly>
+          `_item_name" required='' readonly>
                 <input type='text' placeholder='qty' name ="` +
           counter +
           `_qty" id="` +
@@ -488,7 +518,7 @@ $(document).ready(function () {
     var patti_lorry_value = $("#patti_lorry_number").val();
 
     $.ajax({
-      url: "/get_sales_list_for_arrival_iteam_list",
+      url: "/get_sales_list_for_arrival_item_list",
       dataType: "json",
       data: {
         patti_farmer: patti_farmer_name_value,
@@ -526,12 +556,12 @@ $(document).ready(function () {
             `_child">
                                     <td>
                                         <div class='comment-your'>
-                                            <input type='text' placeholder='Iteam Name' name ="` +
+                                            <input type='text' placeholder='item Name' name ="` +
             counter +
-            `_iteam_name" id="` +
+            `_item_name" id="` +
             counter +
-            `_iteam_name" value="` +
-            patti_sales_entry_list[index]["iteam_name"] +
+            `_item_name" value="` +
+            patti_sales_entry_list[index]["item_name"] +
             `" required='' readonly>
                                             
                                         </div>
@@ -821,7 +851,7 @@ $(document).ready(function () {
       } else {
         e.preventDefault();
         if (ZERO_FLAG == true) {
-          alert("Cannt have ZERO as Qty for the iteam..!");
+          alert("Cannt have ZERO as Qty for the item..!");
         } else {
           if (
             total <= parseInt($("#total_number_of_bags").val()) &&
@@ -836,7 +866,7 @@ $(document).ready(function () {
   });
 
   $(document).on("submit", "#sales_entry_form", function (e) {
-    var iteam_goods_list = "";
+    var item_goods_list = "";
     ("use strict");
 
     $.ajax({
@@ -848,15 +878,15 @@ $(document).ready(function () {
       cache: false,
       timeout: 90000,
       fail: function () {
-        iteam_goods_list = "";
+        item_goods_list = "";
       },
       success: function (data) {
-        iteam_goods_list = data;
+        item_goods_list = data;
       },
     });
 
     var balance_qty = 0;
-    for (var [key, value] of Object.entries(iteam_goods_list)) {
+    for (var [key, value] of Object.entries(item_goods_list)) {
       balance_qty = balance_qty + value;
     }
 
@@ -985,8 +1015,6 @@ $(document).ready(function () {
     }
   }
 
-
-
   $(document).on("keyup", ".customer_ledger_search_text", function () {
     var search_text = $(this).val();
     if(search_text.length >= 3){
@@ -1077,7 +1105,7 @@ $(document).ready(function () {
                 <tr>
                         <td>`+result[index].id+`</td>
                         <td>`+result[index].customer_name+`</td>
-                        <td>`+result[index].iteam_name+`</td>
+                        <td>`+result[index].item_name+`</td>
                         <td>`+result[index].bags+`</td>
                         <td>`+result[index].amount+`</td>
                         <td>`+result[index].balance+`</td>
@@ -1265,6 +1293,10 @@ $(document).ready(function () {
             $(".weekly_rmc_report_table").append(tableHTML);
         }
     }
+
+
+
+
 // Main code end's here
 });
 

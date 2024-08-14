@@ -18,9 +18,9 @@ def consolidate_result_for_report(result: list):
     for single_entry in result:
         if single_entry.get('id') in response:
             consolidate_dict = response.get(single_entry.get('id'))
-            if consolidate_dict.get('iteam_name') != single_entry.get('iteam_name'):
+            if consolidate_dict.get('item_name') != single_entry.get('item_name'):
                 consolidate_dict[
-                    'iteam_name'] = f"{consolidate_dict.get('iteam_name')},{single_entry.get('iteam_name')}"
+                    'item_name'] = f"{consolidate_dict.get('item_name')},{single_entry.get('item_name')}"
             consolidate_dict['bags'] = int(consolidate_dict.get('bags')) + int(single_entry.get('bags'))
             response[single_entry.get('id')] = consolidate_dict
         else:

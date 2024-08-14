@@ -11,9 +11,9 @@ import re
 from django.db import models
 from django.core.paginator import Paginator
 from . import utility
-from .models import Expenditure_Entry, Patti_entry, Patti_entry_list, Sales_Bill_Entry, Sales_Bill_Iteam, Shop, \
-    Arrival_Entry, \
-    Arrival_Goods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory
+from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry, SalesBillItem, Shop, \
+    ArrivalEntry, \
+    ArrivalGoods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory
 import datetime
 from .report.report import Report
 from .utility import consolidate_result_for_report, get_float_number
@@ -113,7 +113,7 @@ def home(request, current_page=1):
         arrival_entry_detail = None
         try:
 
-            arrival_entry_detail = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(
+            arrival_entry_detail = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(
                 Empty_data=False).order_by('-id')
             items_per_page = 10
             paginator = Paginator(arrival_entry_detail, items_per_page)
@@ -180,7 +180,7 @@ def add_new_credit_bill_entry(request):
 
     amount = round(amount_received + bill_discount, 2)
     balance_amount -= amount
-    sales_bill = Sales_Bill_Entry.objects.get(id=sales_bill_id)
+    sales_bill = SalesBillEntry.objects.get(id=sales_bill_id)
     sales_bill.paid_amount = round(sales_bill.paid_amount + amount, 2)
     sales_bill.balance_amount = round(balance_amount, 2)
     sales_bill.save()
@@ -248,13 +248,13 @@ def search_credit(request, current_page=1):
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = Arrival_Entry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
+        entries = ArrivalEntry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
             .annotate(
             qty=models.F('arrival_goods__qty'),
             remarks=models.F('arrival_goods__remarks'),
             initial_qty=models.F('arrival_goods__initial_qty'),
             sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
-            iteam_name=models.F('arrival_goods__iteam_name')
+            item_name=models.F('arrival_goods__item_name')
         ).filter(arrival_goods__shop_id=shop_detail_object).distinct()
 
         items_per_page = 10
@@ -310,7 +310,7 @@ def patti_list(request, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         patti_entry_detail = None
         try:
-            patti_entry_detail = Patti_entry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by(
+            patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by(
                 '-id')
             items_per_page = 10
             paginator = Paginator(patti_entry_detail, items_per_page)
@@ -334,7 +334,7 @@ def sales_bill_entry(request, current_page=1):
 
         sales_entry_detail = None
         try:
-            sales_entry_detail = Sales_Bill_Entry.objects.filter(shop=shop_detail_object).filter(
+            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object).filter(
                 Empty_data=False).order_by('-id')
             items_per_page = 10
             paginator = Paginator(sales_entry_detail, items_per_page)
@@ -380,7 +380,7 @@ def expenditure_entry(request, current_page=1, expenditure_detail=None):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         try:
 
-            expenditure_events_today = Expenditure_Entry.objects.filter(shop=shop_detail_object).filter(
+            expenditure_events_today = ExpenditureEntry.objects.filter(shop=shop_detail_object).filter(
                 date=datetime.datetime.today())
             total_amount = 0
             for entry in expenditure_events_today:
@@ -451,7 +451,7 @@ def add_new_patti_entry(request):
         today = date.today()
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        patti_bill_detail = Patti_entry(
+        patti_bill_detail = PattiEntry(
             lorry_no="",
             date=today,
             advance=0,
@@ -489,7 +489,7 @@ def navigate_to_add_sales_bill_entry(request):
         # )
         # sales_obj.save()
 
-        arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
+        arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
             'sales_bill_detail': True,
@@ -504,7 +504,7 @@ def modify_sales_bill_entry(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         if len(request.POST['sales_bill_id']) <= 0:
-            sales_bill_entry_Obj = Sales_Bill_Entry(
+            sales_bill_entry_Obj = SalesBillEntry(
                 payment_type=request.POST['payment_mode'],
                 customer_name=request.POST['sales_entry_customer_name'],
                 date=getDate_from_string(request.POST['sales_entry_date']),
@@ -518,7 +518,7 @@ def modify_sales_bill_entry(request):
                 Empty_data=False
             )
         else:
-            sales_bill_entry_Obj = Sales_Bill_Entry.objects.get(id=request.POST['sales_bill_id'])
+            sales_bill_entry_Obj = SalesBillEntry.objects.get(id=request.POST['sales_bill_id'])
             sales_bill_entry_Obj.payment_type = request.POST['payment_mode']
             sales_bill_entry_Obj.customer_name = request.POST['sales_entry_customer_name']
             sales_bill_entry_Obj.date = getDate_from_string(request.POST['sales_entry_date'])
@@ -535,7 +535,7 @@ def modify_sales_bill_entry(request):
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
         if sales_bill_entry_Obj.balance_amount > 0.0:
             add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name)
-        add_sales_bill_iteam(request, list(request.POST), sales_bill_entry_Obj)
+        add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
 
@@ -556,14 +556,14 @@ def add_to_credit_bill_db(sales, shop, customer_name):
     credit_bill_history.save()
 
 
-def add_sales_bill_iteam(request, request_list, sales):
+def add_sales_bill_item(request, request_list, sales):
     if request.user.is_authenticated:
         lot_number_list = []
         bags_list = []
         net_weight_list = []
         rates_list = []
         amount_list = []
-        iteam_name_list = []
+        item_name_list = []
 
         for i in request_list:
 
@@ -571,9 +571,9 @@ def add_sales_bill_iteam(request, request_list, sales):
             if lot_number_regrex:
                 lot_number_list.append(i)
 
-            iteam_name_regrex = re.search("^.*_iteam_name$", i)
-            if iteam_name_regrex:
-                iteam_name_list.append(i)
+            item_name_regrex = re.search("^.*_item_name$", i)
+            if item_name_regrex:
+                item_name_list.append(i)
 
             bag_regrex = re.search("^.*_bags$", i)
             if bag_regrex:
@@ -592,13 +592,13 @@ def add_sales_bill_iteam(request, request_list, sales):
                 amount_list.append(i)
 
         for i in range(0, len(lot_number_list)):
-            arrival_goods_entry_Obj = Arrival_Goods.objects.get(id=request.POST[lot_number_list[i]])
+            arrival_goods_entry_Obj = ArrivalGoods.objects.get(id=request.POST[lot_number_list[i]])
 
             arrival_goods_entry_Obj.qty = int(arrival_goods_entry_Obj.qty) - int(request.POST[bags_list[i]])
             arrival_goods_entry_Obj.save()
 
-            sales_bill_entry_Obj = Sales_Bill_Iteam(
-                iteam_name=request.POST[iteam_name_list[i]],
+            sales_bill_entry_Obj = SalesBillItem(
+                item_name=request.POST[item_name_list[i]],
                 arrival_goods=arrival_goods_entry_Obj,
                 bags=request.POST[bags_list[i]],
                 net_weight=request.POST[net_weight_list[i]],
@@ -609,7 +609,7 @@ def add_sales_bill_iteam(request, request_list, sales):
 
             sales_bill_entry_Obj.save()
 
-            print(f"New Sales Bill Iteam  = {sales_bill_entry_Obj.id}")
+            print(f"New Sales Bill item  = {sales_bill_entry_Obj.id}")
     return render(request, 'index.html')
 
 
@@ -622,14 +622,14 @@ def add_expenditure_entry(request):
                 shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
                 if request.POST['expenditure_id'] == "None":
 
-                    expenditure_entry_Obj = Expenditure_Entry(
+                    expenditure_entry_Obj = ExpenditureEntry(
                         date=datetime.datetime.today(),
                         expense_type=str(request.POST['expense_type']).upper(),
                         amount=request.POST['expense_amount'],
                         remark=request.POST['expense_remark'],
                         shop=shop_detail_object)
                 else:
-                    expenditure_entry_Obj = Expenditure_Entry.objects.get(
+                    expenditure_entry_Obj = ExpenditureEntry.objects.get(
                         id=request.POST['expenditure_id'])  # object to update
                     expenditure_entry_Obj.date = datetime.datetime.today()
                     expenditure_entry_Obj.expense_type = str(request.POST['expense_type']).upper()
@@ -648,7 +648,7 @@ def add_expenditure_entry(request):
 @csrf_protect
 def edit_expense(request, expenditure_id):
     if request.user.is_authenticated:
-        expenditure_entry_detail = Expenditure_Entry.objects.get(pk=expenditure_id)
+        expenditure_entry_detail = ExpenditureEntry.objects.get(pk=expenditure_id)
         return expenditure_entry(request, expenditure_detail=expenditure_entry_detail)
     return render(request, 'index.html')
 
@@ -656,7 +656,7 @@ def edit_expense(request, expenditure_id):
 @csrf_protect
 def delete_expense(request, expenditure_id):
     if request.user.is_authenticated:
-        expenditure_entry_detail = Expenditure_Entry.objects.get(pk=expenditure_id)
+        expenditure_entry_detail = ExpenditureEntry.objects.get(pk=expenditure_id)
         expenditure_entry_detail.delete()
         return expenditure_entry(request)
     return render(request, 'index.html')
@@ -671,8 +671,8 @@ def total_amount_expenditure_entry(request):
 @csrf_protect
 def modify_arrival(request, arrival_id):
     if request.user.is_authenticated:
-        arrival_entry_obj = Arrival_Entry.objects.get(pk=arrival_id)
-        arrival_goods_objs = Arrival_Goods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
+        arrival_entry_obj = ArrivalEntry.objects.get(pk=arrival_id)
+        arrival_goods_objs = ArrivalGoods.objects.filter(arrival_entry=arrival_entry_obj).order_by('-id')
 
         today = arrival_entry_obj.date
 
@@ -684,16 +684,16 @@ def modify_arrival(request, arrival_id):
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
-def get_arrival_goods_iteam_name(request):
+def get_arrival_goods_item_name(request):
     [...]
     item_name_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
+    arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object).filter(id=request.GET['selected_lot'])
 
     for arrival_entry in arrival_detail_object:
-        item_name_list[arrival_entry.iteam_name] = arrival_entry.qty
+        item_name_list[arrival_entry.item_name] = arrival_entry.qty
 
-    data = {'iteam_name_list': item_name_list}
+    data = {'item_name_list': item_name_list}
     return Response(data, status=status.HTTP_200_OK)
 
 
@@ -702,11 +702,11 @@ def get_arrival_goods_iteam_name(request):
 def get_arrival_goods_api(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_goods_obj = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
+    arrival_goods_obj = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
     mylist = {}
-    for iteam in arrival_goods_obj:
-        mylist[iteam.id] = iteam.qty
+    for item in arrival_goods_obj:
+        mylist[item.id] = item.qty
 
     return JsonResponse(mylist, status=status.HTTP_200_OK)
 
@@ -716,7 +716,7 @@ def get_arrival_goods_api(request):
 def get_arrival_duplicate_validation_api(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    respones = Arrival_Entry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
+    respones = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
         date=request.GET['date'])
 
     if respones.count() <= 0:
@@ -729,14 +729,14 @@ def get_arrival_duplicate_validation_api(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_list(request):
     [...]
-    iteam_goods_list = {}
+    item_goods_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
+    arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
     for arrival_entry in arrival_detail_object:
-        iteam_goods_list[arrival_entry.id] = arrival_entry.remarks
+        item_goods_list[arrival_entry.id] = arrival_entry.remarks
 
-    data = {'iteam_goods_list': iteam_goods_list}
+    data = {'item_goods_list': item_goods_list}
     return Response(data, status=status.HTTP_200_OK)
 
 
@@ -746,7 +746,7 @@ def add_arrival(request):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
         if len(request.POST['arrival_id']) <= 0:
-            arrival_Entry_Obj = Arrival_Entry(
+            arrival_Entry_Obj = ArrivalEntry(
                 gp_no=request.POST['gp_number'],
                 date=getDate_from_string(request.POST['arrival_entry_date']),
                 patti_name=request.POST['patti_name'],
@@ -755,7 +755,7 @@ def add_arrival(request):
                 shop=shop_detail_object,
                 Empty_data=False)
         else:
-            arrival_Entry_Obj = Arrival_Entry.objects.get(id=request.POST['arrival_id'])  # object to update
+            arrival_Entry_Obj = ArrivalEntry.objects.get(id=request.POST['arrival_id'])  # object to update
             arrival_Entry_Obj.gp_no = request.POST['gp_number']
             arrival_Entry_Obj.date = getDate_from_string(request.POST['arrival_entry_date'])
             arrival_Entry_Obj.patti_name = request.POST['patti_name']
@@ -767,17 +767,17 @@ def add_arrival(request):
         arrival_Entry_Obj.save()
         print(f"New arrival entry  = {arrival_Entry_Obj.id}")
 
-        add_arrival_goods_iteam(request, list(request.POST), arrival_Entry_Obj, shop_detail_object)
+        add_arrival_goods_item(request, list(request.POST), arrival_Entry_Obj, shop_detail_object)
 
         return home(request)
 
     return render(request, 'index.html')
 
 
-def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
+def add_arrival_goods_item(request, request_list, arrival, shop_obj):
     if request.user.is_authenticated:
         former_name_list = []
-        iteam_name_list = []
+        item_name_list = []
         qty_list = []
         weight_list = []
         remarks_list = []
@@ -789,9 +789,9 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
             if former_name_regrex:
                 former_name_list.append(i)
 
-            iteam_name_regrex = re.search("^.*_iteam_name$", i)
-            if iteam_name_regrex:
-                iteam_name_list.append(i)
+            item_name_regrex = re.search("^.*_item_name$", i)
+            if item_name_regrex:
+                item_name_list.append(i)
 
             qty_regrex = re.search("^.*_qty$", i)
             if qty_regrex:
@@ -814,11 +814,11 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 arrival_goods_id.append(i)
 
         for i in range(0, len(former_name_list)):
-            if "modify" in iteam_name_list[i]:
+            if "modify" in item_name_list[i]:
                 local_id = request.POST[arrival_goods_id[i]].split("_")[0]
                 # object to update
-                arrival_Goods_obj = Arrival_Goods.objects.get(id=int(local_id))
-                arrival_Goods_obj.iteam_name = request.POST[iteam_name_list[i]]
+                arrival_Goods_obj = ArrivalGoods.objects.get(id=int(local_id))
+                arrival_Goods_obj.item_name = request.POST[item_name_list[i]]
                 arrival_Goods_obj.former_name = request.POST[former_name_list[i]]
                 arrival_Goods_obj.initial_qty = request.POST[qty_list[i]]
                 arrival_Goods_obj.qty = request.POST[qty_list[i]]
@@ -827,12 +827,12 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 arrival_Goods_obj.remarks = request.POST[remarks_list[i]]
 
                 arrival_Goods_obj.save()
-                print(f"Update Arrival Goods Iteam  = {arrival_Goods_obj.id}")
+                print(f"Update Arrival Goods item  = {arrival_Goods_obj.id}")
 
             else:
 
-                arrival_Goods_obj = Arrival_Goods(
-                    iteam_name=request.POST[iteam_name_list[i]],
+                arrival_Goods_obj = ArrivalGoods(
+                    item_name=request.POST[item_name_list[i]],
                     shop=shop_obj,
                     arrival_entry=arrival,
                     former_name=request.POST[former_name_list[i]],
@@ -844,7 +844,7 @@ def add_arrival_goods_iteam(request, request_list, arrival, shop_obj):
                 )
 
                 arrival_Goods_obj.save()
-                print(f"New Arrival Goods Iteam  = {arrival_Goods_obj.id}")
+                print(f"New Arrival Goods item  = {arrival_Goods_obj.id}")
     return render(request, 'index.html')
 
 
@@ -856,7 +856,7 @@ def get_lorry_number_for_date(request, lorry_date):
     lorry_date = getDate_from_string(lorry_date)
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-    arrival_detail_object = Arrival_Entry.objects.filter(shop=shop_detail_object)
+    arrival_detail_object = ArrivalEntry.objects.filter(shop=shop_detail_object)
     for arrival_entry in arrival_detail_object:
         if arrival_entry.date == lorry_date and arrival_entry.Empty_data is False:
             lorry_number_list.append(arrival_entry.lorry_no)
@@ -872,8 +872,8 @@ def get_daily_rmc_selected_date(request):
     try:
         rmc_date = getDate_from_string(request.GET['date'])
         # Perform the query
-        queryset = Sales_Bill_Entry.objects.filter(shop=shop_detail_object, date=rmc_date).annotate(
-            total_bags=Sum('sales_bill_iteam__bags'),
+        queryset = SalesBillEntry.objects.filter(shop=shop_detail_object, date=rmc_date).annotate(
+            total_bags=Sum('sales_bill_item__bags'),
             total_paid_amount=F('paid_amount'),
             total_rmc=F('rmc')
         ).values('id', 'payment_type', 'total_bags', 'total_paid_amount', 'total_rmc')
@@ -904,10 +904,10 @@ def get_daily_rmc_start_and_end_date(request):
         start_date = getDate_from_string(request.GET['start_date'])
         end_date = getDate_from_string(request.GET['end_date'])
 
-        combined_data = Sales_Bill_Entry.objects.filter(date__range=(start_date, end_date),
-                                                        shop=shop_detail_object).values('date').annotate(
+        combined_data = SalesBillEntry.objects.filter(date__range=(start_date, end_date),
+                                                      shop=shop_detail_object).values('date').annotate(
             total_rmc=Sum('rmc'),
-            total_bags=Sum('sales_bill_iteam__bags'),
+            total_bags=Sum('sales_bill_item__bags'),
             total_total_amount=Sum('total_amount'),
             total_paid_amount=Sum('paid_amount'),
             total_balance_amount=Sum('balance_amount')
@@ -940,12 +940,12 @@ def get_all_farmer_name(request):
     lorry_number = request.GET['lorry_number']
     patti_date = getDate_from_string(request.GET['patti_date'])
 
-    arrival_detail_object = Arrival_Entry.objects.get(
+    arrival_detail_object = ArrivalEntry.objects.get(
         shop=shop_detail_object,
         lorry_no=lorry_number,
         date=patti_date)
 
-    arrival_good_object = Arrival_Goods.objects.filter(
+    arrival_good_object = ArrivalGoods.objects.filter(
         shop=shop_detail_object,
         arrival_entry=arrival_detail_object,
         patti_status=False
@@ -960,7 +960,7 @@ def get_all_farmer_name(request):
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
-def get_sales_list_for_arrival_iteam_list(request):
+def get_sales_list_for_arrival_item_list(request):
     [...]
 
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -969,12 +969,12 @@ def get_sales_list_for_arrival_iteam_list(request):
     patti_date = getDate_from_string(request.GET['patti_date'])
     patti_farmer = request.GET['patti_farmer']
 
-    arrival_detail_object = Arrival_Entry.objects.get(
+    arrival_detail_object = ArrivalEntry.objects.get(
         shop=shop_detail_object,
         lorry_no=lorry_number,
         date=patti_date)
 
-    arrival_good_object = Arrival_Goods.objects.filter(
+    arrival_good_object = ArrivalGoods.objects.filter(
         shop=shop_detail_object,
         arrival_entry=arrival_detail_object,
         former_name=patti_farmer,
@@ -990,23 +990,23 @@ def get_sales_list_for_arrival_iteam_list(request):
         if float(arrival_single_goods.advance) > 0:
             advance = arrival_single_goods.advance
 
-        sales_iteam_list = Sales_Bill_Iteam.objects.filter(
+        sales_item_list = SalesBillItem.objects.filter(
             arrival_goods=arrival_single_goods
         )
-        if len(sales_iteam_list) <= 0:
+        if len(sales_item_list) <= 0:
             arrival_entry_with_no_sales.append(arrival_single_goods)
         else:
-            for sales in sales_iteam_list:
+            for sales in sales_item_list:
                 sales_array.append(sales)
 
     sales_response_list = []
     for single_sales in sales_array:
         sales_dict = {
-            'iteam_name': single_sales.iteam_name,
+            'item_name': single_sales.item_name,
             'net_weight': single_sales.net_weight,
             'sold_qty': single_sales.bags}
 
-        arrival_good_object = Arrival_Goods.objects.get(
+        arrival_good_object = ArrivalGoods.objects.get(
             id=single_sales.arrival_goods.id,
         )
 
@@ -1019,7 +1019,7 @@ def get_sales_list_for_arrival_iteam_list(request):
 
     for single_arrival_entry in arrival_entry_with_no_sales:
         arrival_single_entry = {
-            'iteam_name': single_arrival_entry.iteam_name,
+            'item_name': single_arrival_entry.item_name,
             'net_weight': single_arrival_entry.weight,
             'sold_qty': 0,
             'lot_number': single_arrival_entry.remarks,
@@ -1062,7 +1062,7 @@ def generate_patti_pdf_bill(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        patti_entry_obj = Patti_entry.objects.get(id=request.POST['patti_bill_id'])
+        patti_entry_obj = PattiEntry.objects.get(id=request.POST['patti_bill_id'])
         patti_entry_obj.lorry_no = request.POST['patti_lorry_number']
         patti_entry_obj.shop = shop_detail_object
         patti_entry_obj.date = getDate_from_string(request.POST['patti_entry_date'])
@@ -1074,14 +1074,14 @@ def generate_patti_pdf_bill(request):
         patti_entry_obj.Empty_data = False
 
         patti_entry_obj.save()
-        print(f"New Patti entry Iteam  = {patti_entry_obj.id}")
+        print(f"New Patti entry item  = {patti_entry_obj.id}")
 
-        arrival_detail_object = Arrival_Entry.objects.get(
+        arrival_detail_object = ArrivalEntry.objects.get(
             shop=shop_detail_object,
             lorry_no=request.POST['patti_lorry_number'],
             date=getDate_from_string(request.POST['patti_entry_date']))
 
-        arrival_good_object = Arrival_Goods.objects.get(
+        arrival_good_object = ArrivalGoods.objects.get(
             shop=shop_detail_object,
             arrival_entry=arrival_detail_object,
             former_name=request.POST['patti_farmer_name'],
@@ -1090,24 +1090,24 @@ def generate_patti_pdf_bill(request):
         arrival_good_object.patti_status = True
         arrival_good_object.save()
 
-        add_patti_iteam_list(request, list(request.POST), patti_entry_obj)
+        add_patti_item_list(request, list(request.POST), patti_entry_obj)
         return Report.patti_report_view(request)
         # return patti_list(request)
     return render(request, 'index.html')
 
 
-def add_patti_iteam_list(request, request_list, patti_entry_obj):
+def add_patti_item_list(request, request_list, patti_entry_obj):
     if request.user.is_authenticated:
-        iteam_name_list = []
+        item_name_list = []
         lot_number_list = []
         weight_list = []
         rate_list = []
         amount_list = []
 
         for i in request_list:
-            iteam_name_list_regrex = re.search("^.*_iteam_name$", i)
-            if iteam_name_list_regrex:
-                iteam_name_list.append(i)
+            item_name_list_regrex = re.search("^.*_item_name$", i)
+            if item_name_list_regrex:
+                item_name_list.append(i)
 
             lot_number_list_regrex = re.search("^.*_lot_number$", i)
             if lot_number_list_regrex:
@@ -1125,9 +1125,9 @@ def add_patti_iteam_list(request, request_list, patti_entry_obj):
             if amount_list_regrex:
                 amount_list.append(i)
 
-        for i in range(0, len(iteam_name_list)):
-            patti_obj = Patti_entry_list(
-                iteam=request.POST[iteam_name_list[i]],
+        for i in range(0, len(item_name_list)):
+            patti_obj = PattiEntryList(
+                item=request.POST[item_name_list[i]],
                 lot_no=request.POST[lot_number_list[i]],
                 weight=request.POST[weight_list[i]],
                 rate=request.POST[rate_list[i]],
@@ -1143,17 +1143,17 @@ def add_patti_iteam_list(request, request_list, patti_entry_obj):
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
     if request.user.is_authenticated:
-        sales_obj = Sales_Bill_Entry.objects.get(pk=sales_id)
-        sales_iteam_objs = Sales_Bill_Iteam.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
+        sales_obj = SalesBillEntry.objects.get(pk=sales_id)
+        sales_item_objs = SalesBillItem.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_detail_object = Arrival_Goods.objects.filter(shop=shop_detail_object, qty__gte=1)
+        arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,
                        "arrival_goods_detail": arrival_detail_object,
                        "sales_obj": sales_obj,
-                       "sales_iteam_objs": sales_iteam_objs
+                       "sales_item_objs": sales_item_objs
                        }
                       )
     return render(request, 'index.html')
@@ -1162,10 +1162,10 @@ def edit_sales_bill_entry(request, sales_id):
 @csrf_protect
 def edit_patti_entry(request, patti_id):
     if request.user.is_authenticated:
-        patti_bill_detail = Patti_entry.objects.get(pk=patti_id)
+        patti_bill_detail = PattiEntry.objects.get(pk=patti_id)
         today = patti_bill_detail.date
 
-        patti_entry_obj = Patti_entry_list.objects.filter(patti=patti_bill_detail)
+        patti_entry_obj = PattiEntryList.objects.filter(patti=patti_bill_detail)
 
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {'patti_bill_detail': patti_bill_detail,
@@ -1237,14 +1237,14 @@ def search_farmer_ledger(request):
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
 
-    response = Sales_Bill_Entry.objects.filter(
+    response = SalesBillEntry.objects.filter(
         date=selected_date,
         shop=shop_detail_object,
     ). \
         values('id', 'customer_name', 'payment_type', 'total_amount', 'balance_amount'). \
         annotate(
-        iteam_name=models.F('sales_bill_iteam__iteam_name'),
-        bags=models.F('sales_bill_iteam__bags'),
+        item_name=models.F('sales_bill_item__item_name'),
+        bags=models.F('sales_bill_item__bags'),
     )
 
     if len(response) <= 0:
@@ -1255,7 +1255,7 @@ def get_sales_bill_detail_from_db(shop_detail_object, date):
             my_dict = {
                 'id': single_response.get('id'),
                 'customer_name': single_response.get('customer_name'),
-                'iteam_name': single_response.get('iteam_name'),
+                'item_name': single_response.get('item_name'),
                 'bags': single_response.get('bags'),
                 'amount': single_response.get('total_amount'),
                 'balance': single_response.get('balance_amount'),
@@ -1333,3 +1333,40 @@ def shilk_entry(request):
     if request.user.is_authenticated:
         return render(request, 'Entry/Shilk/shilk.html')
     return render(request, 'index.html')
+
+
+def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
+    selected_date = getDate_from_string(selected_date)
+
+    arrival_entries = ArrivalEntry.objects.filter(
+        date=selected_date,
+        shop=shop_id
+    )
+    total_bags_sum = arrival_entries.aggregate(total_bags_sum=models.Sum('total_bags'))['total_bags_sum']
+    if total_bags_sum is None:
+        total_bags_sum = 0
+
+    goods = ArrivalGoods.objects.filter(arrival_entry__in=arrival_entries)
+    balance_bags_sum = goods.aggregate(balance_bags_sum=models.Sum('qty'))['balance_bags_sum']
+    if balance_bags_sum is None:
+        balance_bags_sum = 0
+    bags_sold_sum = total_bags_sum - balance_bags_sum
+
+    data = {
+        'total_bags_sum': total_bags_sum,
+        'bags_sold_sum': bags_sold_sum,
+        'balance_bags_sum': balance_bags_sum
+    }
+    return data
+
+
+@api_view(['GET'])
+def retrieve_shilk(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        response = get_sales_bag_count_detail_for_selected_date(
+            selected_date=request.GET['selected_date'],
+            shop_id=shop_detail_object
+        )
+        return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+    return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
