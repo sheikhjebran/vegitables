@@ -7,68 +7,64 @@
     <div class="clearfix"> </div>
 
     <div class="shilk_container">
-        <div class="shilk_legend">Date</div>
-        <div class="shilk_legend_value">
-            <input type="date" name="shilk_date" id="shilk_date">
-        </div>
-    </div>
-    <div class="clearfix"> </div>
-    <div class="shilk_container">
-        <div class="shilk_legend">Arrival total</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_arrival" id="shilk_arrival" readonly>
-        </div>
-        <div class="shilk_legend">Bags Sold</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_bags_sold" id="shilk_bags_sold" readonly>
-        </div>
-        <div class="shilk_legend">Balance</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_balance" id="shilk_balance" readonly>
-        </div>
+        <table>
+            <tr>
+                <td>Date</td>
+                <td><input type="date" name="shilk_date" id="shilk_date"></td>
+                <td></td>
+                <td></td>
+                <td>Net Amount</td>
+                <td><input type="text" name="shilk_net_amount" id="shilk_net_amount" readonly></td>
+            </tr>
+            <tr></tr>
+            <tr>
+                <td>Arrivals</td>
+                <td><input type="text" name="shilk_arrival" id="shilk_arrival" readonly></td>
+                <td>Bags Sold</td>
+                <td><input type="text" name="shilk_bags_sold" id="shilk_bags_sold" readonly></td>
+                <td>Balance</td>
+                <td><input type="text" name="shilk_balance" id="shilk_balance" readonly></td>
+            </tr>
+        </table>
     </div>
     <div class="clearfix"> </div>
     <h3 class="heading">Cash Flow</h3>
     <div class="clearfix"> </div>
     <div class="shilk_container">
-        <div class="shilk_legend">Cash Bill Amount</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_cash_bill_amount" id="shilk_cash_bill_amount" readonly>
-        </div>
-        <div class="shilk_legend">Collection</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_collection" id="shilk_collection" readonly>
-        </div>
-        <div class="shilk_legend">Total Sales</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_total_sales" id="shilk_total_sales" readonly>
-        </div>
+        <table>
+            <tr>
+                <td>Cash Bill</td>
+                <td><input type="text" name="shilk_cash_bill_amount" id="shilk_cash_bill_amount" readonly></td>
+                <td>Collection</td>
+                <td><input type="text" name="shilk_collection" id="shilk_collection" readonly></td>
+                <td>Total Sales</td>
+                <td><input type="text" name="shilk_total_sales" id="shilk_total_sales" readonly></td>
+            </tr>
+        </table>
     </div>
-
     <div class="clearfix"> </div>
     <h3 class="heading">Credits</h3>
     <div class="clearfix"> </div>
     <div class="shilk_container">
-        <div class="shilk_legend">Credit Bill Amount</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_credit_bill_amount" id="shilk_credit_bill_amount" readonly>
-        </div>
-        <div class="shilk_legend">UPI</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_phone_pay" id="shilk_phone_pay" readonly>
-        </div>
-        <div class="shilk_legend">Expenses</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_expenses" id="shilk_expenses" readonly>
-        </div>
+        <table>
+            <tr>
+                <td>Credit Bill</td>
+                <td><input type="text" name="shilk_credit_bill_amount" id="shilk_credit_bill_amount" readonly></td>
+                <td>UPI/Banking</td>
+                <td><input type="text" name="shilk_phone_pay" id="shilk_phone_pay" readonly></td>
+                <td>Expenses</td>
+                <td><input type="text" name="shilk_expenses" id="shilk_expenses" readonly></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Patti</td>
+                <td><input type="text" name="shilk_patti" id="shilk_patti" readonly></td>
+            </tr>
+        </table>
     </div>
-    <div class="clearfix"> </div>
-    <div class="shilk_container">
-        <div class="shilk_legend">Net Amount</div>
-        <div class="shilk_legend_value">
-            <input type="text" name="shilk_net_amount" id="shilk_net_amount" readonly>
-        </div>
-    </div>
+
+
     <div class="clearfix"> </div>
 </div>
 {% endblock %}
