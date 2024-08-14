@@ -13,17 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-#      - name: Set up Node.js
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: '16.x'
-
-#      - name: Install Chrome
-#        run: |
-#          cd script
-#          chmod +x install_chrome.sh
-#          ./install_chrome.sh
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:

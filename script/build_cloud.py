@@ -1,13 +1,7 @@
 import sys
 import json
-import time
 from enum import Enum
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-
 
 class ConsoleType(Enum):
     bash = "bash"
@@ -49,18 +43,15 @@ class PythonAnyWhereConsole:
         response = requests.request("DELETE", url, headers=headers)
         return response.status_code
 
-    def create_new_console(self, console_type: ConsoleType):
+    def create_new_console(self):
         url = "https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/"
 
-        payload = json.dumps({
-            "executable": console_type.value
-        })
         headers = {
             'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
             'Content-Type': 'application/json',
         }
 
-        response = requests.request("POST", url, headers=headers, data=payload)
+        response = requests.request("POST", url, headers=headers)
         json_data = json.loads(response.text)
         return json_data['id']
 
@@ -68,28 +59,7 @@ class PythonAnyWhereConsole:
 class BuildCloud(PythonAnyWhereConsole):
 
     def execute(self):
-        # self.delete_all_existing_console()
-        # console_id = self.create_new_console(ConsoleType.bash)
-        # print(f"NewConsole Id : {console_id}")
-        # self.load_console_browser(console_id)
         self.pull_latest_changes_on_pythonanywhere(console_id=29719796)
-
-    def load_console_browser(self, console_id):
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-
-        # Replace 'https://example.com' with the URL of the website you want to open
-        url = f"https://www.pythonanywhere.com/user/PrashantSindhe/consoles/{console_id}/"
-
-        try:
-            # Open the URL
-            driver.get(url)
-            driver.find_element(By.ID,"id_auth-username").send_keys("Sindhe.prashanth@gmail.com")
-            driver.find_element(By.ID, "id_auth-password").send_keys("Welcome@123")
-            driver.find_element(By.ID,"id_next").click()
-            time.sleep(180)
-        finally:
-            # Close the browser after use
-            driver.quit()
 
     def pull_latest_changes_on_pythonanywhere(self, console_id):
         url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/send_input/"
