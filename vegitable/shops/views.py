@@ -1359,7 +1359,7 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
     ).aggregate(
         cash_bill_amount=Sum('paid_amount', filter=Q(payment_type='cash')),
         upi_amount=Sum('paid_amount', filter=Q(payment_type='upi')),
-        credit_bill_amount=Sum('paid_amount', filter=Q(payment_type='credit')),
+        credit_bill_amount=Sum('balance_amount', filter=Q(payment_type='credit')),
         total_sales=Sum('total_amount')
     )
 
