@@ -1,0 +1,13 @@
+Django
+django-rest-framework
+djangorestframework
+Pillow
+pip-check
+pip-upgrader
+whitenoise
+mysqlclient
+reportlab
+pipreqs
+python-decouple
+JsonDecoder
+selenium
