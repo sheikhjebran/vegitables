@@ -148,7 +148,7 @@ $(document).ready(function () {
     $("#shilk_expenses").val(result["total_expenditure"]);
     $("#shilk_net_amount").val(result["net_amount"]);
     $("#shilk_phone_pay").val(result["upi_amount"]);
-
+    $("#shilk_patti").val(result["patti_amount"]);
    }
 
 
