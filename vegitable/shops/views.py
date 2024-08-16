@@ -250,12 +250,12 @@ def inventory(request, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         entries = ArrivalEntry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
             .annotate(
-            qty=models.F('arrival_goods__qty'),
-            remarks=models.F('arrival_goods__remarks'),
-            initial_qty=models.F('arrival_goods__initial_qty'),
-            sold_qty=models.F('arrival_goods__initial_qty') - models.F('arrival_goods__qty'),
-            item_name=models.F('arrival_goods__item_name')
-        ).filter(arrival_goods__shop_id=shop_detail_object).distinct()
+            qty=models.F('arrivalgoods__qty'),
+            remarks=models.F('arrivalgoods__remarks'),
+            initial_qty=models.F('arrivalgoods__initial_qty'),
+            sold_qty=models.F('arrivalgoods__initial_qty') - models.F('arrivalgoods__qty'),
+            item_name=models.F('arrivalgoods__item_name')
+        ).filter(arrivalgoods__shop_id=shop_detail_object).distinct()
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
