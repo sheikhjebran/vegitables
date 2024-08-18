@@ -873,7 +873,7 @@ def get_daily_rmc_selected_date(request):
         rmc_date = getDate_from_string(request.GET['date'])
         # Perform the query
         queryset = SalesBillEntry.objects.filter(shop=shop_detail_object, date=rmc_date).annotate(
-            total_bags=Sum('sales_bill_item__bags'),
+            total_bags=Sum('salesbillitem__bags'),
             total_paid_amount=F('paid_amount'),
             total_rmc=F('rmc')
         ).values('id', 'payment_type', 'total_bags', 'total_paid_amount', 'total_rmc')
@@ -907,7 +907,7 @@ def get_daily_rmc_start_and_end_date(request):
         combined_data = SalesBillEntry.objects.filter(date__range=(start_date, end_date),
                                                       shop=shop_detail_object).values('date').annotate(
             total_rmc=Sum('rmc'),
-            total_bags=Sum('sales_bill_item__bags'),
+            total_bags=Sum('salesbillitem__bags'),
             total_total_amount=Sum('total_amount'),
             total_paid_amount=Sum('paid_amount'),
             total_balance_amount=Sum('balance_amount')
