@@ -102,7 +102,7 @@ else:
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'vegitable_shop',
             'USER': 'root',
-            'PASSWORD': 'uc472bmt',
+            'PASSWORD': 'admin',
             'HOST': '127.0.0.1',
             'PORT': '3306',
             'OPTIONS': {
