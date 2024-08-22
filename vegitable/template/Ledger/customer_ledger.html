@@ -12,10 +12,11 @@
             <form action = "/add_customer_ledger" method = "POST">
             {% csrf_token %}
                 <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
+                <input type="hidden" name="customer_ledger_id" value="{{ customer_ledger.id }}">
                 <table>
                     <tr>
                         <td><span class="form_text">Customer Name</span></td>
-                        <td><input type="text" placeholder="Customer Name" name="name" required="" /></td>
+                        <td><input type="text" placeholder="Customer Name" name="name" required="" value="{{ customer_ledger.name }}"/></td>
                     </tr>
                     <tr>
                         <td><span class="form_text">Customer Contact</span></td>
@@ -24,11 +25,12 @@
                                 placeholder="+91 XXXXXXXXXX"
                                 name="contact"
                                 class="mobile"
+                                value="{{ customer_ledger.contact }}"
                                 required="" /></td>
                     </tr>
                     <tr>
                         <td><span class="form_text">Customer Address</span></td>
-                        <td><input type="textarea" name="address" /></td>
+                        <td><input type="textarea" name="address" value="{{ customer_ledger.address }}"/></td>
                     </tr>
                     <tr>
                         <td><button type="reset" class=" btn-l btn-14">Clear</button></td>
@@ -71,7 +73,12 @@
                     <td>{{customer.name}}</td>
                     <td>{{customer.contact}}</td>
                     <td>{{customer.address}}</td>
+                    <td>
+                        <input type="button" value="Edit" class="edit_button" onclick="location.href = '/edit_customer_ledger/{{customer.id}}';"/>&nbsp;
+                        <input type="button" value="Delete" class="delete_button" onclick="location.href = '/delete_customer_ledger/{{customer.id}}';"/>
+                    </td>
                 </tr>
+
             {% endfor %}
         </tbody>
     </table>
