@@ -74,6 +74,8 @@ urlpatterns = [
     path('search_customer_ledger', views.search_customer_ledger, name='search_customer_ledger'),
     path('customer_ledger/prev/<int:page_number>', views.customer_ledger_prev_page, name="customer_ledger_prev_page"),
     path('customer_ledger/next/<int:page_number>', views.customer_ledger_next_page, name="customer_ledger_next_page"),
+    path('edit_customer_ledger/<int:customer_id>', views.edit_customer_ledger, name='edit_customer_ledger'),
+    path('delete_customer_ledger/<int:customer_id>', views.delete_customer_ledger, name='delete_customer_ledger'),
 
     # Farmer Ledger
     path('farmer_ledger', views.farmer_ledger, name='farmer_ledger'),
