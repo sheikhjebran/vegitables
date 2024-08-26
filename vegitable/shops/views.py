@@ -227,30 +227,32 @@ def get_credit_bill_entry_list(request):
 
 def search_credit(request, current_page=1):
     if request.user.is_authenticated:
-        search_name = request.GET['name']
-        search_date = request.GET['date']
-        if search_name is None or len(search_name) == 0:
-            search_name = ""
-        if search_date is None or len(search_date) == 0:
-            search_date = None
+        search_name = request.GET.get('name', '')
+        search_date = request.GET.get('date', None)
+
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         credit_obj = CreditBillEntry.objects.filter(
             customer_name__icontains=search_name,
             shop_id=shop_detail_object
         )
+
         result = []
         for credit in credit_obj:
-            myDict = {
-                "id": credit.id,
-                "date": credit.sales_bill.date,
-                "bill_no": credit.sales_bill.id,
-                "amount": credit.sales_bill.total_amount,
-                "paid": credit.sales_bill.paid_amount,
-                "balance": credit.sales_bill.balance_amount
-            }
-            result.append(myDict)
+            balance_amount = credit.sales_bill.balance_amount
+            if balance_amount > 0:  # Check if the balance is greater than zero
+                myDict = {
+                    "id": credit.id,
+                    "customer_name": credit.customer_name,
+                    "date": credit.sales_bill.date,
+                    "bill_no": credit.sales_bill.id,
+                    "amount": credit.sales_bill.total_amount,
+                    "paid": credit.sales_bill.paid_amount,
+                    "balance": balance_amount
+                }
+                result.append(myDict)
 
         return render(request, 'Entry/CreditBill/credit_bill.html', {'results': result, 'current_page': current_page})
+
     return render(request, 'index.html')
 
 
