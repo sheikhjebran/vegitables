@@ -1046,6 +1046,28 @@ $(document).ready(function () {
       },
     });
     }
+    if(search_text.length<=0){
+    $.ajax({
+      url: "/default_customer_ledger",
+      method: "GET",
+      async: true,
+      data: {
+        search_text: search_text,
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        hide_show_customer_ledger_table(response.FOUND);
+        update_customer_ledger_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+        hide_show_customer_ledger_table(null)
+      },
+    });
+   }
+
   });
 
    $(document).on("mouseenter", ".credit_id", function () {
@@ -1098,6 +1120,30 @@ $(document).ready(function () {
       },
     });
     }
+    if(search_text.length<=0){
+    $.ajax({
+      url: "/default_farmer_ledger",
+      method: "GET",
+      async: true,
+      data: {
+        search_text: search_text,
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        hide_show_customer_ledger_table(response.FOUND);
+        update_farmer_ledger_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+        hide_show_customer_ledger_table(null)
+      },
+    });
+
+
+   }
+
   });
 
   // Report

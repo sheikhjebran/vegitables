@@ -1228,23 +1228,90 @@ def search_customer_ledger(request):
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
 
+def default_customer_ledger(request, current_page=1, customer_ledger_entry=None):
+    if request.user.is_authenticated:
+        if customer_ledger_entry is None:
+            customer_ledger_entry = {
+                "name": "",
+                "contact": "",
+                "address": "",
+                "id": None
+            }
+        items_per_page = 10
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = utility.generate_unique_number()
+        customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')
+        paginator = Paginator(customer_ledger_list, items_per_page)
+        customer_ledger_list = paginator.get_page(current_page)
+        response = [
+            {
+                'id': customer.id,
+                'name': customer.name,
+                'contact': customer.contact,
+                'address': customer.address
+            }
+            for customer in customer_ledger_list
+        ]
+        if len(response) >= 1:
+            return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def default_farmer_ledger(request):
+    if request.user.is_authenticated:
+        items_per_page = 10
+        current_page = 1
+
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = utility.generate_unique_number()
+        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object)
+
+        paginator = Paginator(farmer_ledger_list, items_per_page)
+        farmer_ledger_list = paginator.get_page(current_page)
+
+        response = [
+            {
+                'id': farmer.id,
+                'name': farmer.name,
+                'contact': farmer.contact,
+                'place': farmer.place
+            }
+            for farmer in farmer_ledger_list
+        ]
+
+        if response:
+            return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['GET'])
 def search_farmer_ledger(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    farmerLedgerObject = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        name__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        contact__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        place__icontains=request.GET['search_text'])
-    response = []
-    for farmer in farmerLedgerObject:
-        farmer_dict = {
+
+    search_text = request.GET.get('search_text', '').strip()
+
+    if search_text:
+        farmer_ledger_objects = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            name__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            contact__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            place__icontains=search_text)
+    else:
+        farmer_ledger_objects = FarmerLedger.objects.filter(shop=shop_detail_object)
+
+    response = [
+        {
             'id': farmer.id,
             'name': farmer.name,
             'contact': farmer.contact,
             'place': farmer.place
         }
-        response.append(farmer_dict)
-    if len(response) >= 1:
+        for farmer in farmer_ledger_objects
+    ]
+
+    if response:
         return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
     else:
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)

@@ -72,6 +72,7 @@ urlpatterns = [
     path('customer_ledger', views.customer_ledger, name='customer_ledger'),
     path('add_customer_ledger', views.add_customer_ledger, name='add_customer_ledger'),
     path('search_customer_ledger', views.search_customer_ledger, name='search_customer_ledger'),
+    path('default_customer_ledger', views.default_customer_ledger, name='default_customer_ledger'),
     path('customer_ledger/prev/<int:page_number>', views.customer_ledger_prev_page, name="customer_ledger_prev_page"),
     path('customer_ledger/next/<int:page_number>', views.customer_ledger_next_page, name="customer_ledger_next_page"),
     path('edit_customer_ledger/<int:customer_id>', views.edit_customer_ledger, name='edit_customer_ledger'),
@@ -81,6 +82,7 @@ urlpatterns = [
     path('farmer_ledger', views.farmer_ledger, name='farmer_ledger'),
     path('add_farmer_ledger', views.add_farmer_ledger, name='add_farmer_ledger'),
     path('search_farmer_ledger', views.search_farmer_ledger, name='search_farmer_ledger'),
+    path('default_farmer_ledger', views.default_farmer_ledger, name='default_farmer_ledger'),
     path('farmer_ledger/prev/<int:page_number>', views.farmer_ledger_prev_page, name="farmer_ledger_prev_page"),
     path('farmer_ledger/next/<int:page_number>', views.farmer_ledger_next_page, name="farmer_ledger_next_page"),
 
