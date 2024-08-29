@@ -552,17 +552,18 @@ def modify_sales_bill_entry(request):
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
         if sales_bill_entry_Obj.balance_amount > 0.0:
-            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name)
+            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name, sales_bill_entry_Obj.balance_amount)
         add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
 
 
-def add_to_credit_bill_db(sales, shop, customer_name):
+def add_to_credit_bill_db(sales, shop, customer_name, balance_amount):
     credit_bill_entry = CreditBillEntry(
         customer_name=customer_name,
         sales_bill=sales,
-        shop=shop
+        shop=shop,
+        initial_credit_bill_amount=float(balance_amount)
     )
     credit_bill_entry.save()
 
@@ -1465,9 +1466,19 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         date=selected_date
     ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
 
+    # Fetching the initial credit bill amount for the specific date
+    initial_credit_bill_amount = CreditBillEntry.objects.filter(
+        shop=shop_id,
+        sales_bill__date=selected_date  # Joining with SalesBillEntry
+    ).aggregate(
+        total_initial_credit=Sum('initial_credit_bill_amount')
+    ).get('total_initial_credit') or 0
+
+
+
     # Set default values to zero if None
     cash_bill_amount = sales_data.get('cash_bill_amount') or 0
-    credit_bill_amount = sales_data.get('credit_bill_amount') or 0
+    credit_bill_amount = initial_credit_bill_amount # sales_data.get('credit_bill_amount') or 0
     total_sales = sales_data.get('total_sales') or 0
     upi_amount = sales_data.get('upi_amount') or 0
     patti = round(patti_entries, 2)
