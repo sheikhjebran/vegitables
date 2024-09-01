@@ -465,7 +465,8 @@ display:none;
     text-decoration: none;
     color: #333;
     padding: 30px 25px;
-    font-size: 14px;
+    font-weight: bolder;
+    font-size: 16px;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
