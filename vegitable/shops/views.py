@@ -1521,5 +1521,10 @@ def edit_customer_ledger(request, customer_id):
 
 
 @csrf_protect
-def delete_customer_ledger():
-    return None
+def delete_customer_ledger(request, customer_id):
+    if request.user.is_authenticated:
+        customer_ledger_detail = CustomerLedger.objects.get(pk=customer_id)
+        customer_ledger_detail.delete()
+        return customer_ledger(request)
+    return render(request, 'index.html')
+
