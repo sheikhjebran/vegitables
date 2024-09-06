@@ -309,11 +309,24 @@ $(document).ready(function () {
   });
 
   $(document).on("keyup", ".sales_bag_count", function () {
-    var bag_count = $(this).val();
+    var bag_count = 0;
     var bag_id = $(this).attr("name");
 
     var res = bag_id.split("_");
     var qty = `#` + res[0] + `_qty`;
+
+
+    var elements = document.querySelectorAll('.add_new_sales_custom_select');
+    elements.forEach(function(element) {
+        // Get the 'id' or 'name' attribute of the element
+        var idAttr = element.getAttribute('id');     // Same logic can apply to the 'id'
+        // Extract the dynamic number part before '_lot_number' in 'name' or 'id'
+        var dynamicNumberFromId = idAttr.split('_')[0];     // Extract number from 'id'
+        if($(`#`+dynamicNumberFromId+`_lot_number`).val() == $(`#`+res[0]+`_lot_number`).val()){
+            bag_count =  bag_count + parseInt($(`#`+dynamicNumberFromId+`_bags`).val());
+        }
+    });
+
 
     if (parseInt(bag_count) > parseInt($(qty).val())) {
       alert($(qty).val() + " : Bags in inventory");
@@ -388,9 +401,11 @@ $(document).ready(function () {
         
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="` +
-          counter +
-          `_bags" required=''>
+                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="`+
+                counter+
+                `_bags" id="`+
+                counter+
+                `_bags" required=''>
             </div>
         </td>
         <td>
