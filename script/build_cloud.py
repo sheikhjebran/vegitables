@@ -50,16 +50,27 @@ class PythonAnyWhereConsole:
             'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
             'Content-Type': 'application/json',
         }
+        payload = json.dumps({
+            "executable": "/bin/bash"  # This specifies that you want a bash console
+        })
 
-        response = requests.request("POST", url, headers=headers)
-        json_data = json.loads(response.text)
-        return json_data['id']
+        response = requests.post(url, headers=headers, data=payload)
+
+        if response.status_code == 200:
+            # Return the console ID from the response
+            console_info = response.json()
+            return console_info.get("id")
+        else:
+            print(f"Error creating console: {response.text}")
+            return None
 
 
 class BuildCloud(PythonAnyWhereConsole):
 
     def execute(self):
-        self.pull_latest_changes_on_pythonanywhere(console_id=29719796)
+        self.delete_all_existing_console()
+        console_id = self.create_new_console()
+        self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
 
     def pull_latest_changes_on_pythonanywhere(self, console_id):
         url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/send_input/"
@@ -73,9 +84,10 @@ class BuildCloud(PythonAnyWhereConsole):
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
-
-        print(response.text)
-        if response.status_code != 200:
+        if response.status_code == 200:
+            print("Commands executed successfully.")
+        else:
+            print(f"Error sending commands: {response.text}")
             sys.exit(1)
 
 
