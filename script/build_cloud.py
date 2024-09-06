@@ -1,5 +1,6 @@
 import sys
 import json
+import time
 from enum import Enum
 import requests
 
@@ -72,6 +73,7 @@ class BuildCloud(PythonAnyWhereConsole):
     def execute(self):
         self.delete_all_existing_console()
         console_id = self.create_new_console()
+        time.sleep(10)
         self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
 
     def pull_latest_changes_on_pythonanywhere(self, console_id):
