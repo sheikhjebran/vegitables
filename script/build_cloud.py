@@ -59,6 +59,8 @@ class PythonAnyWhereConsole:
         if response.status_code == 200:
             # Return the console ID from the response
             console_info = response.json()
+            print("Created new Console")
+            print(f"New Console {console_info.get("id")}")
             return console_info.get("id")
         else:
             print(f"Error creating console: {response.text}")
