@@ -1166,7 +1166,12 @@ def edit_sales_bill_entry(request, sales_id):
         sales_item_objs = SalesBillItem.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
+        selected_arrival_goods_ids = sales_item_objs.values_list('arrival_goods', flat=True)
+
+        arrival_detail_object = ArrivalGoods.objects.filter(
+            Q(shop=shop_detail_object) &
+            (Q(qty__gte=1) | Q(id__in=selected_arrival_goods_ids))
+        )
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,
