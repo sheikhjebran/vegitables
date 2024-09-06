@@ -4,6 +4,7 @@ import time
 from enum import Enum
 import requests
 
+
 class ConsoleType(Enum):
     bash = "bash"
     python27 = "python2.7"
@@ -57,7 +58,7 @@ class PythonAnyWhereConsole:
 
         response = requests.post(url, headers=headers, data=payload)
 
-        if response.status_code == 200:
+        if response.status_code == 201:
             # Return the console ID from the response
             console_info = response.json()
             print("Created new Console")
@@ -67,13 +68,44 @@ class PythonAnyWhereConsole:
             print(f"Error creating console: {response.text}")
             return None
 
+    def is_console_ready(self, console_id):
+        """Checks if the console is ready to accept commands."""
+        url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/"
+        headers = {
+            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
+        }
+        response = requests.request("GET", url, headers=headers)
+        if response.status_code == 200:
+            console_info = response.json()
+            return console_info.get('is_ready', False)
+        else:
+            print(f"Error checking console status: {response.text}")
+            return False
+
+    def wait_for_console_to_start(self, console_id, max_attempts=10, delay=2):
+        """Waits for the console to start by checking its status periodically."""
+        for attempt in range(max_attempts):
+            if self.is_console_ready(console_id):
+                print(f"Console {console_id} is ready.")
+                return
+            else:
+                print(f"Attempt {attempt + 1}/{max_attempts}: Console not ready. Retrying in {delay} seconds...")
+                time.sleep(delay)
+
+        print(f"Console {console_id} is not ready after {max_attempts} attempts.")
+        sys.exit(1)
+
 
 class BuildCloud(PythonAnyWhereConsole):
 
     def execute(self):
         self.delete_all_existing_console()
         console_id = self.create_new_console()
-        time.sleep(10)
+        if console_id:
+            print("Waiting for console to be ready...")
+            self.wait_for_console_to_start(console_id)
+            # Once the console is ready, pull the latest changes
+            self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
         self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
 
     def pull_latest_changes_on_pythonanywhere(self, console_id):
