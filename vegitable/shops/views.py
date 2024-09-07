@@ -352,24 +352,31 @@ def patti_list(request, current_page=1):
 def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
         sales_entry_detail = None
+
         try:
-            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object).filter(
-                Empty_data=False).order_by('-id')
+            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object, Empty_data=False).order_by(
+                '-id')
+
+            # Add pagination
             items_per_page = 10
             paginator = Paginator(sales_entry_detail, items_per_page)
             sales_entry_detail = paginator.get_page(current_page)
 
+            for entry in sales_entry_detail:
+                total_net_weight = SalesBillItem.objects.filter(Sales_Bill_Entry=entry).aggregate(
+                    total_weight=Sum('net_weight')
+                )['total_weight']
+                entry.total_net_weight = total_net_weight if total_net_weight is not None else 0
+
         except Exception as error:
             print(error)
 
-        return render(request, 'Entry/Sales/sales_bill_entry.html',
-                      {
-                          'shop_details': shop_detail_object,
-                          'sales_bill_detail': sales_entry_detail,
-                          'current_page': current_page
-                      })
+        return render(request, 'Entry/Sales/sales_bill_entry.html', {
+            'shop_details': shop_detail_object,
+            'sales_bill_detail': sales_entry_detail,
+            'current_page': current_page
+        })
 
     return render(request, 'index.html')
 
