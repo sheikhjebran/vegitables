@@ -157,27 +157,31 @@ def customer_ledger(request, current_page=1, customer_ledger_entry=None):
 
 
 @csrf_protect
-def farmer_ledger(request, current_page=1):
+def farmer_ledger(request, current_page=1, farmer_ledger_entry=None):
     if request.user.is_authenticated:
+        if farmer_ledger_entry is None:
+            farmer_ledger_entry = {
+                "name": "",
+                "contact": "",
+                "place": "",
+                "id": None
+            }
         items_per_page = 10
-
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         request.session['form_token'] = utility.generate_unique_number()
-        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object)
-
+        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object).order_by('-id')
         paginator = Paginator(farmer_ledger_list, items_per_page)
         farmer_ledger_list = paginator.get_page(current_page)
-
         return render(request, 'Ledger/farmer_ledger.html',
                       {'farmer_ledger_list': farmer_ledger_list,
-                       'current_page': current_page})
+                       'current_page': current_page,
+                       'farmer_ledger': farmer_ledger_entry})
     return render(request, 'index.html')
-
-
 def credit_bill_entry(request):
     if request.user.is_authenticated:
         return render(request, 'Entry/CreditBill/credit_bill.html')
     return render(request, 'index.html')
+
 
 
 def add_new_credit_bill_entry(request):
@@ -299,7 +303,7 @@ def add_customer_ledger(request):
         request.session['form_token'] = utility.generate_unique_number()
         return customer_ledger(request)
 
-    return render(request, 'index.html')
+        return render(request, 'index.html')
 
 
 @csrf_protect
@@ -307,18 +311,26 @@ def add_farmer_ledger(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
             if request.POST.get('form_token') == str(request.session.get('form_token')):
-                del request.session['form_token']  # Remove the token from the session
-                farmer_ledger_obj = FarmerLedger(
-                    name=request.POST['name'],
-                    contact=request.POST['contact'],
-                    place=request.POST['place'],
-                    shop=Shop.objects.get(shop_owner=request.user.id)
-                )
+                del request.session['form_token']
+                if request.POST['farmer_ledger_id'] == "None" or len(request.POST['farmer_ledger_id']) == 0 :
+                    farmer_ledger_obj = FarmerLedger(
+                        name=request.POST['name'],
+                        contact=request.POST['contact'],
+                        place=request.POST['place'],
+                        shop=Shop.objects.get(shop_owner=request.user.id)
+                    )
+                else:
+                    farmer_ledger_obj = FarmerLedger.objects.get(
+                        id=request.POST['farmer_ledger_id'])
+                    farmer_ledger_obj.name = request.POST['name']
+                    farmer_ledger_obj.contact = request.POST['contact']
+                    farmer_ledger_obj.place = request.POST['place']
+                    farmer_ledger_obj.shop = Shop.objects.get(shop_owner=request.user.id)
                 farmer_ledger_obj.save()
-
         request.session['form_token'] = utility.generate_unique_number()
         return farmer_ledger(request)
-    return render(request, 'index.html')
+
+        return render(request, 'index.html')
 
 
 def patti_list(request, current_page=1):
@@ -1448,3 +1460,17 @@ def delete_customer_ledger(request, customer_id):
         return customer_ledger(request)
     return render(request, 'index.html')
 
+@csrf_protect
+def edit_farmer_ledger(request, farmer_id):
+    if request.user.is_authenticated:
+        farmer_ledger_detail = FarmerLedger.objects.get(pk=farmer_id)
+        return farmer_ledger(request, farmer_ledger_entry=farmer_ledger_detail)
+    return render(request, 'index.html')
+
+@csrf_protect
+def delete_farmer_ledger(request, farmer_id):
+    if request.user.is_authenticated:
+        farmer_ledger_detail = FarmerLedger.objects.get(pk=farmer_id)
+        farmer_ledger_detail.delete()
+        return farmer_ledger(request)
+    return render(request, 'index.html')

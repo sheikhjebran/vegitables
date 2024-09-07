@@ -10,6 +10,7 @@
       <form action="/add_farmer_ledger" method="POST">
         {% csrf_token %}
         <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
+         <input type="hidden" name="farmer_ledger_id" value="{{ farmer_ledger.id }}">
         <table>
           <tr>
             <td><span class="form_text">Farmer Name</span></td>
@@ -18,6 +19,7 @@
                 type="text"
                 placeholder="Farmer Name"
                 name="name"
+                value="{{ farmer_ledger.name }}"
                 required=""
               />
             </td>
@@ -30,13 +32,14 @@
                 placeholder="+91 XXXXXXXXXX"
                 name="contact"
                 required=""
+                value="{{ farmer_ledger.contact }}"
                 class="mobile"
               />
             </td>
           </tr>
           <tr>
             <td><span class="form_text">Place</span></td>
-            <td><input type="textarea" name="place" /></td>
+            <td><input type="textarea" name="place" value="{{ farmer_ledger.place }}" /></td>
           </tr>
           <tr>
             <td><button type="reset" class="btn-l btn-14">Clear</button></td>
@@ -88,6 +91,10 @@
           <td>{{farmer.name}}</td>
           <td>{{farmer.contact}}</td>
           <td>{{farmer.place}}</td>
+           <td>
+                        <input type="button" value="Edit" class="edit_button" onclick="location.href = '/edit_farmer_ledger/{{farmer.id}}';"/>&nbsp;
+                        <input type="button" value="Delete" class="delete_button" onclick="location.href = '/delete_farmer_ledger/{{farmer.id}}';"/>
+           </td>
         </tr>
         {% endfor %}
       </tbody>

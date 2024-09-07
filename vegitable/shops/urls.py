@@ -83,6 +83,8 @@ urlpatterns = [
     path('search_farmer_ledger', views.search_farmer_ledger, name='search_farmer_ledger'),
     path('farmer_ledger/prev/<int:page_number>', views.farmer_ledger_prev_page, name="farmer_ledger_prev_page"),
     path('farmer_ledger/next/<int:page_number>', views.farmer_ledger_next_page, name="farmer_ledger_next_page"),
+    path('edit_farmer_ledger/<int:farmer_id>', views.edit_farmer_ledger, name='edit_farmer_ledger'),
+    path('delete_farmer_ledger/<int:farmer_id>', views.delete_farmer_ledger, name='delete_farmer_ledger'),
 
     # Inventory
     path('inventory', views.inventory, name='inventory'),
