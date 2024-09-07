@@ -25,6 +25,7 @@
                     <td>Bill No</td>
                     <td>Customer Name</td>
                     <td>Date</td>
+                    <td>Total Weight</td>
                     <td>Total amount</td>
                 </tr>
             </thead>
@@ -34,6 +35,7 @@
                     <td><a href="/edit_sales_bill_entry/{{sales_bill.id}}">{{ sales_bill.id}}</a></td>
                     <td>{{sales_bill.customer_name}}</td>
                     <td>{{sales_bill.date}}</td>
+                    <td>{{sales_bill.total_net_weight}}</td>
                     <td>{{sales_bill.total_amount}}</td>
                 </tr>
                 {% endfor %}
