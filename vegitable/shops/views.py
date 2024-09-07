@@ -259,19 +259,22 @@ def search_credit(request, current_page=1):
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = ArrivalEntry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
-            .annotate(
-            qty=models.F('arrivalgoods__qty'),
-            remarks=models.F('arrivalgoods__remarks'),
-            initial_qty=models.F('arrivalgoods__initial_qty'),
-            sold_qty=models.F('arrivalgoods__initial_qty') - models.F('arrivalgoods__qty'),
-            item_name=models.F('arrivalgoods__item_name')
-        ).filter(arrivalgoods__shop_id=shop_detail_object).distinct()
+
+        entries = ArrivalGoods.objects.filter(shop_id=shop_detail_object).values(
+            'id',
+            'arrival_entry__date',
+            'remarks',
+            'item_name',
+            'initial_qty',
+            'qty',
+        ).annotate(
+            sold=F('initial_qty') - F('qty'),
+            balance=F('qty')
+        ).filter(qty__gt=0)
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
         entries = paginator.get_page(current_page)
-
         return render(request, 'Inventory/inventory.html', {'entries_list': entries,
                                                             'current_page': current_page})
     return render(request, 'index.html')
@@ -439,19 +442,7 @@ def logout(request):
 def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        # arrival_Entry_Obj = Arrival_Entry(
-        #     gp_no="",
-        #     date=getDate_from_string(today),
-        #     patti_name="",
-        #     total_bags=0,
-        #     lorry_no="",
-        #     shop=shop_detail_object
-        # )
-        # arrival_Entry_Obj.save()
-
         return render(request, 'Entry/Arrival/modify_arrival_entry.html', {
-            # "arrival_detail": arrival_Entry_Obj,
             "today": today,
             "NEW": True
         })
@@ -552,7 +543,8 @@ def modify_sales_bill_entry(request):
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
         if sales_bill_entry_Obj.balance_amount > 0.0:
-            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name, sales_bill_entry_Obj.balance_amount)
+            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
+                                  sales_bill_entry_Obj.balance_amount)
         add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
@@ -1479,11 +1471,9 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         total_initial_credit=Sum('initial_credit_bill_amount')
     ).get('total_initial_credit') or 0
 
-
-
     # Set default values to zero if None
     cash_bill_amount = sales_data.get('cash_bill_amount') or 0
-    credit_bill_amount = initial_credit_bill_amount # sales_data.get('credit_bill_amount') or 0
+    credit_bill_amount = initial_credit_bill_amount  # sales_data.get('credit_bill_amount') or 0
     total_sales = sales_data.get('total_sales') or 0
     upi_amount = sales_data.get('upi_amount') or 0
     patti = round(patti_entries, 2)
@@ -1532,4 +1522,3 @@ def delete_customer_ledger(request, customer_id):
         customer_ledger_detail.delete()
         return customer_ledger(request)
     return render(request, 'index.html')
-
