@@ -196,7 +196,7 @@
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
                     <span>Cooli</span>
-                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required="" value="{{sales_obj.cooli}}" >
+                    <input type="text" placeholder="Enter Cooli Amount" id= "cooli" name = "cooli" class= "decimal_number_only" required=""  value="{% if sales_obj and sales_obj.cooli %}{{ sales_obj.cooli }}{% else %}0{% endif %}">
                 </div>
                 <div class="clearfix"> </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%;float:right">
