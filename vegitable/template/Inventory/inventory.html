@@ -22,11 +22,11 @@
         {%for entry in entries_list %}
         <tr>
           <td>{{entry.id}}</td>
-          <td>{{entry.date}}</td>
+          <td>{{entry.arrival_entry__date }}</td>
           <td>{{entry.remarks}}</td>
           <td>{{entry.item_name}}</td>
           <td>{{entry.initial_qty}}</td>
-          <td>{{entry.sold_qty}}</td>
+          <td>{{entry.sold}}</td>
           <td>{{entry.qty}}</td>
         </tr>
         {% endfor %}

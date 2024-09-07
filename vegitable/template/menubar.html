@@ -1,47 +1,58 @@
 {% load static %}
+<div class="navbar">
+    <div class="logo">Known</div>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <ul>
+        <li class="submenu">
+            <a href="#" class="active">Entry</a>
+            <ul class="submenu-list">
+                <li><a href="/home">Arrival Entry</a></li>
+                <li><a href="/sales_bill_entry">Sales Entry</a></li>
+                <li><a href="/patti_list">Patti Entry</a></li>
+                <li><a href="/expenditure_entry">Expenditure Entry</a></li>
+                <li><a href="/credit_bill_entry">CreditBill Entry</a></li>
+                <li><a href="/shilk_entry">Shilk Entry</a></li>
+            </ul>
+        </li>
+        <li class="submenu">
+            <a href="#">Report</a>
+            <ul class="submenu-list">
+                <li><a href="/sales_bill_report">Sales Report</a></li>
+                <li><a href="/rmc_report">RMC Report</a></li>
+            </ul>
+        </li>
+        <li class="submenu">
+            <a href="#">Ledger</a>
+            <ul class="submenu-list">
+                <li><a href="/customer_ledger">Customer Ledger</a></li>
+                <li><a href="/farmer_ledger">Farmer Ledger</a></li>
+            </ul>
+        </li>
+        <li><a href="/inventory">Inventory</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+    <div class="contact">
+        <i class="fa fa-phone"></i>
+        <span>+65 2244 1100</span>
+    </div>
+</div>
+
+<!-- Include Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
+<!-- JavaScript to toggle menu -->
+<script>
+    function toggleMenu() {
+        var menu = document.querySelector('.navbar ul');
+        menu.classList.toggle('show');
+    }
+</script>
 
 <div class="container">
-  <nav class="mainmenu">
-    <ol>
-      <li class="menu-item">
-        <a href="#">Entry</a>
-        <ol class="sub-menu">
-          <li class="menu-item"><a href="/home">Arrival Entry</a></li>
-          <li class="menu-item"><a href="/sales_bill_entry">Sales Entry</a></li>
-          <li class="menu-item"><a href="/patti_list">Patti Entry</a></li>
-          <li class="menu-item"><a href="/expenditure_entry">Expenditure Entry</a></li>
-          <li class="menu-item"><a href="/credit_bill_entry">Credit Bill Entry</a></li>
-          <li class="menu-item"><a href="/shilk_entry">Shilk Entry</a></li>
-        </ol>
-      </li>
-      <li class="menu-item">
-        <a href="#">Report</a>
-        <ol class="sub-menu">
-          <li class="menu-item">
-            <a href="/sales_bill_report">Sales Report</a>
-          </li>
-          <li class="menu-item">
-            <a href="/rmc_report">RMC Report</a>
-          </li>
-        </ol>
-      </li>
-
-      <li class="menu-item">
-        <a href="#">Ledger</a>
-        <ol class="sub-menu">
-          <li class="menu-item">
-            <a href="/customer_ledger">Customer Ledger</a>
-          </li>
-          <li class="menu-item">
-            <a href="/farmer_ledger">Farmer Ledger</a>
-          </li>
-        </ol>
-      </li>
-      <li class="menu-item"><a href="/inventory">Inventory</a></li>
-      <li class="menu-item"><a href="/profile">Profile</a></li>
-      <li class="menu-item"><a href="/logout">Logout</a></li>
-    </ol>
-  </nav>
-
   <div class="clearfix"></div>
 </div>

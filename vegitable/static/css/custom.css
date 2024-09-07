@@ -104,189 +104,6 @@ margin-top: 10%
 cursor:pointer
 }
 
-
-/* Menu bar */
-.mainmenu {
-    background: #239052;
-    height: 5rem;
-    box-sizing: border-box;
-  }
-  .mainmenu ol {
-    list-style-type: none;
-    margin: 0 auto;
-    padding: 0;
-  }
-  .mainmenu > ol {
-    max-width: 1000px;
-    padding: 0 2rem;
-    display: flex;
-  }
-  .mainmenu > ol > .menu-item {
-    flex: 1;
-    padding: 0.75rem 0;
-  }
-  .mainmenu > ol > .menu-item:after {
-    content: "";
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    bottom: 5px;
-    left: calc(50% - 2px);
-    background: #568e6f;
-    will-change: transform;
-    transform: scale(0);
-    transition: transform 0.2s ease;
-  }
-  .mainmenu > ol > .menu-item:hover:after {
-    transform: scale(1);
-  }
-  .menu-item {
-    position: relative;
-    line-height: 2.5rem;
-    text-align: center;
-  }
-  .menu-item a {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    display: block;
-    color: #FFF;
-  }
-  .sub-menu .menu-item {
-    padding: 0.75rem 0;
-    background: #568e6f;
-    opacity: 0;
-    transform-origin: bottom;
-    animation: enter 0.2s ease forwards;
-  }
-  .sub-menu .menu-item:nth-child(1) {
-    animation-duration: 0.2s;
-    animation-delay: 0s;
-  }
-  .sub-menu .menu-item:nth-child(2) {
-    animation-duration: 0.3s;
-    animation-delay: 0.1s;
-  }
-  .sub-menu .menu-item:nth-child(3) {
-    animation-duration: 0.4s;
-    animation-delay: 0.2s;
-  }
-  .sub-menu .menu-item:hover {
-    background: #568e6f;
-  }
-  .sub-menu .menu-item a {
-    padding: 0 0.75rem;
-  }
-  @media screen and (max-width: 600px) {
-    .sub-menu .menu-item {
-      background: #568e6f;
-    }
-  }
-  
-  @media screen and (max-width: 600px) {
-    .mainmenu {
-      position: relative;
-    }
-    .mainmenu:after {
-      content: "";
-      position: absolute;
-      top: calc(50% - 2px);
-      right: 1rem;
-      width: 30px;
-      height: 4px;
-      background: #FFF;
-      box-shadow: 0 10px #FFF, 0 -10px #FFF;
-    }
-    .mainmenu > ol {
-      display: none;
-      background: #568e6f;
-      flex-direction: column;
-      justify-content: center;
-      height: 100vh;
-      animation: fade 0.2s ease-out;
-    }
-    .mainmenu > ol > .menu-item {
-      flex: 0;
-      opacity: 0;
-      animation: enter 0.3s ease-out forwards;
-    }
-    .mainmenu > ol > .menu-item:nth-child(1) {
-      animation-delay: 0s;
-    }
-    .mainmenu > ol > .menu-item:nth-child(2) {
-      animation-delay: 0.1s;
-    }
-    .mainmenu > ol > .menu-item:nth-child(3) {
-      animation-delay: 0.2s;
-    }
-    .mainmenu > ol > .menu-item:nth-child(4) {
-      animation-delay: 0.3s;
-    }
-    .mainmenu > ol > .menu-item:nth-child(5) {
-      animation-delay: 0.4s;
-    }
-    .mainmenu > ol > .menu-item + .menu-item {
-      margin-top: 0.75rem;
-    }
-    .mainmenu > ol > .menu-item:after {
-      left: auto;
-      right: 1rem;
-      bottom: calc(50% - 2px);
-    }
-    .mainmenu > ol > .menu-item:hover {
-      z-index: 1;
-    }
-    .mainmenu:hover > ol {
-      display: flex;
-    }
-    .mainmenu:hover:after {
-      box-shadow: none;
-    }
-  }
-  
-  .sub-menu {
-    position: absolute;
-    width: 100%;
-    top: 100%;
-    left: 0;
-    display: none;
-    z-index: 1;
-  }
-  .menu-item:hover > .sub-menu {
-    display: block;
-  }
-  
-  @media screen and (max-width: 600px) {
-    .sub-menu {
-      width: 100vw;
-      left: -2rem;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-  }
-  
-  
-  @keyframes enter {
-    from {
-      opacity: 0;
-      transform: scaleY(0.98) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes fade {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-/* End Menu Bar */
-
 .form_background{
     display: flex;
     flex-direction: row;
@@ -612,3 +429,157 @@ display:none;
     font-size:14px;
     font-weight: bolder;
 }
+
+/* Menu bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f8f8;
+    padding: 10px 10%;
+    border-top: 4px solid #29ca8e;
+    height: 50px;
+}
+
+.navbar .logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.navbar ul li {
+    position: relative; /* Necessary for submenu positioning */
+    margin: 0 0px;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: #333;
+    padding: 30px 25px;
+    font-weight: bolder;
+    font-size: 16px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+    color: #fff;
+    background-color: #29ca8e;
+    border-radius: 0px;
+}
+
+.navbar ul li a.active {
+    color: #fff;
+    background-color: #29ca8e;
+    border-radius: 0px;
+}
+
+/* Submenu styles */
+.submenu .submenu-list {
+    display: none;
+    position: absolute;
+    top: 260%;
+    left: 0;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 1000;
+    width: 190%; /* Ensure it aligns with parent */
+}
+
+.submenu .submenu-list li {
+    margin: 0;
+}
+
+.submenu .submenu-list li a {
+    padding: 10px 20px;
+    display: block;
+    color: #333;
+    font-size: 14px;
+}
+
+.submenu .submenu-list li a:hover {
+    background-color: #29ca8e;
+    color: #fff;
+}
+
+.submenu:hover .submenu-list {
+    display: block;
+}
+
+.navbar .contact {
+    display: flex;
+    align-items: center;
+    color: #29ca8e;
+    font-size: 16px;
+}
+
+.navbar .contact i {
+    margin-right: 8px;
+}
+
+/* Hamburger menu icon */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.hamburger div {
+    width: 25px;
+    height: 3px;
+    background-color: #333;
+    margin: 4px;
+}
+
+/* Media query for small screens */
+@media (max-width: 768px) {
+    .navbar ul {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .hamburger {
+        display: flex;
+    }
+    .navbar ul.show {
+        display: flex;
+    }
+    .navbar ul li {
+        margin: 0px 0;
+    }
+    .navbar ul li a {
+        padding: 10px 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Adjust submenu positioning for small screens */
+    .submenu .submenu-list {
+        position: relative;
+        top: 0;
+        left: 100%;
+        width: auto; /* Adjust the width as needed */
+        border: none;
+        box-shadow: none;
+        background-color: #f8f8f8;
+    }
+}
+
+/*Menu End */

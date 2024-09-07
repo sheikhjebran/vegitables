@@ -309,11 +309,24 @@ $(document).ready(function () {
   });
 
   $(document).on("keyup", ".sales_bag_count", function () {
-    var bag_count = $(this).val();
+    var bag_count = 0;
     var bag_id = $(this).attr("name");
 
     var res = bag_id.split("_");
     var qty = `#` + res[0] + `_qty`;
+
+
+    var elements = document.querySelectorAll('.add_new_sales_custom_select');
+    elements.forEach(function(element) {
+        // Get the 'id' or 'name' attribute of the element
+        var idAttr = element.getAttribute('id');     // Same logic can apply to the 'id'
+        // Extract the dynamic number part before '_lot_number' in 'name' or 'id'
+        var dynamicNumberFromId = idAttr.split('_')[0];     // Extract number from 'id'
+        if($(`#`+dynamicNumberFromId+`_lot_number`).val() == $(`#`+res[0]+`_lot_number`).val()){
+            bag_count =  bag_count + parseInt($(`#`+dynamicNumberFromId+`_bags`).val());
+        }
+    });
+
 
     if (parseInt(bag_count) > parseInt($(qty).val())) {
       alert($(qty).val() + " : Bags in inventory");
@@ -388,9 +401,11 @@ $(document).ready(function () {
         
         <td>
             <div class='comment-your'>
-                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="` +
-          counter +
-          `_bags" required=''>
+                <input type='text' placeholder='Bags' class= "sales_bag_count number_only" name ="`+
+                counter+
+                `_bags" id="`+
+                counter+
+                `_bags" required=''>
             </div>
         </td>
         <td>
@@ -1046,6 +1061,28 @@ $(document).ready(function () {
       },
     });
     }
+    if(search_text.length<=0){
+    $.ajax({
+      url: "/default_customer_ledger",
+      method: "GET",
+      async: true,
+      data: {
+        search_text: search_text,
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        hide_show_customer_ledger_table(response.FOUND);
+        update_customer_ledger_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+        hide_show_customer_ledger_table(null)
+      },
+    });
+   }
+
   });
 
    $(document).on("mouseenter", ".credit_id", function () {
@@ -1098,6 +1135,30 @@ $(document).ready(function () {
       },
     });
     }
+    if(search_text.length<=0){
+    $.ajax({
+      url: "/default_farmer_ledger",
+      method: "GET",
+      async: true,
+      data: {
+        search_text: search_text,
+      },
+      success: function (response) {
+        console.log("AJAX request successful");
+        hide_show_customer_ledger_table(response.FOUND);
+        update_farmer_ledger_table(response.result);
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX request failed");
+        console.log("Status: " + status);
+        console.log("Error: " + error);
+        hide_show_customer_ledger_table(null)
+      },
+    });
+
+
+   }
+
   });
 
   // Report

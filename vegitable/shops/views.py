@@ -231,49 +231,54 @@ def get_credit_bill_entry_list(request):
 
 def search_credit(request, current_page=1):
     if request.user.is_authenticated:
-        search_name = request.GET['name']
-        search_date = request.GET['date']
-        if search_name is None or len(search_name) == 0:
-            search_name = ""
-        if search_date is None or len(search_date) == 0:
-            search_date = None
+        search_name = request.GET.get('name', '')
+        search_date = request.GET.get('date', None)
+
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         credit_obj = CreditBillEntry.objects.filter(
             customer_name__icontains=search_name,
             shop_id=shop_detail_object
         )
+
         result = []
         for credit in credit_obj:
-            myDict = {
-                "id": credit.id,
-                "date": credit.sales_bill.date,
-                "bill_no": credit.sales_bill.id,
-                "amount": credit.sales_bill.total_amount,
-                "paid": credit.sales_bill.paid_amount,
-                "balance": credit.sales_bill.balance_amount
-            }
-            result.append(myDict)
+            balance_amount = credit.sales_bill.balance_amount
+            if balance_amount > 0:  # Check if the balance is greater than zero
+                myDict = {
+                    "id": credit.id,
+                    "customer_name": credit.customer_name,
+                    "date": credit.sales_bill.date,
+                    "bill_no": credit.sales_bill.id,
+                    "amount": credit.sales_bill.total_amount,
+                    "paid": credit.sales_bill.paid_amount,
+                    "balance": balance_amount
+                }
+                result.append(myDict)
 
         return render(request, 'Entry/CreditBill/credit_bill.html', {'results': result, 'current_page': current_page})
+
     return render(request, 'index.html')
 
 
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        entries = ArrivalEntry.objects.filter(shop_id=shop_detail_object).values('id', 'date') \
-            .annotate(
-            qty=models.F('arrivalgoods__qty'),
-            remarks=models.F('arrivalgoods__remarks'),
-            initial_qty=models.F('arrivalgoods__initial_qty'),
-            sold_qty=models.F('arrivalgoods__initial_qty') - models.F('arrivalgoods__qty'),
-            item_name=models.F('arrivalgoods__item_name')
-        ).filter(arrivalgoods__shop_id=shop_detail_object).distinct()
+
+        entries = ArrivalGoods.objects.filter(shop_id=shop_detail_object).values(
+            'id',
+            'arrival_entry__date',
+            'remarks',
+            'item_name',
+            'initial_qty',
+            'qty',
+        ).annotate(
+            sold=F('initial_qty') - F('qty'),
+            balance=F('qty')
+        ).filter(qty__gt=0)
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
         entries = paginator.get_page(current_page)
-
         return render(request, 'Inventory/inventory.html', {'entries_list': entries,
                                                             'current_page': current_page})
     return render(request, 'index.html')
@@ -303,7 +308,7 @@ def add_customer_ledger(request):
         request.session['form_token'] = utility.generate_unique_number()
         return customer_ledger(request)
 
-        return render(request, 'index.html')
+    return render(request, 'index.html')
 
 
 @csrf_protect
@@ -359,24 +364,31 @@ def patti_list(request, current_page=1):
 def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
         sales_entry_detail = None
+
         try:
-            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object).filter(
-                Empty_data=False).order_by('-id')
+            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object, Empty_data=False).order_by(
+                '-id')
+
+            # Add pagination
             items_per_page = 10
             paginator = Paginator(sales_entry_detail, items_per_page)
             sales_entry_detail = paginator.get_page(current_page)
 
+            for entry in sales_entry_detail:
+                total_net_weight = SalesBillItem.objects.filter(Sales_Bill_Entry=entry).aggregate(
+                    total_weight=Sum('net_weight')
+                )['total_weight']
+                entry.total_net_weight = total_net_weight if total_net_weight is not None else 0
+
         except Exception as error:
             print(error)
 
-        return render(request, 'Entry/Sales/sales_bill_entry.html',
-                      {
-                          'shop_details': shop_detail_object,
-                          'sales_bill_detail': sales_entry_detail,
-                          'current_page': current_page
-                      })
+        return render(request, 'Entry/Sales/sales_bill_entry.html', {
+            'shop_details': shop_detail_object,
+            'sales_bill_detail': sales_entry_detail,
+            'current_page': current_page
+        })
 
     return render(request, 'index.html')
 
@@ -449,19 +461,7 @@ def logout(request):
 def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        # arrival_Entry_Obj = Arrival_Entry(
-        #     gp_no="",
-        #     date=getDate_from_string(today),
-        #     patti_name="",
-        #     total_bags=0,
-        #     lorry_no="",
-        #     shop=shop_detail_object
-        # )
-        # arrival_Entry_Obj.save()
-
         return render(request, 'Entry/Arrival/modify_arrival_entry.html', {
-            # "arrival_detail": arrival_Entry_Obj,
             "today": today,
             "NEW": True
         })
@@ -562,17 +562,19 @@ def modify_sales_bill_entry(request):
         sales_bill_entry_Obj.save()
         print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
         if sales_bill_entry_Obj.balance_amount > 0.0:
-            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name)
+            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
+                                  sales_bill_entry_Obj.balance_amount)
         add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
         return sales_bill_entry(request)
     return render(request, 'index.html')
 
 
-def add_to_credit_bill_db(sales, shop, customer_name):
+def add_to_credit_bill_db(sales, shop, customer_name, balance_amount):
     credit_bill_entry = CreditBillEntry(
         customer_name=customer_name,
         sales_bill=sales,
-        shop=shop
+        shop=shop,
+        initial_credit_bill_amount=float(balance_amount)
     )
     credit_bill_entry.save()
 
@@ -1175,7 +1177,12 @@ def edit_sales_bill_entry(request, sales_id):
         sales_item_objs = SalesBillItem.objects.filter(Sales_Bill_Entry=sales_obj).order_by('-id')
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_detail_object = ArrivalGoods.objects.filter(shop=shop_detail_object, qty__gte=1)
+        selected_arrival_goods_ids = sales_item_objs.values_list('arrival_goods', flat=True)
+
+        arrival_detail_object = ArrivalGoods.objects.filter(
+            Q(shop=shop_detail_object) &
+            (Q(qty__gte=1) | Q(id__in=selected_arrival_goods_ids))
+        )
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,
@@ -1240,23 +1247,90 @@ def search_customer_ledger(request):
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
 
+def default_customer_ledger(request, current_page=1, customer_ledger_entry=None):
+    if request.user.is_authenticated:
+        if customer_ledger_entry is None:
+            customer_ledger_entry = {
+                "name": "",
+                "contact": "",
+                "address": "",
+                "id": None
+            }
+        items_per_page = 10
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = utility.generate_unique_number()
+        customer_ledger_list = CustomerLedger.objects.filter(shop=shop_detail_object).order_by('-id')
+        paginator = Paginator(customer_ledger_list, items_per_page)
+        customer_ledger_list = paginator.get_page(current_page)
+        response = [
+            {
+                'id': customer.id,
+                'name': customer.name,
+                'contact': customer.contact,
+                'address': customer.address
+            }
+            for customer in customer_ledger_list
+        ]
+        if len(response) >= 1:
+            return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def default_farmer_ledger(request):
+    if request.user.is_authenticated:
+        items_per_page = 10
+        current_page = 1
+
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        request.session['form_token'] = utility.generate_unique_number()
+        farmer_ledger_list = FarmerLedger.objects.filter(shop=shop_detail_object)
+
+        paginator = Paginator(farmer_ledger_list, items_per_page)
+        farmer_ledger_list = paginator.get_page(current_page)
+
+        response = [
+            {
+                'id': farmer.id,
+                'name': farmer.name,
+                'contact': farmer.contact,
+                'place': farmer.place
+            }
+            for farmer in farmer_ledger_list
+        ]
+
+        if response:
+            return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['GET'])
 def search_farmer_ledger(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    farmerLedgerObject = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        name__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        contact__icontains=request.GET['search_text']) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-        place__icontains=request.GET['search_text'])
-    response = []
-    for farmer in farmerLedgerObject:
-        farmer_dict = {
+
+    search_text = request.GET.get('search_text', '').strip()
+
+    if search_text:
+        farmer_ledger_objects = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            name__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            contact__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
+            place__icontains=search_text)
+    else:
+        farmer_ledger_objects = FarmerLedger.objects.filter(shop=shop_detail_object)
+
+    response = [
+        {
             'id': farmer.id,
             'name': farmer.name,
             'contact': farmer.contact,
             'place': farmer.place
         }
-        response.append(farmer_dict)
-    if len(response) >= 1:
+        for farmer in farmer_ledger_objects
+    ]
+
+    if response:
         return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
     else:
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
@@ -1408,9 +1482,17 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         date=selected_date
     ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
 
+    # Fetching the initial credit bill amount for the specific date
+    initial_credit_bill_amount = CreditBillEntry.objects.filter(
+        shop=shop_id,
+        sales_bill__date=selected_date  # Joining with SalesBillEntry
+    ).aggregate(
+        total_initial_credit=Sum('initial_credit_bill_amount')
+    ).get('total_initial_credit') or 0
+
     # Set default values to zero if None
     cash_bill_amount = sales_data.get('cash_bill_amount') or 0
-    credit_bill_amount = sales_data.get('credit_bill_amount') or 0
+    credit_bill_amount = initial_credit_bill_amount  # sales_data.get('credit_bill_amount') or 0
     total_sales = sales_data.get('total_sales') or 0
     upi_amount = sales_data.get('upi_amount') or 0
     patti = round(patti_entries, 2)

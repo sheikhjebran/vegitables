@@ -20,7 +20,11 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Date</span>
+                    {% if NEW %}
+                    <input type="date" id = "patti_entry_date" name = "patti_entry_date" required="" >
+                    {% else %}
                     <input type="date" id = "patti_entry_date" name = "patti_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
+                    {% endif %}
                 </div>
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
