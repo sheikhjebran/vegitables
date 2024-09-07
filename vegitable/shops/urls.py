@@ -9,6 +9,7 @@ urlpatterns = [
     # Dashboard Authentication
     path('authenticate', views.get_authenticate, name="get_authenticate"),
     path('logout', views.logout, name="logout"),
+
     # Api to get Authenticated
     path('authenticate_api', views.get_authenticate_api, name="get_authenticate_api"),
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('add_arrival_entry', views.add_new_arrival_entry, name='add_new_arrival_entry'),
     path('add_arrival', views.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>', views.modify_arrival, name='modify_arrival'),
+
     # RestAPI
     path('get_arrival_goods_item_name', views.get_arrival_goods_item_name, name='get_arrival_goods_item_name'),
     path('get_arrival_goods_list', views.get_arrival_goods_list, name='get_arrival_goods_list'),
