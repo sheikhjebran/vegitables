@@ -335,7 +335,7 @@ def add_farmer_ledger(request):
         request.session['form_token'] = utility.generate_unique_number()
         return farmer_ledger(request)
 
-        return render(request, 'index.html')
+    return render(request, 'index.html')
 
 
 def patti_list(request, current_page=1):
