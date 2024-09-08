@@ -1,6 +1,14 @@
 {% load static %}
 <div class="navbar">
-    <div class="logo">Known</div>
+    <div class="logo">
+        Known
+        <ul class="logo-submenu">
+            <li><a href="/profile" style="padding:10px">{{request.user.first_name}} {{request.user.last_name}}</a></li>
+            <li><a href="/change_password" style="padding:10px">Change Password</a></li>
+            <li><a href="/subscription_info" style="padding:10px">Subscription Info</a></li>
+            <li><a href="/logout" style="padding:10px">Logout</a></li>
+        </ul>
+    </div>
     <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>

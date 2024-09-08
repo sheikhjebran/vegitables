@@ -583,3 +583,49 @@ display:none;
 }
 
 /*Menu End */
+
+/* Position the logo relative so the submenu is positioned correctly */
+.logo {
+    position: relative;
+    cursor: pointer; /* Optional, to indicate it's hoverable */
+}
+
+/* Logo Submenu Styles */
+.logo-submenu {
+    display: none;  /* Ensure it is hidden by default */
+    position: absolute;
+    top: 100%; /* Position the submenu below the logo */
+    left: 0;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 1000;
+    width: 190px;
+     visibility: hidden;
+}
+
+.logo-submenu li {
+    margin: 0;
+}
+
+.logo-submenu li a {
+    padding: 10px 20px;
+    display: block;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.logo-submenu li a:hover {
+    background-color: #29ca8e;
+    color: #fff;
+}
+
+/* Show the submenu when hovering over the logo */
+.logo:hover .logo-submenu {
+    display: block;
+    visibility: visible;
+}
