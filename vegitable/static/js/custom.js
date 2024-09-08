@@ -1234,8 +1234,8 @@ $(document).ready(function () {
 
   function update_daily_rmc_container(response){
     if(response.FOUND){
-        $(".daily_report_container").show();
-        $(".weekly_report_container").hide();
+        $(".daily_report_container").css("visibility", "show");
+        $(".weekly_report_container").css("visibility", "hidden");
         $(".daily_report_table_cash").children("tbody").children("tr").remove();
         $(".daily_report_table_credit").children("tbody").children("tr").remove();
 
@@ -1285,13 +1285,11 @@ $(document).ready(function () {
     $(document).on("click",".rmc_daily_button",function(){
         $(".daily_report_date").show();
         $(".daily_report_container").show();
-
         $(".weekly_report_date").hide();
     });
     $(document).on("click",".rmc_weekly_button",function(){
         $(".daily_report_date").hide();
         $(".daily_report_container").hide();
-
         $(".weekly_report_date").show();
     });
 
