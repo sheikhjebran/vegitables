@@ -177,11 +177,12 @@ def farmer_ledger(request, current_page=1, farmer_ledger_entry=None):
                        'current_page': current_page,
                        'farmer_ledger': farmer_ledger_entry})
     return render(request, 'index.html')
+
+
 def credit_bill_entry(request):
     if request.user.is_authenticated:
         return render(request, 'Entry/CreditBill/credit_bill.html')
     return render(request, 'index.html')
-
 
 
 def add_new_credit_bill_entry(request):
@@ -317,7 +318,7 @@ def add_farmer_ledger(request):
         if request.method == 'POST':
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 del request.session['form_token']
-                if request.POST['farmer_ledger_id'] == "None" or len(request.POST['farmer_ledger_id']) == 0 :
+                if request.POST['farmer_ledger_id'] == "None" or len(request.POST['farmer_ledger_id']) == 0:
                     farmer_ledger_obj = FarmerLedger(
                         name=request.POST['name'],
                         contact=request.POST['contact'],
@@ -530,41 +531,44 @@ def navigate_to_add_sales_bill_entry(request):
 
 def modify_sales_bill_entry(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if len(request.POST['sales_bill_id']) <= 0:
-            sales_bill_entry_Obj = SalesBillEntry(
-                payment_type=request.POST['payment_mode'],
-                customer_name=request.POST['sales_entry_customer_name'],
-                date=getDate_from_string(request.POST['sales_entry_date']),
-                shop=shop_detail_object,
-                rmc=request.POST['rmc'],
-                commission=request.POST['comission'],
-                cooli=request.POST['cooli'],
-                total_amount=round(float(request.POST['total_amount']), 2),
-                paid_amount=round(float(request.POST['paid_amount']), 2),
-                balance_amount=round(float(request.POST['balance_amount']), 2),
-                Empty_data=False
-            )
-        else:
-            sales_bill_entry_Obj = SalesBillEntry.objects.get(id=request.POST['sales_bill_id'])
-            sales_bill_entry_Obj.payment_type = request.POST['payment_mode']
-            sales_bill_entry_Obj.customer_name = request.POST['sales_entry_customer_name']
-            sales_bill_entry_Obj.date = getDate_from_string(request.POST['sales_entry_date'])
-            sales_bill_entry_Obj.shop = shop_detail_object
-            sales_bill_entry_Obj.rmc = request.POST['rmc']
-            sales_bill_entry_Obj.commission = request.POST['comission']
-            sales_bill_entry_Obj.cooli = request.POST['cooli']
-            sales_bill_entry_Obj.total_amount = round(float(request.POST['total_amount']), 2)
-            sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
-            sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
-            sales_bill_entry_Obj.Empty_data = False
+        if request.POST.get('form_token') == str(request.session.get('form_token')):
+            del request.session['form_token']  # Remove the token from the session
+            shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+            if len(request.POST['sales_bill_id']) <= 0:
+                sales_bill_entry_Obj = SalesBillEntry(
+                    payment_type=request.POST['payment_mode'],
+                    customer_name=request.POST['sales_entry_customer_name'],
+                    date=getDate_from_string(request.POST['sales_entry_date']),
+                    shop=shop_detail_object,
+                    rmc=request.POST['rmc'],
+                    commission=request.POST['comission'],
+                    cooli=request.POST['cooli'],
+                    total_amount=round(float(request.POST['total_amount']), 2),
+                    paid_amount=round(float(request.POST['paid_amount']), 2),
+                    balance_amount=round(float(request.POST['balance_amount']), 2),
+                    Empty_data=False
+                )
+            else:
+                sales_bill_entry_Obj = SalesBillEntry.objects.get(id=request.POST['sales_bill_id'])
+                sales_bill_entry_Obj.payment_type = request.POST['payment_mode']
+                sales_bill_entry_Obj.customer_name = request.POST['sales_entry_customer_name']
+                sales_bill_entry_Obj.date = getDate_from_string(request.POST['sales_entry_date'])
+                sales_bill_entry_Obj.shop = shop_detail_object
+                sales_bill_entry_Obj.rmc = request.POST['rmc']
+                sales_bill_entry_Obj.commission = request.POST['comission']
+                sales_bill_entry_Obj.cooli = request.POST['cooli']
+                sales_bill_entry_Obj.total_amount = round(float(request.POST['total_amount']), 2)
+                sales_bill_entry_Obj.paid_amount = round(float(request.POST['paid_amount']), 2)
+                sales_bill_entry_Obj.balance_amount = round(float(request.POST['balance_amount']), 2)
+                sales_bill_entry_Obj.Empty_data = False
 
-        sales_bill_entry_Obj.save()
-        print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
-        if sales_bill_entry_Obj.balance_amount > 0.0:
-            add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
-                                  sales_bill_entry_Obj.balance_amount)
-        add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
+            sales_bill_entry_Obj.save()
+            print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
+            if sales_bill_entry_Obj.balance_amount > 0.0:
+                add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
+                                      sales_bill_entry_Obj.balance_amount)
+            add_sales_bill_item(request, list(request.POST), sales_bill_entry_Obj)
+        request.session['form_token'] = utility.generate_unique_number()
         return sales_bill_entry(request)
     return render(request, 'index.html')
 
@@ -1542,12 +1546,14 @@ def delete_customer_ledger(request, customer_id):
         return customer_ledger(request)
     return render(request, 'index.html')
 
+
 @csrf_protect
 def edit_farmer_ledger(request, farmer_id):
     if request.user.is_authenticated:
         farmer_ledger_detail = FarmerLedger.objects.get(pk=farmer_id)
         return farmer_ledger(request, farmer_ledger_entry=farmer_ledger_detail)
     return render(request, 'index.html')
+
 
 @csrf_protect
 def delete_farmer_ledger(request, farmer_id):
