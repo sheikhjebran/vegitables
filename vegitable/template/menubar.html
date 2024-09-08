@@ -16,7 +16,7 @@
     </div>
     <ul>
         <li class="submenu">
-            <a href="#" class="active">Entry</a>
+            <a href="#" class="{% if 'entry' in request.path or 'home' in request.path %}active{% endif %}">Entry</a>
             <ul class="submenu-list">
                 <li><a href="/home">Arrival Entry</a></li>
                 <li><a href="/sales_bill_entry">Sales Entry</a></li>
@@ -27,22 +27,22 @@
             </ul>
         </li>
         <li class="submenu">
-            <a href="#">Report</a>
+            <a href="#" class="{% if 'report' in request.path %}active{% endif %}">Report</a>
             <ul class="submenu-list">
                 <li><a href="/sales_bill_report">Sales Report</a></li>
                 <li><a href="/rmc_report">RMC Report</a></li>
             </ul>
         </li>
         <li class="submenu">
-            <a href="#">Ledger</a>
+            <a href="#" class="{% if 'ledger' in request.path %}active{% endif %}">Ledger</a>
             <ul class="submenu-list">
                 <li><a href="/customer_ledger">Customer Ledger</a></li>
                 <li><a href="/farmer_ledger">Farmer Ledger</a></li>
             </ul>
         </li>
-        <li><a href="/inventory">Inventory</a></li>
-        <li><a href="/profile">Profile</a></li>
-        <li><a href="/logout">Logout</a></li>
+        <li><a href="/inventory" class="{% if request.path == '/inventory' %}active{% endif %}">Inventory</a></li>
+        <li><a href="/profile" class="{% if request.path == '/profile' %}active{% endif %}">Profile</a></li>
+        <li><a href="/logout" class="{% if request.path == '/logout' %}active{% endif %}">Logout</a></li>
     </ul>
     <div class="contact">
         <i class="fa fa-phone"></i>
