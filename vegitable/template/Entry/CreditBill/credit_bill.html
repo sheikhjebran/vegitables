@@ -11,6 +11,7 @@
         <div class="card">
             <form action = "/search_credit" method = "GET">
             {% csrf_token %}
+                <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
                 <table>
                     <tr>
                         <td><span class="form_text">Date</span></td>

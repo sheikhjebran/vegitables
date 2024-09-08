@@ -12,6 +12,7 @@
 
             <form id="sales_entry_form" action = "/add_sales_bill" method = "POST">
                 {% csrf_token %}
+                <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
                 <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
                     <input type="text" name="sales_bill_id" id="sales_bill_id" value="{{sales_obj.id}}" readonly>
