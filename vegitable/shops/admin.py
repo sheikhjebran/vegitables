@@ -7,7 +7,8 @@ from .models import (
     SalesBillItem,
     Shop,
     ArrivalEntry,
-    ArrivalGoods)
+    ArrivalGoods,
+    Index)
 
 # Register your models here.
 
@@ -19,3 +20,4 @@ admin.site.register(SalesBillEntry)
 admin.site.register(SalesBillItem)
 admin.site.register(PattiEntry)
 admin.site.register(PattiEntryList)
+admin.site.register(Index)
