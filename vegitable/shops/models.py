@@ -16,6 +16,27 @@ class Shop(models.Model):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
 
+class Index(models.Model):
+    expenditure_entry_prefix = CharField(max_length=50)
+    expenditure_entry_counter = IntegerField()
+    arrival_entry_prefix = CharField(max_length=50)
+    arrival_entry_counter = IntegerField()
+    sales_bill_entry_prefix = CharField(max_length=50)
+    sales_bill_entry_counter = IntegerField()
+    patti_entry_prefix = CharField(max_length=50)
+    patti_entry_counter = IntegerField()
+    customer_ledger_prefix = CharField(max_length=50)
+    customer_ledger_counter = IntegerField()
+    farmer_ledger_prefix = CharField(max_length=50)
+    farmer_ledger_counter = IntegerField()
+    credit_bill_entry_prefix = CharField(max_length=50)
+    credit_bill_entry_counter = IntegerField()
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '%s' % (self.shop)
+
+
 class ExpenditureEntry(models.Model):
     date = DateField()
     expense_type = CharField(max_length=50)
@@ -36,9 +57,10 @@ class ArrivalEntry(models.Model):
     total_bags = IntegerField()
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
     Empty_data = BooleanField(default=True)
+    arrival_id = CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.id} - {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
+        return f"{self.id} - {self.arrival_id}- {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
 
 
 class ArrivalGoods(models.Model):

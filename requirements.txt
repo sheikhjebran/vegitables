@@ -9,5 +9,3 @@ mysqlclient
 reportlab
 pipreqs
 python-decouple
-JsonDecoder
-selenium

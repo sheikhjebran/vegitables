@@ -14,8 +14,14 @@
             <form action = "/add_arrival" id="arrival_entry_form" method = "POST">
                 {% csrf_token %}
                 <div class="comment-your" style="width:45%;margin-bottom:2%">
-                    <span>Bill Number</span>                    
-                    <input type="text"  name="arrival_id" value="{{arrival_detail.id}}" readonly>
+                    <span>Bill Number</span>    
+                    <input type="hidden" name="new" value="{{new}}">
+                    {% if new %}
+                        <input type="text" name="arrival_id" value="{{ arrival_detail.arrival_entry_prefix }}{{ arrival_detail.arrival_entry_counter }}" readonly>
+                    {% else %}
+                        <input type="hidden" name="id" value="{{ arrival_detail.id }}" readonly>
+                        <input type="text" name="arrival_id" value="{{ arrival_detail.arrival_id }}" readonly>
+                    {% endif %}
                 </div>
                 <div class="comment-your" style="width:45%;margin-bottom:2%; margin-left:3%">
                     <span>Date</span>
@@ -69,7 +75,7 @@
                             <td>Advance Amount</td>
                         </tr>
                     </tbody>
-                    {% if NEW == true %}
+                    {% if new == true %}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
                         <td>
                             <div class='comment-your'>
