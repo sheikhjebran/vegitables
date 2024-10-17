@@ -57,7 +57,7 @@ class ArrivalEntry(models.Model):
     total_bags = IntegerField()
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
     Empty_data = BooleanField(default=True)
-    arrival_id = CharField(max_length=100)
+    arrival_id = CharField(max_length=100)  # Added the ArrivalId field
 
     def __str__(self):
         return f"{self.id} - {self.arrival_id}- {self.gp_no} - {self.date} - {self.total_bags}- {self.lorry_no}"
@@ -91,6 +91,7 @@ class SalesBillEntry(models.Model):
     paid_amount = FloatField(max_length=50)
     balance_amount = FloatField(max_length=50)
     Empty_data = BooleanField(default=True)
+    sales_bill_id = CharField(max_length=100)  # Added SalesBill ID field
 
     def __str__(self):
         return f"{self.id}-{self.customer_name}-{self.total_amount}"

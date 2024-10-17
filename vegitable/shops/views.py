@@ -522,29 +522,23 @@ def add_new_patti_entry(request):
 def navigate_to_add_sales_bill_entry(request):
     if request.user.is_authenticated:
         today = date.today()
-
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
-        # sales_obj = Sales_Bill_Entry(
-        #     payment_type="",
-        #     customer_name="",
-        #     date=getDate_from_string(today),
-        #     shop=shop_detail_object,
-        #     rmc=0,
-        #     commission=0,
-        #     cooli=0,
-        #     total_amount=0
-        # )
-        # sales_obj.save()
-
         arrival_detail_object = ArrivalGoods.objects.filter(
             shop=shop_detail_object, qty__gte=1)
 
+        index = get_object_or_404(Index, shop=shop_detail_object)
+
+        sales_bill_index = {
+            'sales_entry_prefix': index.sales_bill_entry_prefix,
+            'sales_entry_counter': int(index.sales_bill_entry_counter) + 1
+        }
+
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
             'sales_bill_detail': True,
-            'NEW': True,
+            'new': True,
             "arrival_goods_detail": arrival_detail_object,
-            "today": today
+            "today": today,
+            "sales_bill_index":sales_bill_index
         })
     return render(request, 'index.html')
 
@@ -842,6 +836,12 @@ def add_arrival(request):
 
         arrival_Entry_Obj.save()
         print(f"New arrival entry  = {arrival_Entry_Obj.id}")
+
+        index_obj = get_object_or_404(Index, shop=shop_detail_object)
+
+        # Increment the arrival_entry_counter
+        index_obj.arrival_entry_counter += 1
+        index_obj.save()
 
         add_arrival_goods_item(request, list(
             request.POST), arrival_Entry_Obj, shop_detail_object)
