@@ -1,56 +1,66 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block content %}
-{% include "menubar.html" %}
-
+{% extends 'base.html' %} {% load static %} {% block content %} {% include
+"menubar.html" %}
 
 <div class="container">
+  <div class="comment">
+    <form action="navigate_to_add_sales_bill_entry">
+      <div>
+        <button
+          type="button"
+          class="btn-l btn-2"
+          onclick="location.href = 'navigate_to_add_sales_bill_entry';"
+          style="float: right"
+        >
+          Add New Sales Bill
+        </button>
+        <div class="clearfix"></div>
+      </div>
+    </form>
+  </div>
+  <div class="clearfix"></div>
 
-    <div class="comment">
-        <form action = "navigate_to_add_sales_bill_entry">
-            <div>
-                <button type="button" class=" btn-l btn-2 " onclick="location.href = 'navigate_to_add_sales_bill_entry';" style="float:right;">Add New Sales Bill</button>
-                <div class="clearfix"> </div>
-            </div>
-        </form>
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <td>Bill No</td>
+        <td>Customer Name</td>
+        <td>Date</td>
+        <td>Total Weight</td>
+        <td>Total amount</td>
+      </tr>
+    </thead>
+    <tbody>
+      {%for sales_bill in sales_bill_detail %}
+      <tr>
+        <td>
+          <a href="/edit_sales_bill_entry/{{sales_bill.id}}">{{ sales_bill.sales_bill_id}}</a>
+        </td>
+        <td>{{sales_bill.customer_name}}</td>
+        <td>{{sales_bill.date}}</td>
+        <td>{{sales_bill.total_net_weight}}</td>
+        <td>{{sales_bill.total_amount}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-    </div>
-    <div class="clearfix"> </div>
-
-    
-        <table class="custom-table">
-            <thead >
-                <tr>
-                    <td>Bill No</td>
-                    <td>Customer Name</td>
-                    <td>Date</td>
-                    <td>Total Weight</td>
-                    <td>Total amount</td>
-                </tr>
-            </thead>
-            <tbody>
-                {%for sales_bill in sales_bill_detail %}
-                <tr>
-                    <td><a href="/edit_sales_bill_entry/{{sales_bill.id}}">{{ sales_bill.id}}</a></td>
-                    <td>{{sales_bill.customer_name}}</td>
-                    <td>{{sales_bill.date}}</td>
-                    <td>{{sales_bill.total_net_weight}}</td>
-                    <td>{{sales_bill.total_amount}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    
-
-
-    <div class="page-top-mid1">
-            <ul class="page-mid2">
-                <li><span class="pre1"  onclick="location.href = '/sales_bill/prev/{{current_page}}';" style="cursor: pointer">PREV<i class="fa fa-arrow-left"></i></span></li>
-                <li><a class="next-top1" href="/sales_bill/next/{{current_page}}">NEXT<i class="fa fa-arrow-right next1"></i></a></li>
-            </ul>
-    </div>
-    <div class="clearfix"> </div>
-
+  <div class="page-top-mid1">
+    <ul class="page-mid2">
+      <li>
+        <span
+          class="pre1"
+          onclick="location.href = '/sales_bill/prev/{{current_page}}';"
+          style="cursor: pointer"
+          >PREV<i class="fa fa-arrow-left"></i
+        ></span>
+      </li>
+      <li>
+        <a class="next-top1" href="/sales_bill/next/{{current_page}}"
+          >NEXT<i class="fa fa-arrow-right next1"></i
+        ></a>
+      </li>
+    </ul>
+  </div>
+  <div class="clearfix"></div>
 </div>
 {% endblock %}
