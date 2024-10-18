@@ -378,7 +378,8 @@ def sales_bill_entry(request, current_page=1):
         sales_entry_detail = None
 
         try:
-            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object, Empty_data=False).order_by('-id')
+            sales_entry_detail = SalesBillEntry.objects.filter(
+                shop=shop_detail_object, Empty_data=False).order_by('-id')
 
             # Add pagination
             items_per_page = 10
@@ -539,7 +540,7 @@ def navigate_to_add_sales_bill_entry(request):
             'new': True,
             "arrival_goods_detail": arrival_detail_object,
             "today": today,
-            "sales_bill_index":sales_bill_index
+            "sales_bill_index": sales_bill_index
         })
     return render(request, 'index.html')
 
@@ -824,7 +825,7 @@ def add_arrival(request):
 
         if str(request.POST['new']) == "True":
             arrival_Entry_Obj = ArrivalEntry(
-                arrival_id=request.POST['arrival_id'], # for indexing
+                arrival_id=request.POST['arrival_id'],  # for indexing
                 gp_no=request.POST['gp_number'],
                 date=getDate_from_string(request.POST['arrival_entry_date']),
                 patti_name=request.POST['patti_name'],
