@@ -15,7 +15,13 @@
                 <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
                 <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
-                    <input type="text" name="sales_bill_id" id="sales_bill_id" value="{{sales_obj.id}}" readonly>
+                    <input type="hidden" name="new" value="{{new}}">
+                    {% if new %}
+                        <input type="text" name="sales_bill_id" id="sales_bill_id" value="{{ sales_bill_index.sales_entry_prefix }}{{ sales_bill_index.sales_entry_counter }}" readonly>
+                    {% else %}
+                        <input type="hidden" name="id" value="{{ sales_obj.id }}" readonly>
+                        <input type="text" name="sales_bill_id" id="sales_bill_id" value="{{sales_obj.sales_bill_id}}" readonly>
+                    {% endif %}
                 </div>
                 <div class="comment-your" style="width:25%;margin-bottom:2%; margin-left:5%;">
                     <span>Date</span>
