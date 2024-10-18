@@ -378,8 +378,8 @@ def sales_bill_entry(request, current_page=1):
         sales_entry_detail = None
 
         try:
-            sales_entry_detail = SalesBillEntry.objects.filter(shop=shop_detail_object, Empty_data=False).order_by(
-                '-id')
+            sales_entry_detail = SalesBillEntry.objects.filter(
+                shop=shop_detail_object, Empty_data=False).order_by('-id')
 
             # Add pagination
             items_per_page = 10
@@ -387,9 +387,11 @@ def sales_bill_entry(request, current_page=1):
             sales_entry_detail = paginator.get_page(current_page)
 
             for entry in sales_entry_detail:
+
                 total_net_weight = SalesBillItem.objects.filter(Sales_Bill_Entry=entry).aggregate(
                     total_weight=Sum('net_weight')
                 )['total_weight']
+
                 entry.total_net_weight = total_net_weight if total_net_weight is not None else 0
 
         except Exception as error:
@@ -538,7 +540,7 @@ def navigate_to_add_sales_bill_entry(request):
             'new': True,
             "arrival_goods_detail": arrival_detail_object,
             "today": today,
-            "sales_bill_index":sales_bill_index
+            "sales_bill_index": sales_bill_index
         })
     return render(request, 'index.html')
 
@@ -549,8 +551,9 @@ def modify_sales_bill_entry(request):
             # Remove the token from the session
             del request.session['form_token']
             shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-            if len(request.POST['sales_bill_id']) <= 0:
+            if str(request.POST['new']) == "True":
                 sales_bill_entry_Obj = SalesBillEntry(
+                    sales_bill_id=request.POST['sales_bill_id'],
                     payment_type=request.POST['payment_mode'],
                     customer_name=request.POST['sales_entry_customer_name'],
                     date=getDate_from_string(request.POST['sales_entry_date']),
@@ -566,7 +569,7 @@ def modify_sales_bill_entry(request):
                 )
             else:
                 sales_bill_entry_Obj = SalesBillEntry.objects.get(
-                    id=request.POST['sales_bill_id'])
+                    id=request.POST['id'])
                 sales_bill_entry_Obj.payment_type = request.POST['payment_mode']
                 sales_bill_entry_Obj.customer_name = request.POST['sales_entry_customer_name']
                 sales_bill_entry_Obj.date = getDate_from_string(
@@ -584,6 +587,14 @@ def modify_sales_bill_entry(request):
                 sales_bill_entry_Obj.Empty_data = False
 
             sales_bill_entry_Obj.save()
+
+            if str(request.POST['new']) == "True":
+                index_obj = get_object_or_404(Index, shop=shop_detail_object)
+
+                # Increment the arrival_entry_counter
+                index_obj.sales_bill_entry_counter += 1
+                index_obj.save()
+
             print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
             if sales_bill_entry_Obj.balance_amount > 0.0:
                 add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
@@ -814,7 +825,7 @@ def add_arrival(request):
 
         if str(request.POST['new']) == "True":
             arrival_Entry_Obj = ArrivalEntry(
-                arrival_id=request.POST['arrival_id'],
+                arrival_id=request.POST['arrival_id'],  # for indexing
                 gp_no=request.POST['gp_number'],
                 date=getDate_from_string(request.POST['arrival_entry_date']),
                 patti_name=request.POST['patti_name'],
@@ -837,11 +848,12 @@ def add_arrival(request):
         arrival_Entry_Obj.save()
         print(f"New arrival entry  = {arrival_Entry_Obj.id}")
 
-        index_obj = get_object_or_404(Index, shop=shop_detail_object)
+        if str(request.POST['new']) == "True":
+            index_obj = get_object_or_404(Index, shop=shop_detail_object)
 
-        # Increment the arrival_entry_counter
-        index_obj.arrival_entry_counter += 1
-        index_obj.save()
+            # Increment the arrival_entry_counter
+            index_obj.arrival_entry_counter += 1
+            index_obj.save()
 
         add_arrival_goods_item(request, list(
             request.POST), arrival_Entry_Obj, shop_detail_object)
