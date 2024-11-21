@@ -1,6 +1,6 @@
 import random
 import time
-from datetime import datetime
+import datetime
 
 existing_numbers = set()
 
@@ -22,7 +22,8 @@ def consolidate_result_for_report(result: list):
             if consolidate_dict.get('item_name') != single_entry.get('item_name'):
                 consolidate_dict[
                     'item_name'] = f"{consolidate_dict.get('item_name')},{single_entry.get('item_name')}"
-            consolidate_dict['bags'] = int(consolidate_dict.get('bags')) + int(single_entry.get('bags'))
+            consolidate_dict['bags'] = int(consolidate_dict.get(
+                'bags')) + int(single_entry.get('bags'))
             response[single_entry.get('id')] = consolidate_dict
         else:
             response[single_entry.get('id')] = single_entry
@@ -41,6 +42,7 @@ def get_float_number(number):
         return float(number)
     except ValueError:
         return 0
+
 
 def getDate_from_string(stringDate: str):
     mystringDate = str(stringDate).split("-")
