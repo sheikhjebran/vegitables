@@ -14,13 +14,19 @@
                 {% csrf_token %}
                 <div class="comment-your" style="width:10%;margin-bottom:2%">
                     <span>Bill No</span>
-                    <input type="text" placeholder="Bill No" required="" value="{{patti_bill_detail.id}}" name="patti_bill_id" id="patti_bill_id" readonly>
+                    <input type="hidden" name="new" value="{{new}}">
+                     {% if new %}
+                        <input type="text" placeholder="Bill No" required="" value="{{ patti_index.patti_entry_prefix }}{{ patti_index.patti_entry_counter }}" name="patti_bill_id" id="patti_bill_id" readonly>
+                    {% else %}
+                        <input type="hidden" name="id" value="{{ patti_bill_detail.id }}" readonly>
+                        <input type="text" placeholder="Bill No" required="" value="{{patti_bill_detail.id}}" name="patti_bill_id" id="patti_bill_id" readonly>
+                     {% endif %}
                 </div>
                 <div class="clearfix"> </div>
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Date</span>
-                    {% if NEW %}
+                    {% if new %}
                     <input type="date" id = "patti_entry_date" name = "patti_entry_date" required="" >
                     {% else %}
                     <input type="date" id = "patti_entry_date" name = "patti_entry_date" required="" value="{{today|date:'Y-m-d'}}" >
@@ -29,7 +35,7 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Lorry Number</span>
-                    {% if NEW %}
+                    {% if new %}
                         <select class="custom-select" name="patti_lorry_number" id ="patti_lorry_number">
                            <option selected="true" disabled="disabled">Choose Lorry Number</option>
                         </select>
@@ -45,7 +51,7 @@
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Farmer Name</span>
                     <select class="custom-select" name="patti_farmer_name" id ="patti_farmer_namer">
-                        {% if NEW %}
+                        {% if new %}
                         <option selected="true" disabled="disabled">Choose Farmer Name</option>
                         {% else %}
                         <option value="{{patti_bill_detail.farmer_name}}">{{patti_bill_detail.farmer_name}}</option>
@@ -79,7 +85,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% if NEW %}
+                    {% if new %}
                         <tr><td></td></tr>
                     {% else %}
                         {% for patti_entry_item in patti_entry_obj %}

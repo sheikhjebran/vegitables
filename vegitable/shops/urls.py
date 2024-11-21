@@ -1,29 +1,29 @@
 from django.urls import path
 
 from . import views
-from shops.shop_views import settings
+from .shop_views import arrival_view, patti_view, settings_view
 
 urlpatterns = [
     # webpage URL
     path('', views.index, name="index"),
 
     # Dashboard Authentication
-    path('authenticate', views.get_authenticate, name="get_authenticate"),
+    path('authenticate', arrival_view.get_authenticate, name="get_authenticate"),
     path('logout', views.logout, name="logout"),
 
     # dashboard URL
-    path('home', views.home, name='home'),
+    path('home', arrival_view.home, name='home'),
     path('home/prev/<int:page_number>',
-         views.home_prev_page, name="home_prev_page"),
+         arrival_view.home_prev_page, name="home_prev_page"),
     path('home/next/<int:page_number>',
-         views.home_next_page, name="home_next_page"),
+         arrival_view.home_next_page, name="home_next_page"),
 
     # Arrival Entry URL
-    path('add_arrival_entry', views.add_new_arrival_entry,
+    path('add_arrival_entry', arrival_view.add_new_arrival_entry,
          name='add_new_arrival_entry'),
-    path('add_arrival', views.add_arrival, name='add_arrival'),
+    path('add_arrival', arrival_view.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>',
-         views.modify_arrival, name='modify_arrival'),
+         arrival_view.modify_arrival, name='modify_arrival'),
 
     # RestAPI
     path('get_arrival_goods_item_name', views.get_arrival_goods_item_name,
@@ -65,13 +65,13 @@ urlpatterns = [
          name='get_sales_list_for_arrival_item_list'),
 
     # patti Entry URL
-    path('patti_list', views.patti_list, name="patti_list"),
-    path('add_new_patti_entry', view=views.add_new_patti_entry,
+    path('patti_list', patti_view.patti_list, name="patti_list"),
+    path('add_new_patti_entry', view=patti_view.add_new_patti_entry,
          name='add_new_patti_entry'),
-    path('generate_patti_pdf_bill', view=views.generate_patti_pdf_bill,
+    path('generate_patti_pdf_bill', view=patti_view.generate_patti_pdf_bill,
          name='generate_patti_pdf_bill'),
     path('edit_patti_entry/<int:patti_id>',
-         views.edit_patti_entry, name='edit_patti_entry'),
+         patti_view.edit_patti_entry, name='edit_patti_entry'),
 
     # Rest Api for the patti
     path('get_all_lorry_number/<str:lorry_date>', view=views.get_lorry_number_for_date,
@@ -146,6 +146,6 @@ urlpatterns = [
          name="get_daily_rmc_start_and_end_date"),
 
     # Settings
-    path('settings', settings.navigate_to_settings, name="settings"),
-    path('update_prefix', settings.update_prefix, name="update_prefix")
+    path('settings', settings_view.navigate_to_settings, name="settings"),
+    path('update_prefix', settings_view.update_prefix, name="update_prefix")
 ]
