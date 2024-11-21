@@ -9,7 +9,6 @@ urlpatterns = [
 
     # Dashboard Authentication
     path('authenticate', arrival_view.get_authenticate, name="get_authenticate"),
-    path('authenticate', arrival_view.get_authenticate, name="get_authenticate"),
     path('logout', views.logout, name="logout"),
 
     # dashboard URL
