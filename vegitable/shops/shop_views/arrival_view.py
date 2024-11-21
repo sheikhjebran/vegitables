@@ -161,12 +161,6 @@ def add_arrival_goods_item(request, request_list, arrival, shop_obj):
     return render(request, 'index.html')
 
 
-<< << << < HEAD
-
-== == == =
->>>>>> > main
-
-
 @csrf_protect
 def home(request, current_page=1):
     if request.user.is_authenticated:
