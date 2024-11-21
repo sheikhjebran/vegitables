@@ -1,7 +1,8 @@
 from django.urls import path
 
 from . import views
-from .shop_views import arrival_view, patti_view, settings_view
+from .shop_views import arrival_view, patti_view, settings_view, expenditure_view
+
 
 urlpatterns = [
     # webpage URL
@@ -39,13 +40,14 @@ urlpatterns = [
     path('profile', views.profile, name='profile'),
 
     # expenditure_entry Entry URL
-    path('expenditure_entry', views.expenditure_entry, name='expenditure_entry'),
-    path('add_expenditure', views.add_expenditure_entry,
+    path('expenditure_entry', expenditure_view.expenditure_entry,
+         name='expenditure_entry'),
+    path('add_expenditure', expenditure_view.add_expenditure_entry,
          name='add_expenditure_entry'),
     path('edit_expense/<int:expenditure_id>',
-         views.edit_expense, name='edit_expense'),
+         expenditure_view.edit_expense, name='edit_expense'),
     path('delete_expense/<int:expenditure_id>',
-         views.delete_expense, name='delete_expense'),
+         expenditure_view.delete_expense, name='delete_expense'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
@@ -73,6 +75,7 @@ urlpatterns = [
     path('edit_patti_entry/<int:patti_id>',
          patti_view.edit_patti_entry, name='edit_patti_entry'),
 
+
     # Rest Api for the patti
     path('get_all_lorry_number/<str:lorry_date>', view=views.get_lorry_number_for_date,
          name='get_lorry_number_for_date'),
@@ -81,8 +84,10 @@ urlpatterns = [
 
     # Report
     path('report', views.report, name='report'),
-    path('sales_bill_report', views.sales_bill_report, name='sales_bill_report'),
-    path('report_sales_bill', views.report_sales_bill, name='report_sales_bill'),
+    path('sales_bill_report', views.sales_bill_report,
+         name='sales_bill_report'),
+    path('report_sales_bill', views.report_sales_bill,
+         name='report_sales_bill'),
     path('generate_sales_bill_report', views.generate_sales_bill_report,
          name='generate_sales_bill_report'),
     path('rmc_report', views.rmc_report, name='rmc_report'),
@@ -106,7 +111,8 @@ urlpatterns = [
 
     # Farmer Ledger
     path('farmer_ledger', views.farmer_ledger, name='farmer_ledger'),
-    path('add_farmer_ledger', views.add_farmer_ledger, name='add_farmer_ledger'),
+    path('add_farmer_ledger', views.add_farmer_ledger,
+         name='add_farmer_ledger'),
     path('search_farmer_ledger', views.search_farmer_ledger,
          name='search_farmer_ledger'),
     path('default_farmer_ledger', views.default_farmer_ledger,
@@ -128,7 +134,8 @@ urlpatterns = [
          views.inventory_next_page, name="inventory_next_page"),
 
     # Credit Bill Entry
-    path('credit_bill_entry', views.credit_bill_entry, name="credit_bill_entry"),
+    path('credit_bill_entry', views.credit_bill_entry,
+         name="credit_bill_entry"),
     path('search_credit', views.search_credit, name="search_credit"),
     path('add_credit_bill_amount', views.add_new_credit_bill_entry,
          name="add_new_credit_bill_entry"),
@@ -148,4 +155,5 @@ urlpatterns = [
     # Settings
     path('settings', settings_view.navigate_to_settings, name="settings"),
     path('update_prefix', settings_view.update_prefix, name="update_prefix")
+
 ]

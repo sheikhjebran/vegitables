@@ -47,11 +47,12 @@ def add_new_patti_entry(request):
 
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {
-                       "today": today,
-                       "new": True,
-                       "patti_index": patti_index}
+                          "today": today,
+                          "new": True,
+                          "patti_index": patti_index}
                       )
     return render(request, 'index.html')
+
 
 def generate_patti_pdf_bill(request):
     if request.user.is_authenticated:
@@ -81,7 +82,6 @@ def generate_patti_pdf_bill(request):
             index_obj.patti_entry_counter += 1
             index_obj.save()
 
-
         arrival_detail_object = ArrivalEntry.objects.get(
             shop=shop_detail_object,
             lorry_no=request.POST['patti_lorry_number'],
@@ -99,6 +99,7 @@ def generate_patti_pdf_bill(request):
         add_patti_item_list(request, list(request.POST), patti_entry_obj)
         return Report.patti_report_view(request)
     return render(request, 'index.html')
+
 
 @csrf_protect
 def edit_patti_entry(request, patti_id):

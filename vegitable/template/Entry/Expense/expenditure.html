@@ -9,20 +9,33 @@
     <div class="card">
       <form action="/add_expenditure" method="POST">
         {% csrf_token %}
-        <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
-        <input type="hidden" name="expenditure_id" value="{{ expenditure.id }}">
+        <input
+          type="hidden"
+          name="form_token"
+          value="{{ request.session.form_token }}"
+        />
+        <input
+          type="hidden"
+          name="expenditure_id"
+          value="{{ expenditure.id }}"
+        />
         <table>
           <tr>
             <td><span class="form_text">Expense Type</span></td>
             <td>
               <select class="custom-select" name="expense_type">
-                {% if  expenditure_id is not "None" %}
-                  <option value ="{{expenditure.expense_type}}" selected="selected">{{expenditure.expense_type}}</option>
+                {% if expenditure_id is not "None" %}
+                <option
+                  value="{{expenditure.expense_type}}"
+                  selected="selected"
+                >
+                  {{expenditure.expense_type}}
+                </option>
                 {% endif %}
-                  <option value ="cash">Cash</option>
-                  <option value ="cheque">Cheque</option>
-                  <option value ="credit card">Credit Card</option>
-                  <option value ="upi">UPI</option>
+                <option value="cash">Cash</option>
+                <option value="cheque">Cheque</option>
+                <option value="credit card">Credit Card</option>
+                <option value="upi">UPI</option>
               </select>
             </td>
           </tr>
@@ -40,14 +53,15 @@
           </tr>
           <tr>
             <td><span class="form_text">Amount</span></td>
-            <td><input
-                    type="text"
-                    name="expense_amount"
-                    placeholder="Expense Amount"
-                    required=""
-                    class="decimal_number_only"
-                    value="{{expenditure.amount}}"
-                />
+            <td>
+              <input
+                type="text"
+                name="expense_amount"
+                placeholder="Expense Amount"
+                required=""
+                class="decimal_number_only"
+                value="{{expenditure.amount}}"
+              />
             </td>
           </tr>
           <tr>
@@ -57,12 +71,12 @@
         </table>
       </form>
       <input
-                    type="text"
-                    name="today_total_amount"
-                    placeholder="{{total_amount}}"
-                    value="Total Expense = {{total_amount}} /-"
-                    class="decimal_number_only"
-                />
+        type="text"
+        name="today_total_amount"
+        placeholder="{{total_amount}}"
+        value="Total Expense = {{total_amount}} /-"
+        class="decimal_number_only"
+      />
     </div>
   </div>
   <div class="clearfix"></div>
@@ -74,11 +88,18 @@
     </div>
   </div>
 
+  <div class="search-custom-table">
+        <div class="form_background">
+        <div class="card search_text_box">
+        <input type="date" placeholder="Search Text ..." name="search_text" class="customer_ledger_search_text" fdprocessedid="wjxlyg">
+        </div></div>
+    </div>
   <div class="custom-table-div">
-        <table class="custom-table" id="tableWrapper">
+    <table class="custom-table" id="tableWrapper">
       <thead>
         <tr>
           <td>Si No</td>
+          <td>Date</td>
           <td>Expense Type</td>
           <td>Amount</td>
           <td>Remarks</td>
@@ -88,12 +109,23 @@
         {%for expenditure in expenditure_detail%}
         <tr>
           <td>{{ forloop.counter }}</td>
+          <td>{{expenditure.date}}</td>
           <td>{{expenditure.expense_type}}</td>
           <td>{{expenditure.amount}}</td>
           <td>{{expenditure.remark}}</td>
           <td>
-            <input type="button" value="Edit" class="edit_button" onclick="location.href = '/edit_expense/{{expenditure.id}}';"/>&nbsp;
-            <input type="button" value="Delete" class="delete_button" onclick="location.href = '/delete_expense/{{expenditure.id}}';"/>
+            <input
+              type="button"
+              value="Edit"
+              class="edit_button"
+              onclick="location.href = '/edit_expense/{{expenditure.id}}';"
+            />&nbsp;
+            <input
+              type="button"
+              value="Delete"
+              class="delete_button"
+              onclick="location.href = '/delete_expense/{{expenditure.id}}';"
+            />
           </td>
         </tr>
         {% endfor %}

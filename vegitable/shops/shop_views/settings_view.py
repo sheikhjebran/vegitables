@@ -7,8 +7,9 @@ def navigate_to_settings(request):
     if request.user.is_authenticated:
         shop_instance = Shop.objects.get(shop_owner=request.user.id)
         index_instance = Index.objects.get(shop=shop_instance)
-        return render(request, 'Settings/settings.html',{ 'index_data': index_instance,})
+        return render(request, 'Settings/settings.html', {'index_data': index_instance, })
     return render(request, 'index.html')
+
 
 def update_prefix(request):
     if request.user.is_authenticated:
@@ -36,6 +37,6 @@ def update_prefix(request):
         index_instance.inventory_prefix = inventory_prefix
 
         index_instance.save()
-        return render(request, 'Settings/settings.html',{ 'index_data': index_instance,})
+        return render(request, 'Settings/settings.html', {'index_data': index_instance, })
 
     return render(request, 'index.html')
