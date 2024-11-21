@@ -7,7 +7,6 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages, auth
 from ..utility import getDate_from_string
 
-
 def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .shop_views import arrival_view, patti_view, settings_view
+from .shop_views import arrival_view, patti_view, settings_view, expenditure_view
 
 urlpatterns = [
     # webpage URL
@@ -39,13 +39,13 @@ urlpatterns = [
     path('profile', views.profile, name='profile'),
 
     # expenditure_entry Entry URL
-    path('expenditure_entry', views.expenditure_entry, name='expenditure_entry'),
-    path('add_expenditure', views.add_expenditure_entry,
+    path('expenditure_entry', expenditure_view.expenditure_entry, name='expenditure_entry'),
+    path('add_expenditure', expenditure_view.add_expenditure_entry,
          name='add_expenditure_entry'),
     path('edit_expense/<int:expenditure_id>',
-         views.edit_expense, name='edit_expense'),
+         expenditure_view.edit_expense, name='edit_expense'),
     path('delete_expense/<int:expenditure_id>',
-         views.delete_expense, name='delete_expense'),
+         expenditure_view.delete_expense, name='delete_expense'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
