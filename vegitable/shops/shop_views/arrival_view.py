@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages, auth
 from ..utility import getDate_from_string
 
+
 def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
@@ -158,6 +159,7 @@ def add_arrival_goods_item(request, request_list, arrival, shop_obj):
                 arrival_goods_obj.save()
                 print(f"New Arrival Goods item  = {arrival_goods_obj.id}")
     return render(request, 'index.html')
+
 
 @csrf_protect
 def home(request, current_page=1):
