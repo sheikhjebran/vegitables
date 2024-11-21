@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 from .shop_views import arrival_view, patti_view, settings_view, expenditure_view
 
+
 urlpatterns = [
     # webpage URL
     path('', views.index, name="index"),
@@ -13,7 +14,6 @@ urlpatterns = [
 
     # dashboard URL
     path('home', arrival_view.home, name='home'),
-    path('home', arrival_view.home, name='home'),
     path('home/prev/<int:page_number>',
          arrival_view.home_prev_page, name="home_prev_page"),
     path('home/next/<int:page_number>',
@@ -22,7 +22,6 @@ urlpatterns = [
     # Arrival Entry URL
     path('add_arrival_entry', arrival_view.add_new_arrival_entry,
          name='add_new_arrival_entry'),
-    path('add_arrival', arrival_view.add_arrival, name='add_arrival'),
     path('add_arrival', arrival_view.add_arrival, name='add_arrival'),
     path('edit_arrival_entry/<int:arrival_id>',
          arrival_view.modify_arrival, name='modify_arrival'),
