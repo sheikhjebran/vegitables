@@ -147,4 +147,5 @@ urlpatterns = [
 
     # Settings
     path('settings', settings.navigate_to_settings, name="settings"),
+    path('update_prefix', settings.update_prefix, name="update_prefix")
 ]

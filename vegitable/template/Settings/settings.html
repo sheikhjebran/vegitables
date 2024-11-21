@@ -7,6 +7,8 @@
   <h1 class="heading">Table Prefix Setting</h1>
   <div class="clearfix"></div>
   <div class="prefix_container">
+    <form method="POST" action="/update_prefix">
+      {% csrf_token %}
     <table>
       <tr>
         <td>Arrival Entry Prefix </td>
@@ -108,7 +110,8 @@
         </td>
       </tr>
     </table>
-    <button type="button" class=" btn-l btn-2 " id="update_prefix">Update Prefix</button>
+    <button type="submit" class=" btn-l btn-2 " id="update_prefix">Update Prefix</button>
+    </form>
   </div>
 </div>
 
