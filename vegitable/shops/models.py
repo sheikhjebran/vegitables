@@ -31,6 +31,10 @@ class Index(models.Model):
     farmer_ledger_counter = IntegerField()
     credit_bill_entry_prefix = CharField(max_length=50)
     credit_bill_entry_counter = IntegerField()
+    shilk_entry_prefix = CharField(max_length=50)
+    shilk_entry_counter = IntegerField()
+    inventory_prefix = CharField(max_length=50)
+    inventory_counter = IntegerField()
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
 
     def __str__(self):

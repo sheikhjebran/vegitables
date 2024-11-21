@@ -1,53 +1,88 @@
 {% load static %}
 <div class="navbar">
-    <div class="logo">
-        Known
-        <ul class="logo-submenu">
-            <li><a href="/profile" style="padding:10px">{{request.user.first_name}} {{request.user.last_name}}</a></li>
-            <li><a href="/change_password" style="padding:10px">Change Password</a></li>
-            <li><a href="/subscription_info" style="padding:10px">Subscription Info</a></li>
-            <li><a href="/logout" style="padding:10px">Logout</a></li>
-        </ul>
-    </div>
-    <div class="hamburger" onclick="toggleMenu()">
-        <div></div>
-        <div></div>
-        <div></div>
-    </div>
-    <ul>
-        <li class="submenu">
-            <a href="#" class="{% if 'entry' in request.path or 'home' in request.path %}active{% endif %}">Entry</a>
-            <ul class="submenu-list">
-                <li><a href="/home">Arrival Entry</a></li>
-                <li><a href="/sales_bill_entry">Sales Entry</a></li>
-                <li><a href="/patti_list">Patti Entry</a></li>
-                <li><a href="/expenditure_entry">Expenditure Entry</a></li>
-                <li><a href="/credit_bill_entry">CreditBill Entry</a></li>
-                <li><a href="/shilk_entry">Shilk Entry</a></li>
-            </ul>
-        </li>
-        <li class="submenu">
-            <a href="#" class="{% if 'report' in request.path %}active{% endif %}">Report</a>
-            <ul class="submenu-list">
-                <li><a href="/sales_bill_report">Sales Report</a></li>
-                <li><a href="/rmc_report">RMC Report</a></li>
-            </ul>
-        </li>
-        <li class="submenu">
-            <a href="#" class="{% if 'ledger' in request.path %}active{% endif %}">Ledger</a>
-            <ul class="submenu-list">
-                <li><a href="/customer_ledger">Customer Ledger</a></li>
-                <li><a href="/farmer_ledger">Farmer Ledger</a></li>
-            </ul>
-        </li>
-        <li><a href="/inventory" class="{% if request.path == '/inventory' %}active{% endif %}">Inventory</a></li>
-        <li><a href="/profile" class="{% if request.path == '/profile' %}active{% endif %}">Profile</a></li>
-        <li><a href="/logout" class="{% if request.path == '/logout' %}active{% endif %}">Logout</a></li>
+  <div class="logo">
+    Known
+    <ul class="logo-submenu">
+      <li>
+        <a href="/profile" style="padding: 10px"
+          >{{request.user.first_name}} {{request.user.last_name}}</a
+        >
+      </li>
+      <li>
+        <a href="/change_password" style="padding: 10px">Change Password</a>
+      </li>
+      <li>
+        <a href="/subscription_info" style="padding: 10px">Subscription Info</a>
+      </li>
+      <li><a href="/settings" style="padding: 10px">Settings</a></li>
+      <li><a href="/logout" style="padding: 10px">Logout</a></li>
     </ul>
-    <div class="contact">
-        <i class="fa fa-phone"></i>
-        <span>+65 2244 1100</span>
-    </div>
+  </div>
+  <div class="hamburger" onclick="toggleMenu()">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <ul>
+    <li class="submenu">
+      <a
+        href="#"
+        class="{% if 'entry' in request.path or 'home' in request.path %}active{% endif %}"
+        >Entry</a
+      >
+      <ul class="submenu-list">
+        <li><a href="/home">Arrival Entry</a></li>
+        <li><a href="/sales_bill_entry">Sales Entry</a></li>
+        <li><a href="/patti_list">Patti Entry</a></li>
+        <li><a href="/expenditure_entry">Expenditure Entry</a></li>
+        <li><a href="/credit_bill_entry">CreditBill Entry</a></li>
+        <li><a href="/shilk_entry">Shilk Entry</a></li>
+      </ul>
+    </li>
+    <li class="submenu">
+      <a href="#" class="{% if 'report' in request.path %}active{% endif %}"
+        >Report</a
+      >
+      <ul class="submenu-list">
+        <li><a href="/sales_bill_report">Sales Report</a></li>
+        <li><a href="/rmc_report">RMC Report</a></li>
+      </ul>
+    </li>
+    <li class="submenu">
+      <a href="#" class="{% if 'ledger' in request.path %}active{% endif %}"
+        >Ledger</a
+      >
+      <ul class="submenu-list">
+        <li><a href="/customer_ledger">Customer Ledger</a></li>
+        <li><a href="/farmer_ledger">Farmer Ledger</a></li>
+      </ul>
+    </li>
+    <li>
+      <a
+        href="/inventory"
+        class="{% if request.path == '/inventory' %}active{% endif %}"
+        >Inventory</a
+      >
+    </li>
+    <li>
+      <a
+        href="/profile"
+        class="{% if request.path == '/profile' %}active{% endif %}"
+        >Profile</a
+      >
+    </li>
+    <li>
+      <a
+        href="/logout"
+        class="{% if request.path == '/logout' %}active{% endif %}"
+        >Logout</a
+      >
+    </li>
+  </ul>
+  <div class="contact">
+    <i class="fa fa-phone"></i>
+    <span>+65 2244 1100</span>
+  </div>
 </div>
 
 <!-- Include Font Awesome for icons -->
@@ -55,10 +90,10 @@
 
 <!-- JavaScript to toggle menu -->
 <script>
-    function toggleMenu() {
-        var menu = document.querySelector('.navbar ul');
-        menu.classList.toggle('show');
-    }
+  function toggleMenu() {
+    var menu = document.querySelector(".navbar ul");
+    menu.classList.toggle("show");
+  }
 </script>
 
 <div class="container">
