@@ -1,5 +1,6 @@
 import random
 import time
+from datetime import datetime
 
 existing_numbers = set()
 
@@ -40,3 +41,7 @@ def get_float_number(number):
         return float(number)
     except ValueError:
         return 0
+
+def getDate_from_string(stringDate: str):
+    mystringDate = str(stringDate).split("-")
+    return datetime.date(int(mystringDate[0]), int(mystringDate[1]), int(mystringDate[2]))
