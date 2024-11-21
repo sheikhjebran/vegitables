@@ -412,7 +412,7 @@ margin-top:0;
 display:none;
 }
 
-.shilk_container table{
+.shilk_container table, .prefix_container table{
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 15px;
@@ -420,10 +420,10 @@ display:none;
     font-size: 1.5em;
     font-weight: 700;
 }
-.shilk_container table tr {
+.shilk_container table tr, .prefix_container table tr {
     margin-top:20%;
 }
-.shilk_container input[type="date"], .shilk_container input[type="text"] {
+.shilk_container input[type="date"], .shilk_container input[type="text"],.prefix_container input[type="text"] {
     height: 30px;
     padding-left:2%;
     font-size:14px;

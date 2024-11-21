@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'menubar.html' %}
+
+<div class="container">
+  <h1 class="heading">Table Prefix Setting</h1>
+  <div class="clearfix"></div>
+  <div class="prefix_container">
+    <form method="POST" action="/update_prefix">
+      {% csrf_token %}
+    <table>
+      <tr>
+        <td>Arrival Entry Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="arrival_entry_prefix"
+            id="arrival_entry_prefix"
+            value = {{index_data.arrival_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Sales Entry Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="sales_entry_prefix"
+            id="sales_entry_prefix"
+            value = {{index_data.sales_bill_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Patti Entry Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="patti_entry_prefix"
+            id="patti_entry_prefix"
+            value = {{index_data.patti_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Expenditure Entry Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="expenditure_entry_prefix"
+            id="expenditure_entry_prefix"
+            value = {{index_data.expenditure_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Credit Bill Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="credit_entry_prefix"
+            id="credit_entry_prefix"
+            value = {{index_data.credit_bill_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Shilk Entry Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="shilk_entry_prefix"
+            id="shilk_entry_prefix"
+            value = {{index_data.shilk_entry_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Customer Ledger Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="customer_ledger_prefix"
+            id="customer_ledger_prefix"
+            value = {{index_data.customer_ledger_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Farmer Ledger Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="farmer_ledger_prefix"
+            id="farmer_ledger_prefix"
+            value = {{index_data.farmer_ledger_prefix}}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Inventory Prefix </td>
+        <td>
+          <input
+            type="text"
+            name="inventory_prefix"
+            id="inventory_prefix"
+            value = {{index_data.inventory_prefix}}
+          />
+        </td>
+      </tr>
+    </table>
+    <button type="submit" class=" btn-l btn-2 " id="update_prefix">Update Prefix</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

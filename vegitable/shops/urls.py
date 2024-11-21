@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from shops.shop_views import settings
 
 urlpatterns = [
     # webpage URL
@@ -142,5 +143,9 @@ urlpatterns = [
     path('get_daily_rmc_selected_date', views.get_daily_rmc_selected_date,
          name="get_daily_rmc_selected_date"),
     path('get_daily_rmc_start_and_end_date', views.get_daily_rmc_start_and_end_date,
-         name="get_daily_rmc_start_and_end_date")
+         name="get_daily_rmc_start_and_end_date"),
+
+    # Settings
+    path('settings', settings.navigate_to_settings, name="settings"),
+    path('update_prefix', settings.update_prefix, name="update_prefix")
 ]
