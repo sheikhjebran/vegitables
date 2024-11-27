@@ -1,6 +1,4 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block content %}
+{% extends 'base.html' %} {% load static %} {% block content %}
 {% include 'menubar.html' %}
 
 <div class="container">
@@ -88,12 +86,14 @@
     </div>
   </div>
 
+
   <div class="search-custom-table">
-        <div class="form_background">
-        <div class="card search_text_box">
-        <input type="date" placeholder="Search Text ..." name="search_text" class="customer_ledger_search_text" fdprocessedid="wjxlyg">
-        </div></div>
+    <div class="form_background">
+      <div class="card search_text_box">
+        <input type="date" name="search_date" id="search_date" />
+      </div>
     </div>
+  </div>
   <div class="custom-table-div">
     <table class="custom-table" id="tableWrapper">
       <thead>
@@ -133,5 +133,5 @@
     </table>
   </div>
 </div>
-
+ <script src="{% static 'js/expenditure_entry/expenditure_entry.js'%}"></script>
 {% endblock %}

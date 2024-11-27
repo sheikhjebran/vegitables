@@ -1361,9 +1361,6 @@ $(document).ready(function () {
         }
     }
 
-
-
-
 // Main code end's here
 });
 

@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 
@@ -111,3 +112,26 @@ def expenditure_prev_page(request, page_number):
         return expenditure_entry(request, current_page=page_number - 1)
     else:
         return expenditure_entry(request)
+
+
+def fetch_expenditures(request):
+    search_date = request.GET.get('search_date')
+
+    if search_date:
+        # Filter the ExpenditureEntry based on the selected date
+        expenditures = ExpenditureEntry.objects.filter(date=search_date)
+
+        # Prepare the result data to send back
+        result_data = []
+        for entry in expenditures:
+            result_data.append({
+                'id': entry.id,
+                'expense_type': entry.expense_type,
+                'amount': entry.amount,
+                'remark': entry.remark,
+                'date': entry.date
+            })
+
+        return JsonResponse(result_data, safe=False)  # Return as JSON
+    else:
+        return JsonResponse([], safe=False)  # Return an empty list if no date is selected
