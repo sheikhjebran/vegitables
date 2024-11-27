@@ -48,6 +48,7 @@ urlpatterns = [
          expenditure_view.edit_expense, name='edit_expense'),
     path('delete_expense/<int:expenditure_id>',
          expenditure_view.delete_expense, name='delete_expense'),
+    path('fetch_expenditures/', expenditure_view.fetch_expenditures, name='fetch_expenditures'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
