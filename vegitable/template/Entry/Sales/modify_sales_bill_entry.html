@@ -41,32 +41,7 @@
                 
                 
                 <div class="clearfix"> </div>
-                <div class="radio-bottom radio-bottom5">
-					{% if sales_bill_detail %}
-                        <span class="mid-radio">
-                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash">
-                            <label for="sales_enrty_cash">Cash<i></i></label>
-                        </span>
-                        <span class="mid-radio">
-                            <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit">
-                            <label for="sales_entry_credit">Credit<i></i></label>
-                        </span>
-                    {% else %}
-                        <span class="mid-radio">
-                            <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
-                            <label for="sales_enrty_cash">Cash<i></i></label>
-                        </span>
-                        <span class="mid-radio">
-                            <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
-                            <label for="sales_entry_credit">Credit<i></i></label>
-                        </span>
-                    {% endif %}
-					<span class="mid-radio">
-                            <input type="radio" id="sales_entry_upi" name="payment_mode" value = "upi">
-                            <label for="sales_entry_upi">Upi/Cheque<i></i></label>
-                    </span>
-				</div>
-                <div class="clearfix"> </div>
+
 
                 <button type="button" class=" btn-l btn-2 " id="add_sales_entry_list">Add Sales Entry</button>
                 <div class="clearfix"> </div>
@@ -221,8 +196,25 @@
                     <input type="text" placeholder="0" id= "balance_amount" name = "balance_amount" required="" value="{{sales_obj.balance_amount}}" readonly>
                 </div>
                 <div class="clearfix"> </div>
-
-                <button type="submit" class=" btn-l btn-2 " style="float:right">Generate Bill</button>
+                <div class="custom-radio-button">
+					{% if sales_bill_detail %}
+                        <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" checked>
+                        <label for="sales_enrty_cash">Cash </label><br>
+                        <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit">
+                        <label for="sales_entry_credit">Credit </label><br>
+                        <input type="radio" id="sales_entry_upi" name="payment_mode" value = "upi">
+                        <label for="sales_entry_upi">Upi </label><br>
+                    {% else %}
+                        <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
+                        <label for="sales_enrty_cash">Cash </label><br>
+                        <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
+                        <label for="sales_entry_credit">Credit </label><br>
+                        <input type="radio" id="sales_entry_upi" name="payment_mode" value = "upi" {% if sales_obj.payment_type == "upi" %} checked {% endif %}>
+                        <label for="sales_entry_upi">Upi </label><br>
+                    {% endif %}
+				</div>
+                <div class="clearfix"> </div>
+                <button type="submit" class=" btn-l btn-2 ">Generate Bill</button>
                 <div class="clearfix"> </div>
                 
             </form>
@@ -230,4 +222,6 @@
     </div>
 
 </div>
+
+ <script src="{% static 'js/sales_entry/sales_entry.js'%}"></script>
 {% endblock %}

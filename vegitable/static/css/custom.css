@@ -629,3 +629,14 @@ display:none;
     display: block;
     visibility: visible;
 }
+
+.custom-radio-button {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Adjust spacing between each radio button and label pair */
+}
+
+.custom-radio-button input[type="radio"] {
+    transform: scale(2); /* Adjust the scale value for desired size */
+    margin-right: 10px; /* Add space between the radio button and label */
+}
