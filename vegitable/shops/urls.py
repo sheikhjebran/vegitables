@@ -1,8 +1,7 @@
 from django.urls import path
 
 from . import views
-from .shop_views import arrival_view, patti_view, settings_view, expenditure_view
-
+from .shop_views import arrival_view, patti_view, settings_view, expenditure_view, shilk_view
 
 urlpatterns = [
     # webpage URL
@@ -144,8 +143,8 @@ urlpatterns = [
          name="get_credit_bill_entry_list"),
 
     # Shilk Entry
-    path('shilk_entry', views.shilk_entry, name="shilk_entry"),
-    path('retrieve_shilk', views.retrieve_shilk, name="retrieve_shilk"),
+    path('shilk_entry', shilk_view.shilk_entry, name="shilk_entry"),
+    path('retrieve_shilk', shilk_view.retrieve_shilk, name="retrieve_shilk"),
 
     # RMC
     path('get_daily_rmc_selected_date', views.get_daily_rmc_selected_date,

@@ -114,44 +114,6 @@ $(document).ready(function () {
     balance_amount.val(parseFloat(result).toFixed(2));
   });
 
-
-
-   $(document).on("change keyup","#shilk_date", function () {
-        var selected_date = $(this).val();
-        $.ajax({
-          url: "/retrieve_shilk",
-          method: "GET",
-          async: true,
-          data: {
-            selected_date: selected_date,
-          },
-          success: function (response) {
-            console.log("AJAX request successful");
-            update_shilk_form(response.result)
-          },
-          error: function (xhr, status, error) {
-            console.log("AJAX request failed");
-            console.log("Status: " + status);
-            console.log("Error: " + error);
-          },
-        });
-   });
-
-   function update_shilk_form(result){
-    $("#shilk_arrival").val(result["total_bags_sum"]);
-    $("#shilk_bags_sold").val(result["bags_sold_sum"]);
-    $("#shilk_balance").val(result["balance_bags_sum"]);
-    $("#shilk_total_sales").val(result["total_sales"]);
-    $("#shilk_cash_bill_amount").val(result["cash_bill_amount"]);
-    $("#shilk_collection").val(result["collection"]);
-    $("#shilk_credit_bill_amount").val(result["credit_bill_amount"]);
-    $("#shilk_expenses").val(result["total_expenditure"]);
-    $("#shilk_net_amount").val(result["net_amount"]);
-    $("#shilk_phone_pay").val(result["upi_amount"]);
-    $("#shilk_patti").val(result["patti_amount"]);
-   }
-
-
   $(document).on("change", ".add_new_sales_custom_select", function () {
     var lot_number_Id = $(this).attr("id");
     var selected_lot = $(this).val();
