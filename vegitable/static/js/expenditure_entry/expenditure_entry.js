@@ -1,6 +1,6 @@
 // expenditure.js
 
-class ExpenditureSearch {
+class Expenditure {
     constructor() {
         this.searchButton = document.getElementById('search_date');
         this.tableBody = document.querySelector('#tableWrapper tbody');
@@ -82,5 +82,5 @@ class ExpenditureSearch {
 
 // Initialize the ExpenditureSearch class
 document.addEventListener('DOMContentLoaded', () => {
-    new ExpenditureSearch();
+    new Expenditure();
 });
