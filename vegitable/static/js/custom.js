@@ -648,30 +648,6 @@ $(document).ready(function () {
     }
   });
 
-    function validate_credit_bill_amount_received(){
-        var balance = parseFloat($(".balance_amount").val());
-        var amountReceived = parseFloat($(".amount_received").val());
-        var discount = parseFloat($(".discount").val());
-
-        // Set discount to 0 if it's empty
-        if (isNaN(discount)) {
-          discount = 0;
-        }
-
-        if(discount+amountReceived>balance){
-            $(".amount_received").val("");
-            $(".discount").val("");
-            alert("Received amount cannot exceed Balance Amount ..!");
-        }
-    }
-   $(document).on("input",".amount_received",function(){
-        validate_credit_bill_amount_received();
-   });
-
-   $(document).on("input",".discount",function(){
-        validate_credit_bill_amount_received();
-   });
-
   $(document).on("submit", "#arrival_entry_form", function (e) {
     var total_bags_count = parseInt($("#total_number_of_bags").val());
     if (total_bags_count <= 0) {
@@ -900,32 +876,6 @@ $(document).ready(function () {
    }
 
   });
-
-   $(document).on("mouseenter", ".credit_id", function () {
-        var text = $(this).attr("value");
-        var amount_balance = $(this).attr("amount_balance");
-        console.log(text);
-        console.log(amount_balance);
-        $("#popup").css({
-            'display':"block"
-        });
-
-        $(".overlay").css({
-            'display':"block"
-        });
-        $(".sales_bill_id").val(text);
-        $(".balance_amount").val(amount_balance);
-   });
-
-   $(document).on("click", ".popup_close", function () {
-        $(".overlay").css({
-            'display':"none",
-            'position': "fixed"
-        });
-        $("#popup").css({
-            'display':"none"
-        });
-   });
 
 
   $(document).on("keyup", ".farmer_ledger_search_text", function () {
@@ -1187,100 +1137,3 @@ function removeElement(el) {
 
   element.remove();
 }
-
-
-// Tool tip Text
-document.addEventListener("DOMContentLoaded", function() {
-    const tooltipTriggers = document.querySelectorAll(".tooltip-trigger");
-
-    tooltipTriggers.forEach(trigger => {
-        trigger.addEventListener("mouseover", showTooltip);
-        trigger.addEventListener("mouseout", hideTooltip);
-    });
-
-    async function showTooltip(event) {
-        const id = event.target.getAttribute("data-tooltip");
-        var tableData="";
-        try {
-            const response = await createTableData(id);
-            console.log("Table HTML:", response);
-            tableData= response;
-            // Here you can use the 'response' to append the table to your desired element in the DOM or perform other operations
-        } catch (error) {
-            console.error("Error:", error);
-            // Handle the error if necessary
-        }
-
-
-        const tooltipContent = document.createElement("div");
-        tooltipContent.classList.add("tooltip-content");
-
-        const table = document.createElement("table");
-        table.classList.add("tooltip-table");
-        table.innerHTML = tableData;
-
-        tooltipContent.appendChild(table);
-
-        const tooltip = document.createElement("div");
-        tooltip.classList.add("tooltip");
-        tooltip.appendChild(tooltipContent);
-
-        const container = event.target.closest(".tooltip-container");
-        container.appendChild(tooltip);
-        setTimeout(() => tooltip.classList.add("active"), 10);
-    }
-
-    function hideTooltip(event) {
-        const tooltip = event.target.closest(".tooltip-container").querySelector(".tooltip");
-        if (tooltip) {
-            tooltip.classList.remove("active");
-            setTimeout(() => tooltip.remove(), 200);
-        }
-    }
-
-    function getCreditBillEntryList(id) {
-        return new Promise(function(resolve, reject) {
-            $.ajax({
-                url: "/get_credit_bill_entry_list",
-                method: "GET",
-                async: true,
-                data: {
-                    id: id
-                },
-                success: function (response) {
-                    console.log("AJAX request successful");
-                    console.log(response);
-                    resolve(response);
-                },
-                error: function (xhr, status, error) {
-                    console.log("Get Credit Bill Entry request failed");
-                    console.log("Status: " + status);
-                    console.log("Error: " + error);
-                    reject(error);
-                },
-            });
-        });
-    }
-
-    async function createTableData(id) {
-    try {
-            const response = await getCreditBillEntryList(id);
-            // Use the response data here
-            console.log("Response from AJAX call:", response);
-            const creditData = response;
-            const data = response;
-
-            let tableHTML = "<thead><tr><th>Payment&nbsp;Date</th><th>Amount</th><th>PaymentMode</th></tr></thead><tbody>";
-
-            data.forEach(item => {
-                tableHTML += `<tr><td>${item.date}</td><td>${item.amount}/-</td><td>${item.payment_mode}</td></tr>`;
-            });
-
-            tableHTML += "</tbody>";
-            return tableHTML;
-        } catch (error) {
-            console.error("Error from AJAX call:", error);
-            throw error; // Re-throw the error so the caller can handle it
-        }
-    }
-});
