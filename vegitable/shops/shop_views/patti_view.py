@@ -72,9 +72,9 @@ def generate_patti_pdf_bill(request):
             patti_entry_obj.hamali = request.POST['hamali']
             patti_entry_obj.net_amount = request.POST['net_amount']
             patti_entry_obj.Empty_data = False
+            patti_entry_obj.save()
+            print(f"New Patti entry item  = {patti_entry_obj.id}")
 
-        patti_entry_obj.save()
-        print(f"New Patti entry item  = {patti_entry_obj.id}")
         if str(request.POST['new']) == "True":
             index_obj = get_object_or_404(Index, shop=shop_detail_object)
 
