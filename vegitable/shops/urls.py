@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .shop_views import arrival_view, patti_view, settings_view, expenditure_view, shilk_view
+from .shop_views import arrival_view, patti_view, settings_view, expenditure_view, shilk_view, credit_bill_view
 
 urlpatterns = [
     # webpage URL
@@ -134,12 +134,12 @@ urlpatterns = [
          views.inventory_next_page, name="inventory_next_page"),
 
     # Credit Bill Entry
-    path('credit_bill_entry', views.credit_bill_entry,
+    path('credit_bill_entry', credit_bill_view.credit_bill_entry,
          name="credit_bill_entry"),
-    path('search_credit', views.search_credit, name="search_credit"),
-    path('add_credit_bill_amount', views.add_new_credit_bill_entry,
+    path('search_credit', credit_bill_view.search_credit, name="search_credit"),
+    path('add_credit_bill_amount', credit_bill_view.add_new_credit_bill_entry,
          name="add_new_credit_bill_entry"),
-    path('get_credit_bill_entry_list', views.get_credit_bill_entry_list,
+    path('get_credit_bill_entry_list', credit_bill_view.get_credit_bill_entry_list,
          name="get_credit_bill_entry_list"),
 
     # Shilk Entry

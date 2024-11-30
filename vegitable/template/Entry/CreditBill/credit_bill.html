@@ -9,7 +9,7 @@
     <h1 class="heading">Credit Bill Entry</h1>
     <div class="form_background">
         <div class="card">
-            <form action = "/search_credit" method = "GET">
+            <form action = "/search_credit" method = "GET" id="search_credit_record">
             {% csrf_token %}
                 <input type="hidden" name="form_token" value="{{ request.session.form_token }}">
                 <table>
@@ -115,5 +115,6 @@
 
 
 </div>
-
+<script src="{% static 'js/credit_bill_entry/credit_bill_entry.js'%}"></script>
+<script src="{% static 'js/credit_bill_entry/tool_tip.js'%}"></script>
 {% endblock %}

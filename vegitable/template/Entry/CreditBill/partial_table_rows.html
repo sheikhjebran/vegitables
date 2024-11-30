@@ -1,0 +1,34 @@
+<!-- partial_table_rows.html -->
+{% load static %}
+{% for credit in results %}
+<thead>
+            <tr>
+                <td>Bill No</td>
+                <td>Customer Name</td>
+                <td>Bill Date</td>
+                <td>Amount</td>
+                <td>Paid</td>
+                <td>Balance</td>
+            </tr>
+        </thead>
+        <tbody>
+            {%for credit in results %}
+                <tr>
+                    <td>
+                        <span class="no_border credit_id" value="{{credit.bill_no}}" amount_balance="{{credit.balance}}">{{credit.bill_no}}</span>
+                    </td>
+                    <td>{{credit.customer_name}}</td>
+                    <td>{{credit.date}}</td>
+                    <td>{{credit.amount}}</td>
+                    <td>{{credit.paid}}</td>
+                    <td>
+                        <div class="tooltip-container">
+                            {{credit.balance}}
+                            <img class="small_icon tooltip-trigger" data-tooltip="{{credit.id}}" src="{% static 'images/exclamation.png'%}">
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+<script src="{% static 'js/credit_bill_entry/tool_tip.js'%}"></script>
+{% endfor %}
