@@ -8,24 +8,30 @@ from ..utility import get_float_number, getDate_from_string
 import datetime
 from rest_framework import status
 
+
 def credit_bill_entry(request):
     if request.user.is_authenticated:
         return render(request, 'Entry/CreditBill/credit_bill.html')
     return render(request, 'index.html')
 
+
 def search_credit(request):
     if request.user.is_authenticated:
-        search_name = request.GET.get('name', '').strip()  # Get name, default to an empty string
-        search_date = request.GET.get('date', None)  # Get date, default to None
+        # Get name, default to an empty string
+        search_name = request.GET.get('name', '').strip()
+        # Get date, default to None
+        search_date = request.GET.get('date', None)
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         query = CreditBillEntry.objects.filter(shop_id=shop_detail_object)
 
         if search_name:
-            query = query.filter(customer_name__icontains=search_name)  # Filter by name if provided
+            # Filter by name if provided
+            query = query.filter(customer_name__icontains=search_name)
 
         if search_date:
-            query = query.filter(date=search_date) # Filter by date if provided
+            # Filter by date if provided
+            query = query.filter(date=search_date)
 
         # Execute the query
         credit_obj = query
@@ -44,9 +50,11 @@ def search_credit(request):
                     "balance": balance_amount
                 }
                 result.append(myDict)
-        rendered_table_rows = render(request, 'Entry/CreditBill/partial_table_rows.html', {'results': result}).content.decode()
+        rendered_table_rows = render(
+            request, 'Entry/CreditBill/partial_table_rows.html', {'results': result}).content.decode()
         return JsonResponse({'success': True, 'html': rendered_table_rows})
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
 
 def add_new_credit_bill_entry(request):
     balance_amount = get_float_number(
@@ -81,7 +89,6 @@ def add_new_credit_bill_entry(request):
     return search_credit(request)
 
 
-
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def get_credit_bill_entry_list(request):
@@ -101,4 +108,3 @@ def get_credit_bill_entry_list(request):
         }
         data.append(credit)
     return Response(data=data, status=status.HTTP_200_OK)
-

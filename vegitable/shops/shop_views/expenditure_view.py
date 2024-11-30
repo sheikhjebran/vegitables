@@ -134,4 +134,5 @@ def fetch_expenditures(request):
 
         return JsonResponse(result_data, safe=False)  # Return as JSON
     else:
-        return JsonResponse([], safe=False)  # Return an empty list if no date is selected
+        # Return an empty list if no date is selected
+        return JsonResponse([], safe=False)

@@ -70,10 +70,7 @@ class FarmerLedger {
   updateTable(result) {
     this.tableWrapper.children("tbody").children("tr").remove();
     result.forEach((entry) => {
-      this.tableWrapper
-        .children("tbody")
-        .last()
-        .append(`
+      this.tableWrapper.children("tbody").last().append(`
           <tr>
             <td><a href="/edit_farmer_ledger_entry/${entry.id}">${entry.id}</a></td>
             <td>${entry.name}</td>
@@ -94,8 +91,7 @@ class FarmerLedger {
   }
 }
 
-
 // Initialize the SalesEntry class when the document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new FarmerLedger();
+document.addEventListener("DOMContentLoaded", () => {
+  new FarmerLedger();
 });
