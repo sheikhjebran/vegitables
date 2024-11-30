@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from ..models import Shop, CreditBillEntry, CreditBillHistory, SalesBillEntry
-from ..utility import  get_float_number
+from ..utility import get_float_number, getDate_from_string
 import datetime
 from rest_framework import status
 
@@ -25,7 +25,7 @@ def search_credit(request):
             query = query.filter(customer_name__icontains=search_name)  # Filter by name if provided
 
         if search_date:
-            query = query.filter(date=search_date)  # Filter by date if provided
+            query = query.filter(date=search_date) # Filter by date if provided
 
         # Execute the query
         credit_obj = query

@@ -92,6 +92,8 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
     upi_amount = sales_data.get('upi_amount') or 0
     patti = round(patti_entries, 2)
 
+    cash_balance = cash_bill_amount + collection - total_expenditure
+
     net_amount = (total_sales + collection) - \
         (credit_bill_amount + upi_amount + patti + total_expenditure)
 
@@ -106,5 +108,6 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         'upi_amount': upi_amount,
         'total_expenditure': total_expenditure,
         'net_amount': round(net_amount, 2),
-        'patti_amount': patti
+        'patti_amount': patti,
+        'cash_balance': cash_balance
     }

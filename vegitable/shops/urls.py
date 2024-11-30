@@ -1,7 +1,14 @@
 from django.urls import path
 
 from . import views
-from .shop_views import arrival_view, patti_view, settings_view, expenditure_view, shilk_view, credit_bill_view
+from .shop_views import (
+    arrival_view,
+    patti_view,
+    settings_view,
+    expenditure_view,
+    shilk_view,
+    credit_bill_view,
+    farmer_ledger_view)
 
 urlpatterns = [
     # webpage URL
@@ -110,21 +117,21 @@ urlpatterns = [
          views.delete_customer_ledger, name='delete_customer_ledger'),
 
     # Farmer Ledger
-    path('farmer_ledger', views.farmer_ledger, name='farmer_ledger'),
-    path('add_farmer_ledger', views.add_farmer_ledger,
+    path('farmer_ledger', farmer_ledger_view.farmer_ledger, name='farmer_ledger'),
+    path('add_farmer_ledger', farmer_ledger_view.add_farmer_ledger,
          name='add_farmer_ledger'),
-    path('search_farmer_ledger', views.search_farmer_ledger,
+    path('search_farmer_ledger', farmer_ledger_view.search_farmer_ledger,
          name='search_farmer_ledger'),
-    path('default_farmer_ledger', views.default_farmer_ledger,
+    path('default_farmer_ledger', farmer_ledger_view.default_farmer_ledger,
          name='default_farmer_ledger'),
     path('farmer_ledger/prev/<int:page_number>',
-         views.farmer_ledger_prev_page, name="farmer_ledger_prev_page"),
+         farmer_ledger_view.farmer_ledger_prev_page, name="farmer_ledger_prev_page"),
     path('farmer_ledger/next/<int:page_number>',
-         views.farmer_ledger_next_page, name="farmer_ledger_next_page"),
+         farmer_ledger_view.farmer_ledger_next_page, name="farmer_ledger_next_page"),
     path('edit_farmer_ledger/<int:farmer_id>',
-         views.edit_farmer_ledger, name='edit_farmer_ledger'),
+         farmer_ledger_view.edit_farmer_ledger, name='edit_farmer_ledger'),
     path('delete_farmer_ledger/<int:farmer_id>',
-         views.delete_farmer_ledger, name='delete_farmer_ledger'),
+         farmer_ledger_view.delete_farmer_ledger, name='delete_farmer_ledger'),
 
     # Inventory
     path('inventory', views.inventory, name='inventory'),

@@ -40,6 +40,7 @@ class ShilkManager {
         this.setValue("#shilk_net_amount", result["net_amount"]);
         this.setValue("#shilk_phone_pay", result["upi_amount"]);
         this.setValue("#shilk_patti", result["patti_amount"]);
+        this.setValue("#shilk_cash_balance",result["cash_balance"]);
     }
 
     setValue(selector, value) {
