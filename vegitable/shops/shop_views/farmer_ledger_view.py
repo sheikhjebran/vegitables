@@ -32,6 +32,7 @@ def farmer_ledger(request, current_page=1, farmer_ledger_entry=None):
                        'farmer_ledger': farmer_ledger_entry})
     return render(request, 'index.html')
 
+
 @csrf_protect
 def add_farmer_ledger(request):
     if request.user.is_authenticated:
@@ -60,6 +61,7 @@ def add_farmer_ledger(request):
         return farmer_ledger(request)
 
     return render(request, 'index.html')
+
 
 @api_view(['GET'])
 def search_farmer_ledger(request):
@@ -91,6 +93,7 @@ def search_farmer_ledger(request):
     else:
         return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
+
 @api_view(['GET'])
 def default_farmer_ledger(request):
     if request.user.is_authenticated:
@@ -120,14 +123,17 @@ def default_farmer_ledger(request):
         else:
             return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
+
 def farmer_ledger_prev_page(request, page_number):
     if page_number > 1:
         return farmer_ledger(request, current_page=page_number - 1)
     else:
         return farmer_ledger(request)
 
+
 def farmer_ledger_next_page(request, page_number):
     return farmer_ledger(request, current_page=page_number + 1)
+
 
 @csrf_protect
 def edit_farmer_ledger(request, farmer_id):

@@ -28,16 +28,11 @@ def customer_ledger_next_page(request, page_number):
     return customer_ledger(request, current_page=page_number + 1)
 
 
-
-
 def customer_ledger_prev_page(request, page_number):
     if page_number > 1:
         return customer_ledger(request, current_page=page_number - 1)
     else:
         return customer_ledger(request)
-
-
-
 
 
 def inventory_next_page(request, page_number):
@@ -84,16 +79,6 @@ def customer_ledger(request, current_page=1, customer_ledger_entry=None):
                        'current_page': current_page,
                        'customer_ledger': customer_ledger_entry})
     return render(request, 'index.html')
-
-
-
-
-
-
-
-
-
-
 
 
 def inventory(request, current_page=1):
@@ -147,11 +132,6 @@ def add_customer_ledger(request):
         return customer_ledger(request)
 
     return render(request, 'index.html')
-
-
-
-
-
 
 
 def sales_bill_entry(request, current_page=1):
@@ -208,23 +188,15 @@ def profile(request):
         return render(request, 'index.html')
 
 
-
-
 def logout(request):
     auth.logout(request)
     return render(request, 'index.html')
-
-
-
 
 
 def add_new_expenditure_entry(request):
     if request.user.is_authenticated:
         return render(request, 'modify_expenditure_entry.html', {'expenditure_detail': "NEW"})
     return render(request, 'index.html')
-
-
-
 
 
 def navigate_to_add_sales_bill_entry(request):
@@ -388,18 +360,10 @@ def add_sales_bill_item(request, request_list, sales):
     return render(request, 'index.html')
 
 
-
-
-
-
-
 def total_amount_expenditure_entry(request):
     if request.user.is_authenticated:
         return render(request, 'expenditure_total_iframe.html')
     return render(request, 'index.html')
-
-
-
 
 
 @api_view(('GET',))
@@ -461,10 +425,6 @@ def get_arrival_goods_list(request):
 
     data = {'item_goods_list': item_goods_list}
     return Response(data, status=status.HTTP_200_OK)
-
-
-
-
 
 
 @api_view(('GET',))
@@ -682,10 +642,6 @@ def grouping_sales_bill_entry(sales_response_list: list):
     return response
 
 
-
-
-
-
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
     if request.user.is_authenticated:
@@ -763,6 +719,7 @@ def default_customer_ledger(request, current_page=1, customer_ledger_entry=None)
             return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
         else:
             return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
+
 
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
@@ -875,6 +832,3 @@ def delete_customer_ledger(request, customer_id):
         customer_ledger_detail.delete()
         return customer_ledger(request)
     return render(request, 'index.html')
-
-
-
