@@ -628,6 +628,16 @@ $(document).ready(function () {
     }
   });
 
+  $(document).on("keypress", ".alpha_and_number", function (event) {
+    let keyCode = event.which || event.keyCode;
+
+    if (!((keyCode >= 48 && keyCode <= 57) || // 0-9
+          (keyCode >= 65 && keyCode <= 90) || // A-Z
+          (keyCode >= 97 && keyCode <= 122))) { // a-z
+        event.preventDefault();
+    }
+  });
+
   $(document).on("input", ".decimal_number_only", function () {
     var position = this.selectionStart - 1;
     //remove all but number and .
