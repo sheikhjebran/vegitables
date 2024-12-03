@@ -10,7 +10,7 @@ from ..models import Shop, FarmerLedger
 
 
 @csrf_protect
-def farmer_ledger(request, current_page=1, farmer_ledger_entry=None):
+def farmer_ledger(request, current_page=1, farmer_ledger_entry=None, message=None):
     if request.user.is_authenticated:
         if farmer_ledger_entry is None:
             farmer_ledger_entry = {
@@ -29,7 +29,8 @@ def farmer_ledger(request, current_page=1, farmer_ledger_entry=None):
         return render(request, 'Ledger/farmer_ledger.html',
                       {'farmer_ledger_list': farmer_ledger_list,
                        'current_page': current_page,
-                       'farmer_ledger': farmer_ledger_entry})
+                       'farmer_ledger': farmer_ledger_entry,
+                       'message':message})
     return render(request, 'index.html')
 
 
@@ -48,6 +49,8 @@ def add_farmer_ledger(request):
                             shop=Shop.objects.get(shop_owner=request.user.id)
                         )
                         farmer_ledger_obj.save()
+                    else:
+                        return farmer_ledger(request, message="Farmer Entry already exists")
                 else:
                     farmer_ledger_obj = FarmerLedger.objects.get(
                         id=request.POST['farmer_ledger_id'])

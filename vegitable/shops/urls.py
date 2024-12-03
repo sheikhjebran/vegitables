@@ -8,7 +8,8 @@ from .shop_views import (
     expenditure_view,
     shilk_view,
     credit_bill_view,
-    farmer_ledger_view)
+    farmer_ledger_view,
+    customer_ledger_view)
 
 urlpatterns = [
     # webpage URL
@@ -100,21 +101,21 @@ urlpatterns = [
     path('rmc_report', views.rmc_report, name='rmc_report'),
 
     # Customer Ledger
-    path('customer_ledger', views.customer_ledger, name='customer_ledger'),
-    path('add_customer_ledger', views.add_customer_ledger,
+    path('customer_ledger', customer_ledger_view.customer_ledger, name='customer_ledger'),
+    path('add_customer_ledger', customer_ledger_view.add_customer_ledger,
          name='add_customer_ledger'),
-    path('search_customer_ledger', views.search_customer_ledger,
+    path('search_customer_ledger', customer_ledger_view.search_customer_ledger,
          name='search_customer_ledger'),
-    path('default_customer_ledger', views.default_customer_ledger,
+    path('default_customer_ledger', customer_ledger_view.default_customer_ledger,
          name='default_customer_ledger'),
     path('customer_ledger/prev/<int:page_number>',
-         views.customer_ledger_prev_page, name="customer_ledger_prev_page"),
+         customer_ledger_view.customer_ledger_prev_page, name="customer_ledger_prev_page"),
     path('customer_ledger/next/<int:page_number>',
-         views.customer_ledger_next_page, name="customer_ledger_next_page"),
+         customer_ledger_view.customer_ledger_next_page, name="customer_ledger_next_page"),
     path('edit_customer_ledger/<int:customer_id>',
-         views.edit_customer_ledger, name='edit_customer_ledger'),
+         customer_ledger_view.edit_customer_ledger, name='edit_customer_ledger'),
     path('delete_customer_ledger/<int:customer_id>',
-         views.delete_customer_ledger, name='delete_customer_ledger'),
+         customer_ledger_view.delete_customer_ledger, name='delete_customer_ledger'),
 
     # Farmer Ledger
     path('farmer_ledger', farmer_ledger_view.farmer_ledger, name='farmer_ledger'),
