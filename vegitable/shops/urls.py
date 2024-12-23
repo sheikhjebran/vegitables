@@ -10,6 +10,7 @@ from .shop_views import (
     credit_bill_view,
     farmer_ledger_view,
     customer_ledger_view)
+from .shop_views.mobile import login
 
 urlpatterns = [
     # webpage URL
@@ -55,7 +56,8 @@ urlpatterns = [
          expenditure_view.edit_expense, name='edit_expense'),
     path('delete_expense/<int:expenditure_id>',
          expenditure_view.delete_expense, name='delete_expense'),
-    path('fetch_expenditures/', expenditure_view.fetch_expenditures, name='fetch_expenditures'),
+    path('fetch_expenditures/', expenditure_view.fetch_expenditures,
+         name='fetch_expenditures'),
 
     # Sales Entry URL
     path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
@@ -101,7 +103,8 @@ urlpatterns = [
     path('rmc_report', views.rmc_report, name='rmc_report'),
 
     # Customer Ledger
-    path('customer_ledger', customer_ledger_view.customer_ledger, name='customer_ledger'),
+    path('customer_ledger', customer_ledger_view.customer_ledger,
+         name='customer_ledger'),
     path('add_customer_ledger', customer_ledger_view.add_customer_ledger,
          name='add_customer_ledger'),
     path('search_customer_ledger', customer_ledger_view.search_customer_ledger,
@@ -162,6 +165,10 @@ urlpatterns = [
 
     # Settings
     path('settings', settings_view.navigate_to_settings, name="settings"),
-    path('update_prefix', settings_view.update_prefix, name="update_prefix")
+    path('update_prefix', settings_view.update_prefix, name="update_prefix"),
+
+
+    # flutter login
+    path('login', login.UserLoginView.as_view(), name='login')
 
 ]
