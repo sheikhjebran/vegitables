@@ -9,8 +9,8 @@ from .shop_views import (
     shilk_view,
     credit_bill_view,
     farmer_ledger_view,
-    customer_ledger_view)
-from .shop_views.mobile import login
+    customer_ledger_view,
+    mobile)
 
 urlpatterns = [
     # webpage URL
@@ -169,6 +169,6 @@ urlpatterns = [
 
 
     # flutter login
-    path('login', login.UserLoginView.as_view(), name='login')
+    path('api/login/', mobile.login_view, name='login'),
 
 ]
