@@ -9,3 +9,4 @@ mysqlclient
 reportlab
 pipreqs
 python-decouple
+django-cors-headers

@@ -24,9 +24,6 @@ def index(request):
     return render(request, 'index.html')
 
 
-
-
-
 def inventory_next_page(request, page_number):
     return inventory(request, current_page=page_number + 1)
 
@@ -47,9 +44,6 @@ def sales_bill_prev_page(request, page_number):
         return sales_bill_entry(request, current_page=page_number - 1)
     else:
         return sales_bill_entry(request)
-
-
-
 
 
 def inventory(request, current_page=1):
@@ -74,9 +68,6 @@ def inventory(request, current_page=1):
         return render(request, 'Inventory/inventory.html', {'entries_list': entries,
                                                             'current_page': current_page})
     return render(request, 'index.html')
-
-
-
 
 
 def sales_bill_entry(request, current_page=1):
@@ -613,12 +604,6 @@ def edit_sales_bill_entry(request, sales_id):
     return render(request, 'index.html')
 
 
-
-
-
-
-
-
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
 
@@ -713,6 +698,3 @@ def generate_patti_bill_report(request):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
     return render(request, 'index.html')
-
-
-
