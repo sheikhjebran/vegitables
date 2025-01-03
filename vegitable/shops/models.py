@@ -166,6 +166,7 @@ class CreditBillEntry(models.Model):
     sales_bill = ForeignKey(SalesBillEntry, on_delete=models.CASCADE)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
     initial_credit_bill_amount = FloatField(max_length=100)
+
     def __str__(self):
         return f"{self.id}-{self.customer_name}"
 
@@ -175,5 +176,17 @@ class CreditBillHistory(models.Model):
     amount = FloatField(max_length=100)
     payment_mode = CharField(max_length=100)
     credit_bill = ForeignKey(CreditBillEntry, on_delete=models.CASCADE)
+
     def __str__(self):
         return f"{self.id}-{self.date}-{self.amount}-{self.credit_bill}"
+
+
+class MobileSalesBill(models.Model):
+    name = CharField(max_length=100)
+    lot_no = CharField(max_length=100)
+    total_bags = IntegerField()
+    net_weight = FloatField(max_length=100)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id}-{self.name}-{self.lot_no}-{self.total_bags}-{self.net_weight}"

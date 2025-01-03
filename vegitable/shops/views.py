@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from . import utility
 from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry, SalesBillItem, Shop, \
     ArrivalEntry, \
-    ArrivalGoods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory, Index
+    ArrivalGoods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory, Index, MobileSalesBill
 import datetime
 from .report.report import Report
 from .utility import consolidate_result_for_report, get_float_number, getDate_from_string
@@ -149,12 +149,21 @@ def navigate_to_add_sales_bill_entry(request):
             'sales_entry_counter': int(index.sales_bill_entry_counter) + 1
         }
 
+        mobile_sales_bill_object = MobileSalesBill.objects.filter(shop=shop_detail_object)
+
+        mobile_sales = []
+        for single_mobile_sales in mobile_sales_bill_object:
+            if single_mobile_sales.name not in mobile_sales:
+                mobile_sales.append(single_mobile_sales.name)
+
+
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
             'sales_bill_detail': True,
             'new': True,
             "arrival_goods_detail": arrival_detail_object,
             "today": today,
-            "sales_bill_index": sales_bill_index
+            "sales_bill_index": sales_bill_index,
+            "mobile_sales":mobile_sales
         })
     return render(request, 'index.html')
 

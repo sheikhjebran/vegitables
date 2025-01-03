@@ -170,5 +170,5 @@ urlpatterns = [
 
     # flutter login
     path('api/login/', mobile.login_view, name='login'),
-
+    path('api/add_sales_data/', mobile.add_sales_data_view, name='add_sales_data'),
 ]
