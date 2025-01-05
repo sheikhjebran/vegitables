@@ -10,6 +10,7 @@ from .shop_views import (
     credit_bill_view,
     farmer_ledger_view,
     customer_ledger_view,
+    sales_view,
     mobile)
 
 urlpatterns = [
@@ -60,17 +61,18 @@ urlpatterns = [
          name='fetch_expenditures'),
 
     # Sales Entry URL
-    path('sales_bill_entry', views.sales_bill_entry, name='sales_bill_entry'),
+    path('sales_bill_entry', sales_view.sales_bill_entry, name='sales_bill_entry'),
     path('sales_bill/prev/<int:page_number>',
-         views.sales_bill_prev_page, name="sales_bill_prev_page"),
+         sales_view.sales_bill_prev_page, name="sales_bill_prev_page"),
     path('sales_bill/next/<int:page_number>',
-         views.sales_bill_next_page, name="sales_bill_next_page"),
-    path('navigate_to_add_sales_bill_entry', views.navigate_to_add_sales_bill_entry,
+         sales_view.sales_bill_next_page, name="sales_bill_next_page"),
+    path('navigate_to_add_sales_bill_entry', sales_view.navigate_to_add_sales_bill_entry,
          name='navigate_to_add_sales_bill_entry'),
-    path('add_sales_bill', views.modify_sales_bill_entry,
+    path('add_sales_bill', sales_view.modify_sales_bill_entry,
          name='modify_sales_bill_entry'),
     path('edit_sales_bill_entry/<int:sales_id>',
-         views.edit_sales_bill_entry, name='edit_sales_bill_entry'),
+         sales_view.edit_sales_bill_entry, name='edit_sales_bill_entry'),
+    path('get_mobile_customer_detail',sales_view.get_mobile_customer_detail, name='get_mobile_customer_detail'),
 
     # Rest Api for sales entry list
     path('get_sales_list_for_arrival_item_list', views.get_sales_list_for_arrival_item_list,

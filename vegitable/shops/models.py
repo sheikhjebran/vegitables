@@ -177,3 +177,13 @@ class CreditBillHistory(models.Model):
     credit_bill = ForeignKey(CreditBillEntry, on_delete=models.CASCADE)
     def __str__(self):
         return f"{self.id}-{self.date}-{self.amount}-{self.credit_bill}"
+
+class MobileSalesBill(models.Model):
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    name = CharField(max_length=100)
+    lot_no = CharField(max_length=100)
+    total_bags = IntegerField()
+    net_weight = FloatField(max_length=100)
+
+    def __str__(self):
+        return f"{self.id}-{self.name}-{self.lot_no}-{self.net_weight}-{self.shop}"
