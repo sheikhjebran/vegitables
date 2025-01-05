@@ -47,6 +47,7 @@ def sales_bill_entry(request, current_page=1):
 
     return render(request, 'index.html')
 
+
 def sales_bill_next_page(request, page_number):
     return sales_bill_entry(request, current_page=page_number + 1)
 
@@ -56,6 +57,7 @@ def sales_bill_prev_page(request, page_number):
         return sales_bill_entry(request, current_page=page_number - 1)
     else:
         return sales_bill_entry(request)
+
 
 def navigate_to_add_sales_bill_entry(request):
     if request.user.is_authenticated:
@@ -71,7 +73,8 @@ def navigate_to_add_sales_bill_entry(request):
             'sales_entry_counter': int(index.sales_bill_entry_counter) + 1
         }
 
-        mobile_sales_customer = MobileSalesBill.objects.filter(shop=shop_detail_object)
+        mobile_sales_customer = MobileSalesBill.objects.filter(
+            shop=shop_detail_object)
 
         customer_list = []
         for customer in mobile_sales_customer:
@@ -84,9 +87,10 @@ def navigate_to_add_sales_bill_entry(request):
             "arrival_goods_detail": arrival_detail_object,
             "today": today,
             "sales_bill_index": sales_bill_index,
-            "customer_list":customer_list
+            "customer_list": customer_list
         })
     return render(request, 'index.html')
+
 
 def modify_sales_bill_entry(request):
     if request.user.is_authenticated:
@@ -111,7 +115,8 @@ def modify_sales_bill_entry(request):
                     Empty_data=False
                 )
 
-                MobileSalesBill.objects.filter(name=request.POST['sales_entry_customer_name']).delete()
+                MobileSalesBill.objects.filter(
+                    name=request.POST['sales_entry_customer_name']).delete()
 
             else:
                 sales_bill_entry_Obj = SalesBillEntry.objects.get(
@@ -150,6 +155,7 @@ def modify_sales_bill_entry(request):
         request.session['form_token'] = generate_unique_number()
         return sales_bill_entry(request)
     return render(request, 'index.html')
+
 
 def add_sales_bill_item(request, request_list, sales):
     if request.user.is_authenticated:
@@ -226,6 +232,7 @@ def add_to_credit_bill_db(sales, shop, customer_name, balance_amount):
     )
     credit_bill_history.save()
 
+
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
     if request.user.is_authenticated:
@@ -239,8 +246,11 @@ def edit_sales_bill_entry(request, sales_id):
 
         arrival_detail_object = ArrivalGoods.objects.filter(
             Q(shop=shop_detail_object) &
-            (Q(qty__gte=1) | Q(id__in=selected_arrival_goods_ids))
+            (Q(qty__gte=1) & Q(id__in=selected_arrival_goods_ids))
         )
+
+        for iteam in sales_item_objs:
+            print(iteam)
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,
@@ -263,9 +273,9 @@ def get_mobile_customer_detail(request):
         arrival_detail_object = ArrivalGoods.objects.filter(
             shop=shop_detail_object).filter(id=single_result.lot_no)
         arrival_data = list(arrival_detail_object.values(
-                "id", "shop__id", "former_name", "initial_qty", "qty",
-                "weight", "remarks", "item_name", "advance", "patti_status"
-            ))
+            "id", "shop__id", "former_name", "initial_qty", "qty",
+            "weight", "remarks", "item_name", "advance", "patti_status"
+        ))
         for data in arrival_data:
             data["net_weight"] = single_result.net_weight
             data["total_bags"] = single_result.total_bags
