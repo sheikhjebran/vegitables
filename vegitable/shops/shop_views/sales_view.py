@@ -239,8 +239,11 @@ def edit_sales_bill_entry(request, sales_id):
 
         arrival_detail_object = ArrivalGoods.objects.filter(
             Q(shop=shop_detail_object) &
-            (Q(qty__gte=1) | Q(id__in=selected_arrival_goods_ids))
+            (Q(qty__gte=1) & Q(id__in=selected_arrival_goods_ids))
         )
+
+        for iteam in sales_item_objs:
+            print(iteam)
 
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
                       {'sales_bill_detail': False,

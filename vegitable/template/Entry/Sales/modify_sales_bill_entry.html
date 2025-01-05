@@ -79,7 +79,7 @@
                                 <select class="add_new_sales_custom_select" name="0_lot_number" id ="0_lot_number">
                                     <option selected="true" disabled="disabled">Choose Lot No</option>   
                                     {% for arrival_detail in arrival_goods_detail%}
-                                    <option value="{{arrival_detail.id}}">{{arrival_detail.remarks}}</option>
+                                        <option value="{{arrival_detail.id}}">{{arrival_detail.remarks}}</option>
                                     {% endfor %}
                                 </select>
                                 
@@ -125,10 +125,11 @@
                         <td class="custom-select">
                             <div class='comment-your'>
                                 <select class="add_new_sales_custom_select" name="{{item.id}}_modify_lot_number" id ="{{item.id}}_modify_lot_number">
-                                    
-                                    {% for arrival_detail in arrival_goods_detail%}
-                                    <option value="{{arrival_detail.id}}" {% if item.item_name == "{{arrival_detail.item_name}}" %}selected{% endif %}>{{arrival_detail.remarks}}</option>
-                                    {%endfor%}
+                                    {% for arrival_detail in arrival_goods_detail %}
+                                        <option value="{{ arrival_detail.id }}" {% if item.arrival_goods.id == arrival_detail.id %}selected{% endif %}>
+                                            {{ arrival_detail.remarks }}
+                                        </option>
+                                    {% endfor %}
                                 </select>
                                 
                             </div>
