@@ -36,7 +36,16 @@
 
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Customer Name</span>
-                    <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="{{sales_obj.customer_name}}" >
+                    {% if new %}
+                        <select class="mobile_customer_list" name="sales_entry_customer_name">
+                            <option selected="true" disabled="disabled">Choose Customer</option>
+                            {% for customer in customer_list%}
+                            <option value="{{customer}}">{{customer}}</option>
+                            {%endfor%}
+                        </select>
+                    {% else %}
+                        <input type="text" placeholder="Customer Name" name = "sales_entry_customer_name" required="" value="{{sales_obj.customer_name}}" >
+                    {% endif %}
                 </div>
                 
                 
