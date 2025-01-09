@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import response, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from ..models import Shop, SalesBillEntry, SalesBillItem, MobileSalesBill, ArrivalGoods, Index, CreditBillEntry, \
     CreditBillHistory
@@ -263,25 +264,35 @@ def edit_sales_bill_entry(request, sales_id):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_mobile_customer_detail(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    selected_customer = request.GET.get('selectedCustomer', '').strip()
-    results = MobileSalesBill.objects.filter(name=selected_customer)
+    try:
+        # Fetch shop detail object based on the authenticated user
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        selected_customer = request.GET.get('selectedCustomer', '').strip()
 
-    response = []
-    for single_result in results:
-        arrival_detail_object = ArrivalGoods.objects.filter(
-            shop=shop_detail_object).filter(id=single_result.lot_no)
-        arrival_data = list(arrival_detail_object.values(
-            "id", "shop__id", "former_name", "initial_qty", "qty",
-            "weight", "remarks", "item_name", "advance", "patti_status"
-        ))
-        for data in arrival_data:
-            data["net_weight"] = single_result.net_weight
-            data["total_bags"] = single_result.total_bags
-        response.append(arrival_data)
+        # Fetch mobile sales data for the selected customer
+        results = MobileSalesBill.objects.filter(name=selected_customer)
 
-    if response:
-        return JsonResponse(data={'success': True, 'data': response}, status=status.HTTP_200_OK)
-    else:
-        return JsonResponse(data={'success': False}, status=status.HTTP_404_NOT_FOUND)
+        response = []
+        for single_result in results:
+            arrival_detail_object = ArrivalGoods.objects.filter(
+                shop=shop_detail_object).filter(id=single_result.lot_no)
+            arrival_data = list(arrival_detail_object.values(
+                "id", "shop__id", "former_name", "initial_qty", "qty",
+                "weight", "remarks", "item_name", "advance", "patti_status"
+            ))
+            for data in arrival_data:
+                data["net_weight"] = single_result.net_weight
+                data["total_bags"] = single_result.total_bags
+            response.append(arrival_data)
+
+        if response:
+            return JsonResponse(data={'success': True, 'data': response}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(data={'success': False}, status=status.HTTP_404_NOT_FOUND)
+
+    except Shop.DoesNotExist:
+        return JsonResponse(data={'success': False, 'error': 'Shop not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return JsonResponse(data={'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

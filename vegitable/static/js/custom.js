@@ -666,7 +666,13 @@ $(document).ready(function () {
     $.ajax({
       url: "/get_arrival_duplicate_validation_api",
       method: "GET",
+      type: "GET",
       async: true,
+      credentials: 'same-origin',
+      xhrFields: { withCredentials: true },
+       headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
       data: {
         lorry_no: $(".arrival_entry_lorry_number").val(),
         date: $(".arrival_entry_date").val(),
@@ -683,6 +689,21 @@ $(document).ready(function () {
       },
     });
   }
+
+  function getCookie(name) {
+  var cookieValue = null;
+  if (document.cookie && document.cookie != '') {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) == (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
   arrival_entry_lorry_number.on(
     "keyup change",
