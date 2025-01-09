@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from django.db.models import Q
-from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status, serializers
@@ -14,8 +15,9 @@ class ArrivalGoodsSerializer(serializers.ModelSerializer):
         model = ArrivalGoods
         fields = '__all__'
 
-
+@csrf_exempt
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     """
     Authenticate user based on username and password, and return an access token.
@@ -35,7 +37,7 @@ def login_view(request):
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
-
+        print(f"Access token frrom Django is = {access_token}")
         return Response(
             {"access_token": access_token},
             status=status.HTTP_200_OK,
