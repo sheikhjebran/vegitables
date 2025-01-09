@@ -2,9 +2,10 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.decorators import api_view, renderer_classes, permission_classes
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
@@ -132,7 +133,6 @@ def get_arrival_goods_api(request):
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_duplicate_validation_api(request):
-    [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     respones = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
         date=request.GET['date'])

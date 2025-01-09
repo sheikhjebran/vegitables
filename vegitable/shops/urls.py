@@ -72,7 +72,7 @@ urlpatterns = [
          name='modify_sales_bill_entry'),
     path('edit_sales_bill_entry/<int:sales_id>',
          sales_view.edit_sales_bill_entry, name='edit_sales_bill_entry'),
-    path('get_mobile_customer_detail',sales_view.get_mobile_customer_detail, name='get_mobile_customer_detail'),
+    path('get_mobile_customer_detail', sales_view.get_mobile_customer_detail, name='get_mobile_customer_detail'),
 
     # Rest Api for sales entry list
     path('get_sales_list_for_arrival_item_list', views.get_sales_list_for_arrival_item_list,
@@ -170,7 +170,8 @@ urlpatterns = [
     path('update_prefix', settings_view.update_prefix, name="update_prefix"),
 
 
-    # flutter login
+    # flutter API
     path('api/login/', mobile.login_view, name='login'),
-
+    path('api/arrival_goods/', mobile.get_arrival_goods, name='mobile_get_arrival_goods'),
+    path('api/add_sales_data/',mobile.add_sales_data,name="mobile_add_sales_data"),
 ]
