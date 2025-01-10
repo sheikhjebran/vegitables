@@ -111,7 +111,7 @@ class BuildCloud(PythonAnywhereConsole):
 
     def pull_latest_changes_on_pythonanywhere(self, console_id: int):
         """Send commands to a specific console."""
-        payload = {"input": "cd vegetables/vegetable/\ngit pull\npython manage.py migrate\ncd ../.."}
+        payload = {"input": "cd vegitables/vegitable/\ngit pull\npython manage.py migrate\ncd ..\ncd.."}
         response = self.api_client.post(f"consoles/{console_id}/send_input/", payload)
 
         if response.status_code == 200:
