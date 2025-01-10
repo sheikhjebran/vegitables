@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-vu086ii6wha(vte=#^!rs=p36&)+-m9oucn81qzl=zq1khrm@1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", '127.0.0.1','192.168.1.18']
+ALLOWED_HOSTS = ["*", '127.0.0.1','192.168.1.18','https://mbillingtool.pythonanywhere.com/']
 
 
 # Application definition
@@ -81,6 +81,19 @@ CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies) to be sent
 CORS_ORIGIN_ALLOW_ALL = True  # Allow all domains (or specify certain domains)
 SESSION_COOKIE_AGE = 3600
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Enforce HTTPS
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Cookies
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 TEMPLATES = [
     {
