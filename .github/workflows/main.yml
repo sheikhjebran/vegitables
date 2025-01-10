@@ -8,6 +8,7 @@ on:
 jobs:
   build_and_reload:
     runs-on: ubuntu-latest
+    environment: Prahar
 
     steps:
       - name: Checkout code
@@ -19,11 +20,15 @@ jobs:
           python-version: 3.x
 
       - name: Install Dependencies
+        env:
+          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run Build Script
+        env:
+          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         run: python script/build_cloud.py
 
   reload_webapp:
@@ -46,4 +51,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Reload Web App
+        env:
+          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         run: python script/reload_webapp.py
