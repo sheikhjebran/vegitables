@@ -1,10 +1,10 @@
 import requests
 import sys
-url = "https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/webapps/PrashantSindhe.pythonanywhere.com/reload/"
+url = "https://www.pythonanywhere.com/api/v0/user/mbillingtool/webapps/mbillingtool.pythonanywhere.com/reload/"
 
 payload = {}
 headers = {
-  'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96'
+  'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571'
 }
 
 response = requests.request("POST", url, headers=headers, data=payload)

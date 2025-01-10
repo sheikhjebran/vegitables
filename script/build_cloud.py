@@ -7,15 +7,15 @@ import requests
 
 class ConsoleType(Enum):
     bash = "bash"
-    python27 = "python2.7"
+    python27 = "python3.10"
 
 
 class PythonAnyWhereConsole:
 
     def get_all_console(self):
-        url = "https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/"
+        url = "https://www.pythonanywhere.com/api/v0/user/mbillingtool/consoles/"
         headers = {
-            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
+            'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571',
         }
         response = requests.request("GET", url, headers=headers)
         return response.text
@@ -38,18 +38,18 @@ class PythonAnyWhereConsole:
                 print(f"Error , Response code {response}")
 
     def delete_console(self, console_id):
-        url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/"
+        url = f"https://www.pythonanywhere.com/api/v0/user/mbillingtool/consoles/{console_id}/"
         headers = {
-            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96'
+            'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571'
         }
         response = requests.request("DELETE", url, headers=headers)
         return response.status_code
 
     def create_new_console(self):
-        url = "https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/"
+        url = "https://www.pythonanywhere.com/api/v0/user/mbillingtool/consoles/"
 
         headers = {
-            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
+            'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571',
             'Content-Type': 'application/json',
         }
         payload = json.dumps({
@@ -70,9 +70,9 @@ class PythonAnyWhereConsole:
 
     def is_console_ready(self, console_id):
         """Checks if the console is ready to accept commands."""
-        url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/"
+        url = f"https://www.pythonanywhere.com/api/v0/user/mbillingtool/consoles/{console_id}/"
         headers = {
-            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
+            'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571',
         }
         response = requests.request("GET", url, headers=headers)
         if response.status_code == 200:
@@ -106,16 +106,16 @@ class BuildCloud(PythonAnyWhereConsole):
         #     self.wait_for_console_to_start(console_id)
         #     # Once the console is ready, pull the latest changes
         #     self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
-        self.pull_latest_changes_on_pythonanywhere(console_id=35491572)
+        self.pull_latest_changes_on_pythonanywhere(console_id=37525250)
 
     def pull_latest_changes_on_pythonanywhere(self, console_id):
-        url = f"https://www.pythonanywhere.com/api/v0/user/PrashantSindhe/consoles/{console_id}/send_input/"
+        url = f"https://www.pythonanywhere.com/api/v0/user/mbillingtool/consoles/{console_id}/send_input/"
 
         payload = json.dumps({
             "input": "cd vegitables/vegitable/\ngit pull\npython manage.py migrate\ncd ..\ncd ..\n"
         })
         headers = {
-            'Authorization': 'Token d1d33365c22118b0fa2f3ae5905ddd09a6d23e96',
+            'Authorization': 'Token f604c16eae7a29e30c55fb03901a32d32a815571',
             'Content-Type': 'application/json'
         }
 
