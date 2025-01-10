@@ -108,10 +108,10 @@ if config('USE_CLOUD_DB', cast=bool, default=False):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'PrashantSindhe$vegitableshop',
-            'USER': 'PrashantSindhe',
+            'NAME': 'mbillingtool$vegitableshop',
+            'USER': 'mbillingtool',
             'PASSWORD': 'admin@123',
-            'HOST': 'PrashantSindhe.mysql.pythonanywhere-services.com',
+            'HOST': 'mbillingtool.mysql.pythonanywhere-services.com',
             'OPTIONS': {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
             }
