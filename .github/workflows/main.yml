@@ -33,6 +33,7 @@ jobs:
 
   reload_webapp:
     runs-on: ubuntu-latest
+    environment: Prahar
     needs: build_and_reload
     if: ${{ needs.build_and_reload.result == 'success' }}
 
