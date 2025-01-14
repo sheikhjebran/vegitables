@@ -2,7 +2,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -160,24 +159,6 @@ def get_arrival_goods_list(request):
 
 
 @api_view(('GET',))
-@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
-def get_lorry_number_for_date(request, lorry_date):
-    [...]
-    lorry_number_list = []
-    lorry_date = getDate_from_string(lorry_date)
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
-    arrival_detail_object = ArrivalEntry.objects.filter(
-        shop=shop_detail_object)
-    for arrival_entry in arrival_detail_object:
-        if arrival_entry.date == lorry_date and arrival_entry.Empty_data is False:
-            lorry_number_list.append(arrival_entry.lorry_no)
-
-    data = {'lorry_number_list': lorry_number_list}
-    return Response(data, status=status.HTTP_200_OK)
-
-
-@api_view(('GET',))
 def get_daily_rmc_selected_date(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -242,136 +223,9 @@ def get_daily_rmc_start_and_end_date(request):
         return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(('GET',))
-@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
-def get_all_farmer_name(request):
-    [...]
-    farmer_name_list = []
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
-    lorry_number = request.GET['lorry_number']
-    patti_date = getDate_from_string(request.GET['patti_date'])
-
-    arrival_detail_object = ArrivalEntry.objects.get(
-        shop=shop_detail_object,
-        lorry_no=lorry_number,
-        date=patti_date)
-
-    arrival_good_object = ArrivalGoods.objects.filter(
-        shop=shop_detail_object,
-        arrival_entry=arrival_detail_object,
-        patti_status=False
-    )
-
-    for arrival_goods_entry in arrival_good_object:
-        farmer_name_list.append(arrival_goods_entry.former_name)
-
-    data = {'farmer_list': farmer_name_list}
-    return Response(data, status=status.HTTP_200_OK)
 
 
-@api_view(('GET',))
-@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
-def get_sales_list_for_arrival_item_list(request):
-    [...]
 
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-
-    lorry_number = request.GET['patti_lorry']
-    patti_date = getDate_from_string(request.GET['patti_date'])
-    patti_farmer = request.GET['patti_farmer']
-
-    arrival_detail_object = ArrivalEntry.objects.get(
-        shop=shop_detail_object,
-        lorry_no=lorry_number,
-        date=patti_date)
-
-    arrival_good_object = ArrivalGoods.objects.filter(
-        shop=shop_detail_object,
-        arrival_entry=arrival_detail_object,
-        former_name=patti_farmer,
-        patti_status=False
-    )
-
-    advance = 0
-
-    sales_array = []
-    arrival_entry_with_no_sales = []
-    for arrival_single_goods in arrival_good_object:
-        print(arrival_single_goods.id)
-        if float(arrival_single_goods.advance) > 0:
-            advance = arrival_single_goods.advance
-
-        sales_item_list = SalesBillItem.objects.filter(
-            arrival_goods=arrival_single_goods
-        )
-        if len(sales_item_list) <= 0:
-            arrival_entry_with_no_sales.append(arrival_single_goods)
-        else:
-            for sales in sales_item_list:
-                sales_array.append(sales)
-
-    sales_response_list = []
-    for single_sales in sales_array:
-        sales_dict = {
-            'item_name': single_sales.item_name,
-            'net_weight': single_sales.net_weight,
-            'sold_qty': single_sales.bags}
-
-        arrival_good_object = ArrivalGoods.objects.get(
-            id=single_sales.arrival_goods.id,
-        )
-
-        sales_dict['lot_number'] = arrival_good_object.remarks
-        sales_dict['arrival_qty'] = arrival_good_object.qty
-        sales_dict['rates'] = single_sales.rates
-        sales_dict['amount'] = single_sales.amount
-
-        sales_response_list.append(sales_dict)
-
-    for single_arrival_entry in arrival_entry_with_no_sales:
-        arrival_single_entry = {
-            'item_name': single_arrival_entry.item_name,
-            'net_weight': single_arrival_entry.weight,
-            'sold_qty': 0,
-            'lot_number': single_arrival_entry.remarks,
-            'arrival_qty': single_arrival_entry.qty,
-            'rates': 0,
-            'amount': 0
-        }
-        sales_response_list.append(arrival_single_entry)
-
-    sales_response_list = grouping_sales_bill_entry(sales_response_list)
-
-    data = {
-        'farmer_advance': advance,
-        'sales_goods_list': sales_response_list
-    }
-
-    return Response(data, status=status.HTTP_200_OK)
-
-
-def grouping_sales_bill_entry(sales_response_list: list):
-    group_list = {}
-    response = []
-    for index, single_item in enumerate(sales_response_list):
-        if single_item['lot_number'] not in group_list:
-            group_list[single_item['lot_number']] = single_item
-        else:
-            temp_dict = group_list[single_item['lot_number']]
-            temp_dict['sold_qty'] = float(
-                temp_dict['sold_qty']) + float(single_item['sold_qty'])
-            temp_dict['amount'] = float(
-                temp_dict['amount']) + float(single_item['amount'])
-            temp_dict['net_weight'] = float(
-                temp_dict['net_weight']) + float(single_item['net_weight'])
-            temp_dict['rates'] = (
-                temp_dict['amount'] / temp_dict['net_weight']) * float(temp_dict['sold_qty'])
-            group_list[single_item['lot_number']] = temp_dict
-
-    for value in group_list.values():
-        response.append(value)
-    return response
 
 
 def get_sales_bill_detail_from_db(shop_detail_object, date):

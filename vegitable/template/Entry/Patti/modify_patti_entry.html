@@ -38,6 +38,9 @@
                     {% if new %}
                         <select class="custom-select" name="patti_lorry_number" id ="patti_lorry_number">
                            <option selected="true" disabled="disabled">Choose Lorry Number</option>
+                            {% for lorry in un_settled_lorry_detail %}
+                            <option value="{{ lorry.id }}">{{ lorry.lorry_no }}</option>
+                            {% endfor %}
                         </select>
                     {% else %}
                         <select class="custom-select" name="patti_lorry_number" id ="patti_lorry_number">
@@ -46,8 +49,7 @@
                     {% endif %}
                 </div>
                 <div class="clearfix"> </div>
-
-
+                
                 <div class="comment-your" style="width:25%;margin-bottom:2%">
                     <span>Farmer Name</span>
                     <select class="custom-select" name="patti_farmer_name" id ="patti_farmer_namer">
@@ -134,4 +136,5 @@
     </div>
 
 </div>
+<script src="{% static 'js/patti_entry/patti_entry.js'%}"></script>
 {% endblock %}

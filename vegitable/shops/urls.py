@@ -75,7 +75,7 @@ urlpatterns = [
     path('get_mobile_customer_detail', sales_view.get_mobile_customer_detail, name='get_mobile_customer_detail'),
 
     # Rest Api for sales entry list
-    path('get_sales_list_for_arrival_item_list', views.get_sales_list_for_arrival_item_list,
+    path('get_sales_list_for_arrival_item_list', patti_view.get_sales_list_for_arrival_item_list,
          name='get_sales_list_for_arrival_item_list'),
 
     # patti Entry URL
@@ -89,9 +89,7 @@ urlpatterns = [
 
 
     # Rest Api for the patti
-    path('get_all_lorry_number/<str:lorry_date>', view=views.get_lorry_number_for_date,
-         name='get_lorry_number_for_date'),
-    path('get_all_farmer_name', view=views.get_all_farmer_name,
+    path('get_all_farmer_name', view=patti_view.get_all_farmer_name,
          name='get_all_farmer_name'),
 
     # Report

@@ -1,11 +1,14 @@
 from datetime import date
 import re
-
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
-
-from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index
+from rest_framework import status
+from rest_framework.decorators import renderer_classes, api_view
+from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.response import Response
+from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index, SalesBillItem
 from ..report.report import Report
 from ..utility import getDate_from_string
 
@@ -33,9 +36,16 @@ def patti_list(request, current_page=1):
     return render(request, 'index.html')
 
 
+def get_unsettled_lorry_details():
+    # Filter ArrivalGoods with patti_status as False and get related ArrivalEntry fields
+    unsettled_entries = ArrivalEntry.objects.filter(
+        arrivalgoods__patti_status=False
+    ).distinct().values('id', 'lorry_no')
+
+    return list(unsettled_entries)
+
 def add_new_patti_entry(request):
     if request.user.is_authenticated:
-        today = date.today()
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
         index = get_object_or_404(Index, shop=shop_detail_object)
@@ -45,13 +55,27 @@ def add_new_patti_entry(request):
             'patti_entry_counter': int(index.patti_entry_counter) + 1
         }
 
+        un_settled_lorry_detail = get_unsettled_lorry_details()
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {
-                          "today": today,
+                          "un_settled_lorry_detail":un_settled_lorry_detail,
                           "new": True,
                           "patti_index": patti_index}
                       )
     return render(request, 'index.html')
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_all_farmer_name(request):
+    [...]
+    arrival_entry_id = request.GET['lorry_number']
+    arrival_entry = get_object_or_404(ArrivalEntry, id=arrival_entry_id)
+    former_names = ArrivalGoods.objects.filter(
+        arrival_entry=arrival_entry,
+        patti_status=False
+    ).values_list('former_name', flat=True)
+    data = {'farmer_list': list(former_names)}
+    return Response(data, status=status.HTTP_200_OK)
 
 
 def generate_patti_pdf_bill(request):
@@ -71,7 +95,6 @@ def generate_patti_pdf_bill(request):
             patti_entry_obj.total_weight = request.POST['total_weight']
             patti_entry_obj.hamali = request.POST['hamali']
             patti_entry_obj.net_amount = request.POST['net_amount']
-            patti_entry_obj.Empty_data = False
             patti_entry_obj.save()
             print(f"New Patti entry item  = {patti_entry_obj.id}")
 
@@ -161,3 +184,103 @@ def add_patti_item_list(request, request_list, patti_entry_obj):
             patti_obj.save()
 
     return render(request, 'index.html')
+
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def get_sales_list_for_arrival_item_list(request):
+    [...]
+
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+
+    lorry_number = request.GET['patti_lorry']
+    patti_farmer = request.GET['patti_farmer']
+
+    arrival_detail_object = ArrivalEntry.objects.get(
+        id=int(lorry_number))
+
+    arrival_good_object = ArrivalGoods.objects.filter(
+        shop=shop_detail_object,
+        arrival_entry=arrival_detail_object,
+        former_name=patti_farmer,
+        patti_status=False
+    )
+
+    advance = 0
+
+    sales_array = []
+    arrival_entry_with_no_sales = []
+    for arrival_single_goods in arrival_good_object:
+        print(arrival_single_goods.id)
+        if float(arrival_single_goods.advance) > 0:
+            advance = arrival_single_goods.advance
+
+        sales_item_list = SalesBillItem.objects.filter(
+            arrival_goods=arrival_single_goods
+        )
+        if len(sales_item_list) <= 0:
+            arrival_entry_with_no_sales.append(arrival_single_goods)
+        else:
+            for sales in sales_item_list:
+                sales_array.append(sales)
+
+    sales_response_list = []
+    for single_sales in sales_array:
+        sales_dict = {
+            'item_name': single_sales.item_name,
+            'net_weight': single_sales.net_weight,
+            'sold_qty': single_sales.bags}
+
+        arrival_good_object = ArrivalGoods.objects.get(
+            id=single_sales.arrival_goods.id,
+        )
+
+        sales_dict['lot_number'] = arrival_good_object.remarks
+        sales_dict['arrival_qty'] = arrival_good_object.qty
+        sales_dict['rates'] = single_sales.rates
+        sales_dict['amount'] = single_sales.amount
+
+        sales_response_list.append(sales_dict)
+
+    for single_arrival_entry in arrival_entry_with_no_sales:
+        arrival_single_entry = {
+            'item_name': single_arrival_entry.item_name,
+            'net_weight': single_arrival_entry.weight,
+            'sold_qty': 0,
+            'lot_number': single_arrival_entry.remarks,
+            'arrival_qty': single_arrival_entry.qty,
+            'rates': 0,
+            'amount': 0
+        }
+        sales_response_list.append(arrival_single_entry)
+
+    sales_response_list = grouping_sales_bill_entry(sales_response_list)
+
+    data = {
+        'farmer_advance': advance,
+        'sales_goods_list': sales_response_list
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
+
+def grouping_sales_bill_entry(sales_response_list: list):
+    group_list = {}
+    response = []
+    for index, single_item in enumerate(sales_response_list):
+        if single_item['lot_number'] not in group_list:
+            group_list[single_item['lot_number']] = single_item
+        else:
+            temp_dict = group_list[single_item['lot_number']]
+            temp_dict['sold_qty'] = float(
+                temp_dict['sold_qty']) + float(single_item['sold_qty'])
+            temp_dict['amount'] = float(
+                temp_dict['amount']) + float(single_item['amount'])
+            temp_dict['net_weight'] = float(
+                temp_dict['net_weight']) + float(single_item['net_weight'])
+            temp_dict['rates'] = (
+                temp_dict['amount'] / temp_dict['net_weight']) * float(temp_dict['sold_qty'])
+            group_list[single_item['lot_number']] = temp_dict
+
+    for value in group_list.values():
+        response.append(value)
+    return response

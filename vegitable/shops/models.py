@@ -123,7 +123,6 @@ class PattiEntry(models.Model):
     hamali = FloatField(max_length=100)
     net_amount = FloatField(max_length=100)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
-    Empty_data = BooleanField(default=True)
 
     def __str__(self):
         return f"{self.lorry_no}- {self.farmer_name} - {self.total_weight} - {self.net_amount} -{self.shop}"
