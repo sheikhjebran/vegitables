@@ -11,3 +11,4 @@ pipreqs
 python-decouple
 django-cors-headers
 djangorestframework-simplejwt
+xhtml2pdf

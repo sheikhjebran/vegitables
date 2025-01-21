@@ -640,3 +640,7 @@ display:none;
     transform: scale(2); /* Adjust the scale value for desired size */
     margin-right: 10px; /* Add space between the radio button and label */
 }
+
+.print_rmc_report {
+    margin-top: 5%;
+}

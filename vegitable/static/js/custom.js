@@ -2,24 +2,12 @@
 
 $(document).ready(function () {
   //Sales entry variable
-  const rates_input_boxs = $(".calculate_amount");
   const rmc_input_box = $("#rmc");
   const commission_input_box = $("#comission");
   const cooli_input_box = $("#cooli");
   const total_amount = $("#total_amount");
-  const amount_validation = $(".amount_validation");
   const paid_amount = $("#paid_amount");
   const balance_amount = $("#balance_amount");
-
-  // Report entry variable
-  const report_main_option = $(".report_choice");
-
-  var global_amount = 0;
-  var counter = 1;
-  var arrival_qty_list = {};
-  var global_weight = 0;
-  var local_amount = {};
-  var local_weight = {};
 
   //logic to calculate rmc , commission, cooli
   $(document).on("keyup change", ".calculate_amount", function () {
@@ -31,7 +19,6 @@ $(document).ready(function () {
   $(document).on("keyup change", "#cooli", function () {
     Calculate_Cooli();
   });
-
 
   function get_total_amount_from_sales_entry_form() {
     var local_total_amount = 0;
@@ -52,7 +39,9 @@ $(document).ready(function () {
     var net_weight = `#` + res[0] + `_net_weight`;
     var net_weight_value = $(net_weight).val();
 
-    var amount = parseFloat((rate_value * 2 * net_weight_value) / 100).toFixed(2);
+    var amount = parseFloat((rate_value * 2 * net_weight_value) / 100).toFixed(
+      2
+    );
 
     $(`#` + res[0] + `_amount`).val(amount);
 
@@ -110,7 +99,8 @@ $(document).ready(function () {
   $(document).on("keyup change,", "#paid_amount", function () {
     var paid_amount = $(this).val();
     var total_amount = $("#total_amount").val();
-    var result = parseFloat(total_amount).toFixed(2) - parseFloat(paid_amount).toFixed(2);
+    var result =
+      parseFloat(total_amount).toFixed(2) - parseFloat(paid_amount).toFixed(2);
     balance_amount.val(parseFloat(result).toFixed(2));
   });
 
@@ -147,7 +137,6 @@ $(document).ready(function () {
     }
   });
 
-
   $(document).on("click", ".close_button", function () {
     //Get the element name
     var element_name = $(this).attr("name");
@@ -173,9 +162,6 @@ $(document).ready(function () {
     }
   });
 
-
-
-
   // Code to allow only numbers
   $(document).on("input", ".number_only", function () {
     this.value = this.value.replace(/\D/g, "");
@@ -184,17 +170,22 @@ $(document).ready(function () {
   $(document).on("input", ".mobile", function () {
     this.value = this.value.replace(/\D/g, "");
     if (this.value.length > 10) {
-        this.value = this.value.slice(0, 10);
+      this.value = this.value.slice(0, 10);
     }
   });
 
   $(document).on("keypress", ".alpha_and_number", function (event) {
     let keyCode = event.which || event.keyCode;
 
-    if (!((keyCode >= 48 && keyCode <= 57) || // 0-9
-          (keyCode >= 65 && keyCode <= 90) || // A-Z
-          (keyCode >= 97 && keyCode <= 122))) { // a-z
-        event.preventDefault();
+    if (
+      !(
+        (keyCode >= 48 && keyCode <= 57) || // 0-9
+        (keyCode >= 65 && keyCode <= 90) || // A-Z
+        (keyCode >= 97 && keyCode <= 122)
+      )
+    ) {
+      // a-z
+      event.preventDefault();
     }
   });
 
@@ -325,11 +316,11 @@ $(document).ready(function () {
       method: "GET",
       type: "GET",
       async: true,
-      credentials: 'same-origin',
+      credentials: "same-origin",
       xhrFields: { withCredentials: true },
-       headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-        },
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
       data: {
         lorry_no: $(".arrival_entry_lorry_number").val(),
         date: $(".arrival_entry_date").val(),
@@ -348,19 +339,19 @@ $(document).ready(function () {
   }
 
   function getCookie(name) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie != '') {
-    var cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      var cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) == (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
+    var cookieValue = null;
+    if (document.cookie && document.cookie != "") {
+      var cookies = document.cookie.split(";");
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) == name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
       }
     }
+    return cookieValue;
   }
-  return cookieValue;
-}
 
   arrival_entry_lorry_number.on(
     "keyup change",
@@ -368,36 +359,51 @@ $(document).ready(function () {
   );
   arrival_entry_date.on("keyup change", ValidateLorryEntryOnArrivalEntry);
 
-
   // Report
   const report_sales_entry_selected = $(".sales_bill_report");
 
-  function update_sales_bill_report_table(result){
-      $("#tableWrapper").children("tbody").children("tr").remove();
-        for (var index = 0; index < result.length; index++) {
-            $("#tableWrapper")
-              .children("tbody")
-              .last()
-              .append(`
+  function update_sales_bill_report_table(result) {
+    $("#tableWrapper").children("tbody").children("tr").remove();
+    for (var index = 0; index < result.length; index++) {
+      $("#tableWrapper")
+        .children("tbody")
+        .last()
+        .append(
+          `
                 <tr>
-                        <td>`+result[index].id+`</td>
-                        <td>`+result[index].customer_name+`</td>
-                        <td>`+result[index].item_name+`</td>
-                        <td>`+result[index].bags+`</td>
-                        <td>`+result[index].amount+`</td>
-                        <td>`+result[index].balance+`</td>
-                        <td>`+result[index].payment_type+`</td>
+                        <td>` +
+            result[index].id +
+            `</td>
+                        <td>` +
+            result[index].customer_name +
+            `</td>
+                        <td>` +
+            result[index].item_name +
+            `</td>
+                        <td>` +
+            result[index].bags +
+            `</td>
+                        <td>` +
+            result[index].amount +
+            `</td>
+                        <td>` +
+            result[index].balance +
+            `</td>
+                        <td>` +
+            result[index].payment_type +
+            `</td>
                 </tr>
-              `);
-        }
+              `
+        );
     }
-  function CheckSalesBill_Report(){
+  }
+  function CheckSalesBill_Report() {
     $.ajax({
       url: "/report_sales_bill",
       method: "GET",
       async: true,
       data: {
-        date: $(this).val()
+        date: $(this).val(),
       },
       success: function (response) {
         console.log("AJAX request successful");
@@ -407,169 +413,12 @@ $(document).ready(function () {
         console.log("AJAX request failed");
         console.log("Status: " + status);
         console.log("Error: " + error);
-
       },
     });
   }
   report_sales_entry_selected.on("keyup change", CheckSalesBill_Report);
 
-
-   $(document).on("change", ".daily_rmc_date", function () {
-        var selected_date = this.value;
-        getDailyRmcForSelectedDate(selected_date);
-   });
-
-    function getDailyRmcForSelectedDate(selectedDate){
-    $.ajax({
-      url: "/get_daily_rmc_selected_date",
-      method: "GET",
-      async: true,
-      data: {
-        date: selectedDate
-      },
-      success: function (response) {
-        console.log("AJAX request successful");
-        update_daily_rmc_container(response);
-      },
-      error: function (xhr, status, error) {
-        console.log("AJAX request failed");
-        console.log("Status: " + status);
-        console.log("Error: " + error);
-
-      },
-    });
-  }
-
-  function update_daily_rmc_container(response){
-    if(response.FOUND){
-        $(".daily_report_container").css("visibility", "show");
-        $(".weekly_report_container").css("visibility", "hidden");
-        $(".daily_report_table_cash").children("tbody").children("tr").remove();
-        $(".daily_report_table_credit").children("tbody").children("tr").remove();
-
-        var data = response.result;
-        let tableHTMLCash = "<tbody>";
-        let tableHTMLCredit = "<tbody>";
-        let cash_counter = 0;
-        let credit_counter = 0;
-
-        if(data.length==0){
-        $(".daily_report_container").css("visibility", "hidden");
-        }else{
-        data.forEach(item => {
-            if(item.payment_type=="credit"){
-            tableHTMLCredit += `
-            <tr>
-                <td>${item.entry_id}</td>
-                <td>${item.bags}/-</td>
-                <td>${item.paid_amount}</td>
-                <td>${item.rmc}</td>
-            </tr>`;
-            credit_counter = credit_counter + 1;
-            }else{
-            tableHTMLCash += `
-            <tr>
-                <td>${item.entry_id}</td>
-                <td>${item.bags}/-</td>
-                <td>${item.paid_amount}</td>
-                <td>${item.rmc}</td>
-            </tr>`;
-            cash_counter = cash_counter + 1;
-            }
-        });
-        tableHTMLCash += "</tbody>";
-        tableHTMLCredit += "</tbody>";
-         $(".daily_report_table_cash").append(tableHTMLCash);
-         $('.daily_report_table_credit').append(tableHTMLCredit);
-        }
-
-    }else{
-        $(".daily_report_container").css("visibility", "hidden");
-        $(".daily_report_table_cash").children("tbody").children("tr").remove();
-        $(".daily_report_table_credit").children("tbody").children("tr").remove();
-    }
-  }
-
-    $(document).on("click",".rmc_daily_button",function(){
-        $(".daily_report_date").show();
-        $(".daily_report_container").show();
-        $(".weekly_report_date").hide();
-    });
-    $(document).on("click",".rmc_weekly_button",function(){
-        $(".daily_report_date").hide();
-        $(".daily_report_container").hide();
-        $(".weekly_report_date").show();
-    });
-
-    $(document).on("change", ".weekly_rmc_start_date", function () {
-        var start_date = this.value;
-        var end_date = $(".weekly_rmc_end_date").val();
-        if (end_date == "") {
-            console.log("The EndDate value is undefined");
-        }else{
-            getWeeklyRmcForSelectedDate(start_date, end_date);
-        }
-
-
-   });
-   $(document).on("change", ".weekly_rmc_end_date", function () {
-        var end_date = this.value;
-        var start_date = $(".weekly_rmc_start_date").val();
-        if (start_date == "") {
-            console.log("The StartDate value is undefined");
-        }else{
-            getWeeklyRmcForSelectedDate(start_date, end_date);
-        }
-   });
-
-    function getWeeklyRmcForSelectedDate(start_date=null, end_date=null){
-        $.ajax({
-              url: "/get_daily_rmc_start_and_end_date",
-              method: "GET",
-              async: true,
-              data: {
-                start_date: start_date,
-                end_date: end_date
-              },
-              success: function (response) {
-                console.log("AJAX request successful");
-                update_weekly_rmc_container(response);
-              },
-              error: function (xhr, status, error) {
-                console.log("AJAX request failed");
-                console.log("Status: " + status);
-                console.log("Error: " + error);
-
-              },
-            });
-    }
-
-    function update_weekly_rmc_container(response){
-        if(response.FOUND){
-            $(".daily_report_container").hide();
-            $(".weekly_report_container").show();
-
-            $(".weekly_rmc_report_table").children("tbody").children("tr").remove();
-
-            var data = response.result;
-            let tableHTML = "<tbody>";
-            data.forEach(item => {
-                tableHTML += `
-                <tr>
-                    <td>${item.Date}</td>
-                    <td>${item.Total_Bags}</td>
-                    <td>${item.Total_Amount}/-</td>
-                    <td>${item.Total_Paid}/-</td>
-                    <td>${item.Total_Balance}/-</td>
-                    <td>${item.Total_RMC}</td>
-                </tr>`;
-            });
-            tableHTML += "</tbody>";
-            $(".weekly_rmc_report_table").append(tableHTML);
-        }
-    }
-
-// Main code end's here
+  // Main code end's here
 });
 
 function removeElement(el) {

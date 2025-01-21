@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index, SalesBillItem
 from ..report.report import Report
 from ..utility import getDate_from_string
+from django.db.models import Sum, F, Q
 
 
 def patti_list(request, current_page=1):
