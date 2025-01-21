@@ -5,11 +5,27 @@ class PattiHandler {
   }
 
   initEvents() {
-    $(document).on("change", "#patti_lorry_number", this.handleLorryChange.bind(this));
-    $(document).on("change", "#patti_farmer_namer", this.handleFarmerChange.bind(this));
-    $(document).on("keyup", ".patti_weight", this.handleWeightChange.bind(this));
+    $(document).on(
+      "change",
+      "#patti_lorry_number",
+      this.handleLorryChange.bind(this)
+    );
+    $(document).on(
+      "change",
+      "#patti_farmer_namer",
+      this.handleFarmerChange.bind(this)
+    );
+    $(document).on(
+      "keyup",
+      ".patti_weight",
+      this.handleWeightChange.bind(this)
+    );
     $(document).on("keyup", ".patti_rate", this.handleRateChange.bind(this));
-    $(document).on("keyup", "#hamali", this.calculateTotalWeightAndAmount.bind(this));
+    $(document).on(
+      "keyup",
+      "#hamali",
+      this.calculateTotalWeightAndAmount.bind(this)
+    );
   }
 
   async fetchData(url, data) {
@@ -31,12 +47,16 @@ class PattiHandler {
 
   async handleLorryChange() {
     const lorryNumber = $("#patti_lorry_number").val();
-    const data = await this.fetchData("/get_all_farmer_name", { lorry_number: lorryNumber });
+    const data = await this.fetchData("/get_all_farmer_name", {
+      lorry_number: lorryNumber,
+    });
 
     const farmerList = data?.farmer_list || [];
     const selectOptions = [
       `<option selected="true" disabled="disabled">Choose Farmer Name</option>`,
-      ...farmerList.map(farmer => `<option value="${farmer}">${farmer}</option>`),
+      ...farmerList.map(
+        (farmer) => `<option value="${farmer}">${farmer}</option>`
+      ),
     ].join("");
 
     $("#patti_farmer_namer").html(selectOptions);
@@ -59,20 +79,58 @@ class PattiHandler {
   }
 
   renderSalesEntries(salesList) {
-    const rows = salesList.map(entry => `
-      <tr id="${this.counter}_child">
-        <td><input type="text" readonly value="${entry.item_name}" /></td>
-        <td><input type="text" readonly value="${entry.lot_number}" /></td>
-        <td><input type="text" readonly value="${entry.sold_qty}" /></td>
-        <td><input type="text" readonly value="${entry.arrival_qty}" /></td>
-        <td><input type="text" class="patti_weight decimal_number_only" id="${this.counter}_weight" value="${entry.net_weight}" /></td>
-        <td><input type="text" class="patti_rate decimal_number_only" id="${this.counter}_rate" value="${entry.rates}" /></td>
-        <td><input type="text" class="patti_amount decimal_number_only" id="${this.counter}_amount" value="${entry.amount}" /></td>
-      </tr>
-    `).join("");
+    const tableBody = document
+      .getElementById("tableWrapper")
+      .querySelector("tbody");
+    tableBody.innerHTML = "";
+    this.counter = 0;
+    salesList.forEach((item) => {
+      const row = document.createElement("tr");
+      row.style.margin = "3% 0";
+      row.id = `${this.counter}_child`;
 
-    $("#tableWrapper tbody").html(rows);
-    this.counter += salesList.length;
+      row.innerHTML = `
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Item Name' name='${this.counter}_item_name' id='${this.counter}_item_name' value='${item.item_name}' required readonly>
+          </div>
+        </td>
+        <td>
+          <div class="comment-your">
+          <input type='text' placeholder='Bag Mark' name='${this.counter}_lot_number' id='${this.counter}_lot_number' value='${item.lot_number}' required readonly>
+          </div>
+        </td>
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Sold Bag' name='${this.counter}_sold_bag' id='${this.counter}_sold_bag' value='${item.sold_qty}' required readonly>
+          </div>
+        </td>
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Balance Bag' name='${this.counter}_balance_bag' id='${this.counter}_balance_bag' value='${item.arrival_qty}' required readonly>
+            
+          </div>
+        </td>
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Weight' class='patti_weight decimal_number_only' name='${this.counter}_weight' id='${this.counter}_weight' value='${item.net_weight}' required>
+          </div>
+        </td>
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Rate' class='patti_rate decimal_number_only' name='${this.counter}_rate' id='${this.counter}_rate' value='${item.rates}' required>
+          </div>  
+          </td>
+        <td>
+          <div class="comment-your">
+            <input type='text' placeholder='Amount' class='patti_amount decimal_number_only' name='${this.counter}_amount' id='${this.counter}_amount' value='${item.amount}' required>
+          </div>
+        </td>
+      `;
+
+      tableBody.appendChild(row);
+      this.counter++;
+    });
   }
 
   handleWeightChange(event) {

@@ -18,7 +18,7 @@ def patti_list(request, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         patti_entry_detail = None
         try:
-            patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).filter(Empty_data=False).order_by(
+            patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).order_by(
                 '-id')
             items_per_page = 10
             paginator = Paginator(patti_entry_detail, items_per_page)
@@ -44,6 +44,7 @@ def get_unsettled_lorry_details():
 
     return list(unsettled_entries)
 
+
 def add_new_patti_entry(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -58,11 +59,12 @@ def add_new_patti_entry(request):
         un_settled_lorry_detail = get_unsettled_lorry_details()
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {
-                          "un_settled_lorry_detail":un_settled_lorry_detail,
+                          "un_settled_lorry_detail": un_settled_lorry_detail,
                           "new": True,
                           "patti_index": patti_index}
                       )
     return render(request, 'index.html')
+
 
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
@@ -84,19 +86,20 @@ def generate_patti_pdf_bill(request):
 
         if str(request.POST['new']) == "True":
 
-            patti_entry_obj = PattiEntry.objects.get(
-                id=request.POST['patti_bill_id'])
-            patti_entry_obj.lorry_no = request.POST['patti_lorry_number']
-            patti_entry_obj.shop = shop_detail_object
-            patti_entry_obj.date = getDate_from_string(
-                request.POST['patti_entry_date'])
-            patti_entry_obj.advance = request.POST['advance_amount']
-            patti_entry_obj.farmer_name = request.POST['patti_farmer_name']
-            patti_entry_obj.total_weight = request.POST['total_weight']
-            patti_entry_obj.hamali = request.POST['hamali']
-            patti_entry_obj.net_amount = request.POST['net_amount']
+            patti_entry_obj = PattiEntry(
+                lorry_no=request.POST['patti_lorry_number'],
+                date=getDate_from_string(
+                    request.POST['patti_entry_date']),
+                advance=request.POST['advance_amount'],
+                farmer_name=request.POST['patti_farmer_name'],
+                total_weight=request.POST['total_weight'],
+                hamali=request.POST['hamali'],
+                net_amount=request.POST['net_amount'],
+                shop=shop_detail_object,
+                patti_id=request.POST['patti_bill_id']
+            )
+
             patti_entry_obj.save()
-            print(f"New Patti entry item  = {patti_entry_obj.id}")
 
         if str(request.POST['new']) == "True":
             index_obj = get_object_or_404(Index, shop=shop_detail_object)
@@ -106,9 +109,7 @@ def generate_patti_pdf_bill(request):
             index_obj.save()
 
         arrival_detail_object = ArrivalEntry.objects.get(
-            shop=shop_detail_object,
-            lorry_no=request.POST['patti_lorry_number'],
-            date=getDate_from_string(request.POST['patti_entry_date']))
+            id=request.POST['patti_lorry_number'])
 
         arrival_good_object = ArrivalGoods.objects.get(
             shop=shop_detail_object,
@@ -120,7 +121,8 @@ def generate_patti_pdf_bill(request):
         arrival_good_object.save()
 
         add_patti_item_list(request, list(request.POST), patti_entry_obj)
-        return Report.patti_report_view(request)
+        # TODO : return Report.patti_report_view(request)
+        return patti_list(request)
     return render(request, 'index.html')
 
 
@@ -262,6 +264,7 @@ def get_sales_list_for_arrival_item_list(request):
     }
 
     return Response(data, status=status.HTTP_200_OK)
+
 
 def grouping_sales_bill_entry(sales_response_list: list):
     group_list = {}

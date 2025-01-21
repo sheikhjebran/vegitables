@@ -122,6 +122,7 @@ class PattiEntry(models.Model):
     total_weight = FloatField(max_length=100)
     hamali = FloatField(max_length=100)
     net_amount = FloatField(max_length=100)
+    patti_id = CharField(max_length=100)
     shop = ForeignKey(Shop, on_delete=models.CASCADE)
 
     def __str__(self):
