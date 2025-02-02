@@ -62,7 +62,7 @@
                     <div class="clearfix"> </div>
                 </div>
                 <table id="tableWrapper" style="display:block;border-collapse: separate;border-spacing: 0 1em;">
-                    <tbody>
+                    <thead>
                         <tr>
                             <td>Lot No</td>
                             <td>item Name</td>
@@ -71,7 +71,8 @@
                             <td>Rates</td>
                             <td>Amount</td>
                         </tr>
-                    </tbody>
+                    </thead>
+                    <tbody>
                     {% if sales_bill_detail%}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="0_child">
                         <td class="custom-select">
@@ -170,6 +171,7 @@
                     </tr>
                     {% endfor %}
                     {% endif %}
+                    </tbody>
                 </table>
                 <div class="clearfix"> </div>
                 <br>

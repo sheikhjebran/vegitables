@@ -1,6 +1,5 @@
 class SalesEntry {
   constructor() {
-
     this.paidAmount = document.getElementById("paid_amount");
     this.balanceAmount = document.getElementById("balance_amount");
     this.customerSelected = document.querySelector(".mobile_customer_list");
@@ -41,19 +40,21 @@ class SalesEntry {
     });
   }
 
-  addMobileSalesEntryRow(response){
+  addMobileSalesEntryRow(response) {
     this.counter = 0;
     $("#tableWrapper").children("tbody").empty();
     const data = response.data;
-    data.forEach(rowGroup => {
-        rowGroup.forEach(item => {
+    data.forEach((rowGroup) => {
+      rowGroup.forEach((item) => {
+        console.log(
+          `${item.former_name} supplied ${item.qty} units of ${item.item_name} with remarks: ${item.remarks}`
+        );
 
-         console.log(`${item.former_name} supplied ${item.qty} units of ${item.item_name} with remarks: ${item.remarks}`);
-
-          let select_option =
+        let select_option =
           '<option  disabled="disabled">Choose Lot No</option>';
-          select_option += `<option selected="true" value='${item.id}'>${item.remarks}</option>`;
-              let rowHtml = `
+        select_option += `<option selected="true" value='${item.id}'>${item.remarks}</option>`;
+
+        let rowHtml = `
                 <tr style='margin-top:3%;margin-bottom:3%;' id="${this.counter}_child">
                     <td>
                         <div class='comment-your'>
@@ -98,11 +99,9 @@ class SalesEntry {
 
         $("#tableWrapper").children("tbody").last().append(rowHtml);
         this.counter++;
-        });
+      });
     });
-
   }
-
 
   // Check if Credit is Selected
   isCreditSelectedHandler() {
