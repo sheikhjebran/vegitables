@@ -217,16 +217,6 @@ def sales_bill_report(request):
     return render(request, 'index.html')
 
 
-@csrf_protect
-def rmc_report(request):
-    if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        return render(request, 'Report/rmc_report.html', {
-            'shop_details': shop_detail_object,
-        })
-    return render(request, 'index.html')
-
-
 def extract_dictionary_into_list_container(response):
     list_container = []
     for single_item in response:

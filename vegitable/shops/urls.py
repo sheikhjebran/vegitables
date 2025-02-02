@@ -81,7 +81,7 @@ urlpatterns = [
          name='get_sales_list_for_arrival_item_list'),
 
     # patti Entry URL
-    path('patti_list', patti_view.patti_list, name="patti_list"),
+    path('patti_entry', patti_view.patti_entry, name="patti_entry"),
     path('add_new_patti_entry', view=patti_view.add_new_patti_entry,
          name='add_new_patti_entry'),
     path('generate_patti_pdf_bill', view=patti_view.generate_patti_pdf_bill,
@@ -102,7 +102,7 @@ urlpatterns = [
          name='report_sales_bill'),
     path('generate_sales_bill_report', views.generate_sales_bill_report,
          name='generate_sales_bill_report'),
-    path('rmc_report', views.rmc_report, name='rmc_report'),
+    path('rmc_report', rmc_view.rmc_report, name='rmc_report'),
 
     # Customer Ledger
     path('customer_ledger', customer_ledger_view.customer_ledger,
@@ -156,7 +156,7 @@ urlpatterns = [
          name="get_credit_bill_entry_list"),
 
     # Shilk Entry
-    path('shilk_entry', shilk_view.shilk_entry, name="shilk_entry"),
+    path('shilk_report', shilk_view.shilk_report, name="shilk_report"),
     path('retrieve_shilk', shilk_view.retrieve_shilk, name="retrieve_shilk"),
 
     # RMC
@@ -166,6 +166,8 @@ urlpatterns = [
          name="get_daily_rmc_start_and_end_date"),
     path('print_rmc_daily_report', rmc_view.print_rmc_daily_report,
          name='print_rmc_daily_report'),
+    path('print_rmc_weekly_report', rmc_view.print_rmc_weekly_report,
+         name='print_rmc_weekly_report'),
 
     # Settings
     path('settings', settings_view.navigate_to_settings, name="settings"),

@@ -14,7 +14,7 @@ from ..utility import getDate_from_string
 from django.db.models import Sum, F, Q
 
 
-def patti_list(request, current_page=1):
+def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         patti_entry_detail = None
@@ -123,7 +123,7 @@ def generate_patti_pdf_bill(request):
 
         add_patti_item_list(request, list(request.POST), patti_entry_obj)
         # TODO : return Report.patti_report_view(request)
-        return patti_list(request)
+        return patti_entry(request)
     return render(request, 'index.html')
 
 

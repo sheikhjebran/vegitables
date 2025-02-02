@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RMC Daily Report</title>
+    <style>
+      th {
+        font-weight: bold;
+        text-align: center;
+        padding: 8px; /* Add padding to th */
+      }
+      td {
+        text-align: center;
+        padding: 8px; /* Add padding to td */
+      }
+      table {
+        border-collapse: collapse; /* Ensure borders are collapsed */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RMC Daily Report for {{ data.0.date }}</h1>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>RMC</th>
+          <th>Bags</th>
+          <th>Total Amount</th>
+          <th>Paid Amount</th>
+          <th>Balance Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in data %}
+        <tr>
+          <td>{{ entry.date }}</td>
+          <td>{{ entry.rmc }}</td>
+          <td>{{ entry.salesbillitem__bags }}</td>
+          <td>{{ entry.total_amount }}</td>
+          <td>{{ entry.paid_amount }}</td>
+          <td>{{ entry.balance_amount }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

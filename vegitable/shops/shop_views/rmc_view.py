@@ -8,6 +8,18 @@ from xhtml2pdf import pisa
 from ..models import Shop, SalesBillEntry
 from ..utility import getDate_from_string
 from django.db.models import Sum, F, Q
+from django.views.decorators.csrf import csrf_protect
+from django.shortcuts import redirect, render, get_object_or_404
+
+
+@csrf_protect
+def rmc_report(request):
+    if request.user.is_authenticated:
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        return render(request, 'Report/rmc_report.html', {
+            'shop_details': shop_detail_object,
+        })
+    return render(request, 'index.html')
 
 
 @api_view(('GET',))
@@ -76,6 +88,29 @@ def get_daily_rmc_selected_date(request):
         return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def print_rmc_weekly_report(request):
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    start_date = getDate_from_string(request.GET['start_date'])
+    end_date = getDate_from_string(request.GET['end_date'])
+    if start_date and end_date:
+        # Fetch data based on the selected date
+        data = SalesBillEntry.objects.filter(date__gte=start_date, date__lte=end_date, shop=shop_detail_object).values(
+            'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
+        )
+        # Render the data to an HTML template
+        html_string = render_to_string(
+            'Report/report_template/rmc_weekly_report_template.html', {'data': data})
+        # Generate PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="rmc_weekly_report.pdf"'
+        pisa_status = pisa.CreatePDF(html_string, dest=response)
+        if pisa_status.err:
+            return JsonResponse({'error': 'Error generating PDF'}, status=500)
+        return response
+    else:
+        return JsonResponse({'error': 'Invalid date'}, status=400)
+
+
 def print_rmc_daily_report(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
     selected_date = getDate_from_string(request.GET['date'])
@@ -84,7 +119,6 @@ def print_rmc_daily_report(request):
         data = SalesBillEntry.objects.filter(date=selected_date, shop=shop_detail_object).values(
             'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
         )
-        print(data)
         # Render the data to an HTML template
         html_string = render_to_string(
             'Report/report_template/rmc_daily_report_template.html', {'data': data})

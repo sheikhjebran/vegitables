@@ -10,7 +10,7 @@ from rest_framework import status
 from ..utility import getDate_from_string
 
 
-def shilk_entry(request):
+def shilk_report(request):
     if request.user.is_authenticated:
         return render(request, 'Report/shilk.html')
     return render(request, 'index.html')

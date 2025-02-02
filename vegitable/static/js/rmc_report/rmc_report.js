@@ -27,12 +27,15 @@ class RmcReportManager {
     $(".daily_report_date").show();
     $(".daily_report_container").show();
     $(".weekly_report_date").hide();
+    $(".weekly_rmc_start_date").val("");
+    $(".weekly_rmc_end_date").val("");
   }
 
   showWeeklyReport() {
     $(".daily_report_date").hide();
     $(".daily_report_container").hide();
     $(".weekly_report_date").show();
+    $(".daily_rmc_date").val("");
   }
 
   getDailyRmcForSelectedDate(selectedDate) {
@@ -87,9 +90,18 @@ class RmcReportManager {
         url: "/print_rmc_weekly_report",
         method: "GET",
         data: { start_date: startDate, end_date: endDate },
+        xhrFields: {
+          responseType: "blob",
+        },
         success: (response) => {
-          console.log("AJAX request successful");
-          //this.updateDailyRmcContainer(response);
+          var blob = new Blob([response], { type: "application/pdf" });
+          var url = window.URL.createObjectURL(blob);
+          var newWindow = window.open(url);
+          if (newWindow) {
+            newWindow.focus();
+          } else {
+            alert("Please allow popups for this website");
+          }
         },
         error: (xhr, status, error) => {
           console.error("AJAX request failed");
