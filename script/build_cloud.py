@@ -61,7 +61,8 @@ class PythonAnywhereConsole:
             if response.status_code == 204:
                 print(f"Deleted console {console_id}")
             else:
-                print(f"Failed to delete console {console_id}: {response.status_code}")
+                print(f"Failed to delete console {
+                      console_id}: {response.status_code}")
 
     def create_new_console(self, console_type: ConsoleType = ConsoleType.BASH) -> Optional[int]:
         """Create a new console."""
@@ -91,10 +92,12 @@ class PythonAnywhereConsole:
             if self.is_console_ready(console_id):
                 print(f"Console {console_id} is ready.")
                 return
-            print(f"Attempt {attempt + 1}/{max_attempts}: Console not ready. Retrying in {delay} seconds...")
+            print(f"Attempt {
+                  attempt + 1}/{max_attempts}: Console not ready. Retrying in {delay} seconds...")
             time.sleep(delay)
 
-        print(f"Console {console_id} is not ready after {max_attempts} attempts.")
+        print(f"Console {console_id} is not ready after {
+              max_attempts} attempts.")
         sys.exit(1)
 
 
@@ -105,14 +108,16 @@ class BuildCloud(PythonAnywhereConsole):
         """Execute commands to pull latest changes and migrate database."""
         console_ids = self.get_all_console_ids()
         if console_ids:
-            self.pull_latest_changes_on_pythonanywhere(console_id=console_ids[0])
+            self.pull_latest_changes_on_pythonanywhere(
+                console_id=console_ids[0])
         else:
             print("No active consoles found. Exiting.")
 
     def pull_latest_changes_on_pythonanywhere(self, console_id: int):
         """Send commands to a specific console."""
-        payload = {"input": "cd vegitables/vegitable/\ngit pull\npython manage.py migrate\ncd ..\ncd ..\n"}
-        response = self.api_client.post(f"consoles/{console_id}/send_input/", payload)
+        payload = {"input": "cd vegitables/vegitable/\ngit pull\npython manage.py migrate\npython manage.py collectstatic --noinput\ncd ..\ncd ..\n"}
+        response = self.api_client.post(
+            f"consoles/{console_id}/send_input/", payload)
 
         if response.status_code == 200:
             print("Commands executed successfully.")

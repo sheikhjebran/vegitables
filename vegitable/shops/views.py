@@ -59,7 +59,6 @@ def inventory(request, current_page=1):
     return render(request, 'index.html')
 
 
-
 def profile(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
@@ -89,7 +88,6 @@ def add_new_expenditure_entry(request):
     if request.user.is_authenticated:
         return render(request, 'modify_expenditure_entry.html', {'expenditure_detail': "NEW"})
     return render(request, 'index.html')
-
 
 
 def total_amount_expenditure_entry(request):
@@ -158,76 +156,6 @@ def get_arrival_goods_list(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
-@api_view(('GET',))
-def get_daily_rmc_selected_date(request):
-    [...]
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    try:
-        rmc_date = getDate_from_string(request.GET['date'])
-        # Perform the query
-        queryset = SalesBillEntry.objects.filter(shop=shop_detail_object, date=rmc_date).annotate(
-            total_bags=Sum('salesbillitem__bags'),
-            total_paid_amount=F('paid_amount'),
-            total_rmc=F('rmc')
-        ).values('id', 'payment_type', 'total_bags', 'total_paid_amount', 'total_rmc')
-
-        # Iterate through the results
-        data = []
-        for entry in queryset:
-            single_entry = {
-                'entry_id': entry['id'],
-                'payment_type': entry['payment_type'],
-                'bags': entry['total_bags'],
-                'paid_amount': entry['total_paid_amount'],
-                'rmc': entry['total_rmc']}
-            data.append(single_entry)
-
-        if len(data) > 0:
-            return JsonResponse(data={'FOUND': True, 'result': data}, status=status.HTTP_200_OK)
-        return JsonResponse(data={'FOUND': False, 'result': data}, status=status.HTTP_200_OK)
-    except Exception as error:
-        return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(('GET',))
-def get_daily_rmc_start_and_end_date(request):
-    [...]
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    try:
-        start_date = getDate_from_string(request.GET['start_date'])
-        end_date = getDate_from_string(request.GET['end_date'])
-
-        combined_data = SalesBillEntry.objects.filter(date__range=(start_date, end_date),
-                                                      shop=shop_detail_object).values('date').annotate(
-            total_rmc=Sum('rmc'),
-            total_bags=Sum('salesbillitem__bags'),
-            total_total_amount=Sum('total_amount'),
-            total_paid_amount=Sum('paid_amount'),
-            total_balance_amount=Sum('balance_amount')
-        )
-
-        data = []
-        # Loop through and print the combined data
-        for entry in combined_data:
-            single_entry = {
-                "Date": entry['date'],
-                "Total_RMC": entry['total_rmc'],
-                "Total_Amount": entry['total_total_amount'],
-                "Total_Paid": entry['total_paid_amount'],
-                "Total_Balance": entry['total_balance_amount'],
-                "Total_Bags": entry['total_bags'],
-            }
-            data.append(single_entry)
-        return JsonResponse(data={'FOUND': True, 'result': data}, status=status.HTTP_200_OK)
-    except Exception as error:
-        return JsonResponse(data={'FOUND': False, 'result': error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-
-
-
-
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
 
@@ -284,16 +212,6 @@ def sales_bill_report(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         return render(request, 'Report/sales_bill_report.html', {
-            'shop_details': shop_detail_object,
-        })
-    return render(request, 'index.html')
-
-
-@csrf_protect
-def rmc_report(request):
-    if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        return render(request, 'Report/rmc_report.html', {
             'shop_details': shop_detail_object,
         })
     return render(request, 'index.html')

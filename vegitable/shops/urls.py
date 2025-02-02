@@ -11,6 +11,7 @@ from .shop_views import (
     farmer_ledger_view,
     customer_ledger_view,
     sales_view,
+    rmc_view,
     mobile)
 
 urlpatterns = [
@@ -72,14 +73,15 @@ urlpatterns = [
          name='modify_sales_bill_entry'),
     path('edit_sales_bill_entry/<int:sales_id>',
          sales_view.edit_sales_bill_entry, name='edit_sales_bill_entry'),
-    path('get_mobile_customer_detail', sales_view.get_mobile_customer_detail, name='get_mobile_customer_detail'),
+    path('get_mobile_customer_detail', sales_view.get_mobile_customer_detail,
+         name='get_mobile_customer_detail'),
 
     # Rest Api for sales entry list
     path('get_sales_list_for_arrival_item_list', patti_view.get_sales_list_for_arrival_item_list,
          name='get_sales_list_for_arrival_item_list'),
 
     # patti Entry URL
-    path('patti_list', patti_view.patti_list, name="patti_list"),
+    path('patti_entry', patti_view.patti_entry, name="patti_entry"),
     path('add_new_patti_entry', view=patti_view.add_new_patti_entry,
          name='add_new_patti_entry'),
     path('generate_patti_pdf_bill', view=patti_view.generate_patti_pdf_bill,
@@ -100,7 +102,7 @@ urlpatterns = [
          name='report_sales_bill'),
     path('generate_sales_bill_report', views.generate_sales_bill_report,
          name='generate_sales_bill_report'),
-    path('rmc_report', views.rmc_report, name='rmc_report'),
+    path('rmc_report', rmc_view.rmc_report, name='rmc_report'),
 
     # Customer Ledger
     path('customer_ledger', customer_ledger_view.customer_ledger,
@@ -154,14 +156,18 @@ urlpatterns = [
          name="get_credit_bill_entry_list"),
 
     # Shilk Entry
-    path('shilk_entry', shilk_view.shilk_entry, name="shilk_entry"),
+    path('shilk_report', shilk_view.shilk_report, name="shilk_report"),
     path('retrieve_shilk', shilk_view.retrieve_shilk, name="retrieve_shilk"),
 
     # RMC
-    path('get_daily_rmc_selected_date', views.get_daily_rmc_selected_date,
+    path('get_daily_rmc_selected_date', rmc_view.get_daily_rmc_selected_date,
          name="get_daily_rmc_selected_date"),
-    path('get_daily_rmc_start_and_end_date', views.get_daily_rmc_start_and_end_date,
+    path('get_daily_rmc_start_and_end_date', rmc_view.get_daily_rmc_start_and_end_date,
          name="get_daily_rmc_start_and_end_date"),
+    path('print_rmc_daily_report', rmc_view.print_rmc_daily_report,
+         name='print_rmc_daily_report'),
+    path('print_rmc_weekly_report', rmc_view.print_rmc_weekly_report,
+         name='print_rmc_weekly_report'),
 
     # Settings
     path('settings', settings_view.navigate_to_settings, name="settings"),
@@ -170,6 +176,8 @@ urlpatterns = [
 
     # flutter API
     path('api/login/', mobile.login_view, name='login'),
-    path('api/arrival_goods/', mobile.get_arrival_goods, name='mobile_get_arrival_goods'),
-    path('api/add_sales_data/',mobile.add_sales_data,name="mobile_add_sales_data"),
+    path('api/arrival_goods/', mobile.get_arrival_goods,
+         name='mobile_get_arrival_goods'),
+    path('api/add_sales_data/', mobile.add_sales_data,
+         name="mobile_add_sales_data"),
 ]
