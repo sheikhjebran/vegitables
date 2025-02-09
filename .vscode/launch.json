@@ -9,7 +9,7 @@
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/vegitable/manage.py",
-      "args": ["collectstatic"],
+      "args": ["collectstatic", "--noinput"],
       "django": true,
       "justMyCode": true
     },

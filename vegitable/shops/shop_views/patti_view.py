@@ -12,6 +12,10 @@ from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGood
 from ..report.report import Report
 from ..utility import getDate_from_string
 from django.db.models import Sum, F, Q
+import datetime
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
 
 
 def patti_entry(request, current_page=1):
@@ -120,11 +124,37 @@ def generate_patti_pdf_bill(request):
         )
         arrival_good_object.patti_status = True
         arrival_good_object.save()
-
         add_patti_item_list(request, list(request.POST), patti_entry_obj)
-        # TODO : return Report.patti_report_view(request)
-        return patti_entry(request)
+        generate__patti_pdf_bill(request)
     return render(request, 'index.html')
+
+
+def generate__patti_pdf_bill(request):
+    selected_date = request.GET.get('date')
+    if selected_date:
+        selected_date = datetime.datetime.strptime(
+            selected_date, '%Y-%m-%d').date()
+        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        # Fetch data based on the selected date
+        data = PattiEntry.objects.filter(date=selected_date, shop=shop_detail_object).values(
+            'date', 'item', 'quantity', 'rate', 'amount'
+        )
+        # Render the data to an HTML template
+        html_string = render_to_string(
+            'Report/report_template/patti_pdf_template.html', {'data': data})
+        # Generate PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="patti_bill.pdf"'
+        pisa_status = pisa.CreatePDF(html_string, dest=response)
+        if pisa_status.err:
+            return JsonResponse({'error': 'Error generating PDF'}, status=500)
+        # Save the PDF to a file if needed
+        with open('patti_bill.pdf', 'wb') as pdf_file:
+            pdf_file.write(response.content)
+        # Redirect to the next screen
+        return HttpResponseRedirect(reverse('patti_entry'))
+    else:
+        return JsonResponse({'error': 'Invalid date'}, status=400)
 
 
 @csrf_protect
