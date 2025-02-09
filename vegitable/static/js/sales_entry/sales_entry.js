@@ -5,7 +5,7 @@ class SalesEntry {
     this.upiRadioButton = document.querySelector("#sales_entry_upi");
     this.balanceAmount = document.querySelector("#balance_amount");
     this.paidAmount = document.querySelector("#paid_amount");
-    this.customerSelected = document.querySelector("#customerSelected");
+    this.customerSelected = document.querySelector(".mobile_customer_list");
 
     this.rmcInputBox = $("#rmc");
     this.commissionInputBox = $("#comission");
@@ -387,7 +387,13 @@ class SalesEntry {
 
     $(document).on("keyup change", "#paid_amount", () => {
       var paid_amount = this.paidAmount.val();
+      if (paid_amount === "") {
+            paid_amount = 0;
+      }
       var total_amount = this.totalAmount.val();
+      if (total_amount === "") {
+            total_amount = 0;
+      }
       var result =
         parseFloat(total_amount).toFixed(2) -
         parseFloat(paid_amount).toFixed(2);
