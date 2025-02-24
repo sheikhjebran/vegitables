@@ -1,4 +1,3 @@
-import base64
 import os
 import re
 from django.core.paginator import Paginator
@@ -15,6 +14,7 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from django.conf import settings
+import uuid
 
 def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
@@ -83,16 +83,17 @@ def get_all_farmer_name(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
-def generate_patti_pdf_bill(request):
-    if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+def view_generate_patti_pdf_bill(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized access'}, status=403)
 
-        if str(request.POST['new']) == "True":
+    shop_detail_object = get_object_or_404(Shop, shop_owner=request.user.id)
 
+    if str(request.POST.get('new')) == "True":
+        try:
             patti_entry_obj = PattiEntry(
                 lorry_no=request.POST['patti_lorry_number'],
-                date=getDate_from_string(
-                    request.POST['patti_entry_date']),
+                date=getDate_from_string(request.POST['patti_entry_date']),
                 advance=request.POST['advance_amount'],
                 farmer_name=request.POST['patti_farmer_name'],
                 total_weight=request.POST['total_weight'],
@@ -101,17 +102,14 @@ def generate_patti_pdf_bill(request):
                 shop=shop_detail_object,
                 patti_id=request.POST['patti_bill_id']
             )
-
             patti_entry_obj.save()
 
             index_obj = get_object_or_404(Index, shop=shop_detail_object)
-
-            # Increment the arrival_entry_counter
             index_obj.patti_entry_counter += 1
             index_obj.save()
 
-            arrival_detail_object = ArrivalEntry.objects.get(
-                id=request.POST['patti_lorry_number'])
+            arrival_detail_object = get_object_or_404(
+                ArrivalEntry, id=request.POST['patti_lorry_number'])
 
             arrival_good_objects = ArrivalGoods.objects.filter(
                 shop=shop_detail_object,
@@ -119,24 +117,25 @@ def generate_patti_pdf_bill(request):
                 former_name=request.POST['patti_farmer_name']
             )
 
-            if arrival_good_objects.exists():
-                for arrival_good_object in arrival_good_objects:
-                    arrival_good_object.patti_status = True
-                    arrival_good_object.save()
-            else:
-                raise Exception("No ArrivalGoods found matching the criteria")
+            if not arrival_good_objects.exists():
+                return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
+
+            for arrival_good_object in arrival_good_objects:
+                arrival_good_object.patti_status = True
+                arrival_good_object.save()
 
             add_patti_item_list(request, list(request.POST), patti_entry_obj)
-            pdf_url = generate__patti_pdf_bill(
-                request, patti_entry_obj, arrival_detail_object)
+
+            pdf_url = generate_patti_pdf(request, patti_entry_obj)
             return JsonResponse({'pdf_url': pdf_url}, status=200)
-        else:
-            raise Exception("Edit patti is not part of the story")
-    return render(request, 'index.html')
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-def generate__patti_pdf_bill(request, patti_entry_obj, arrival_entry_object):
-
+def generate_patti_pdf(request, patti_entry_obj):
     data = [
         {
             'date': patti_entry_obj.date,
@@ -147,22 +146,28 @@ def generate__patti_pdf_bill(request, patti_entry_obj, arrival_entry_object):
         }
     ]
 
-    # Render the data to an HTML template
+    # Render data to an HTML template
     html_string = render_to_string(
-        r'Entry/Patti/report_template/patti_pdf_template.html', {'data': data})
+        'Entry/Patti/report_template/patti_pdf_template.html', {'data': data})
+
     # Generate PDF
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="patti_bill.pdf"'
+
     pisa_status = pisa.CreatePDF(html_string, dest=response)
+
     if pisa_status.err:
         return JsonResponse({'error': 'Error generating PDF'}, status=500)
 
+    # Generate a unique filename
+    unique_filename = f"patti_bill_{uuid.uuid4().hex}.pdf"
+    pdf_file_path = os.path.join(settings.MEDIA_ROOT, unique_filename)
+
     # Save the PDF to the static directory
-    pdf_file_path = os.path.join(settings.STATIC_ROOT, 'patti_bill.pdf')
     with open(pdf_file_path, 'wb') as pdf_file:
         pdf_file.write(response.content)
 
-    pdf_url = request.build_absolute_uri('/static/' + pdf_file_path)
+    pdf_url = request.build_absolute_uri(settings.MEDIA_URL + unique_filename)
     return pdf_url
 
 

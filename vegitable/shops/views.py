@@ -1,4 +1,7 @@
-from django.http import JsonResponse
+import os
+
+from django.conf import settings
+from django.http import JsonResponse, Http404, FileResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages, auth
@@ -240,3 +243,14 @@ def generate_patti_bill_report(request):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
     return render(request, 'index.html')
+
+
+def view_pdf(request, file_name):
+    pdf_path = os.path.join(settings.MEDIA_ROOT, file_name)
+
+    # 🔥 Ensure file exists before returning
+    if not os.path.exists(pdf_path):
+        raise Http404("File not found")
+
+    # Serve the PDF file
+    return FileResponse(open(pdf_path, "rb"), content_type="application/pdf")

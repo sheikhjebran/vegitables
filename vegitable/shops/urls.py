@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 
 from . import views
@@ -84,7 +86,7 @@ urlpatterns = [
     path('patti_entry', patti_view.patti_entry, name="patti_entry"),
     path('add_new_patti_entry', view=patti_view.add_new_patti_entry,
          name='add_new_patti_entry'),
-    path('generate_patti_pdf_bill', view=patti_view.generate_patti_pdf_bill,
+    path('generate_patti_pdf_bill', view=patti_view.view_generate_patti_pdf_bill,
          name='generate_patti_pdf_bill'),
     path('edit_patti_entry/<int:patti_id>',
          patti_view.edit_patti_entry, name='edit_patti_entry'),
@@ -180,4 +182,10 @@ urlpatterns = [
          name='mobile_get_arrival_goods'),
     path('api/add_sales_data/', mobile.add_sales_data,
          name="mobile_add_sales_data"),
+
+
+    # media download
+    path('media/<str:file_name>', views.view_pdf, name='view_pdf'),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

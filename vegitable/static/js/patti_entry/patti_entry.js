@@ -145,7 +145,9 @@ class PattiHandler {
       .then((data) => {
         if (data.pdf_url) {
           window.open(data.pdf_url, "_blank");
-          window.location.href = "/patti_entry";
+          setTimeout(() => {
+                window.location.href = "/patti_entry";
+            }, 1000);
         } else {
           alert("Error generating PDF");
         }
