@@ -19,11 +19,9 @@ def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         sales_entry_detail = None
-
         try:
             sales_entry_detail = SalesBillEntry.objects.filter(
                 shop=shop_detail_object, Empty_data=False).order_by('-id')
-
             # Add pagination
             items_per_page = 10
             paginator = Paginator(sales_entry_detail, items_per_page)
@@ -81,7 +79,7 @@ def navigate_to_add_sales_bill_entry(request):
         for customer in mobile_sales_customer:
             if customer.name not in customer_list:
                 customer_list.append(customer.name)
-
+        request.session['form_token'] = generate_unique_number()
         return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
             'sales_bill_detail': True,
             'new': True,
