@@ -137,8 +137,8 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'vegitable_shop',
-            'USER': 'root',
-            'PASSWORD': 'admin',
+            'USER': 'jebran',
+            'PASSWORD': 'MoXg.uy3T*u0uOEZ',
             'HOST': '127.0.0.1',
             'PORT': '3306',
             'OPTIONS': {

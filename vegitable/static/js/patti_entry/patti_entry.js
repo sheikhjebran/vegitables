@@ -26,6 +26,7 @@ class PattiHandler {
       "#hamali",
       this.calculateTotalWeightAndAmount.bind(this)
     );
+    $(document).on("submit", "#patti_form", this.generatePattiPdf.bind(this));
   }
 
   async fetchData(url, data) {
@@ -133,6 +134,28 @@ class PattiHandler {
     });
   }
 
+  generatePattiPdf(event) {
+    event.preventDefault();
+    const formData = new FormData(document.getElementById("patti_form"));
+    fetch("/generate_patti_pdf_bill", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.pdf_url) {
+          window.open(data.pdf_url, "_blank");
+          setTimeout(() => {
+                window.location.href = "/patti_entry";
+            }, 1000);
+        } else {
+          alert("Error generating PDF");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
   handleWeightChange(event) {
     const weightId = $(event.target).attr("id");
     const weightValue = parseFloat($(event.target).val()) || 0;
