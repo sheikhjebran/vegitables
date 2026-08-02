@@ -147,6 +147,7 @@ class BuildCloud(PythonAnywhereConsole):
             "git pull",
             f"{self.remote_python} manage.py migrate --noinput",
             f"{self.remote_python} manage.py collectstatic --noinput",
+            "cd /home/mbillingtool",
             f"echo {self.DEPLOY_DONE_MARKER}",
         ]
         payload = {"input": "\n".join(deploy_commands) + "\n"}
