@@ -21,16 +21,19 @@ mimetypes.add_type("text/css", ".css", True)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vu086ii6wha(vte=#^!rs=p36&)+-m9oucn81qzl=zq1khrm@1'
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-dev-only-change-me',
+)
 
 # Determine environment
-DEBUG = config('DEBUG', cast=bool, default=True)
+DEBUG = config('DEBUG', cast=bool, default=False)
 
 # Allow all hosts in development, restrict in production
+DEFAULT_ALLOWED_HOSTS = 'mbillingtool.pythonanywhere.com,localhost,127.0.0.1'
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=DEFAULT_ALLOWED_HOSTS, cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 if DEBUG:
-    ALLOWED_HOSTS = ["*"]
-else:
-    ALLOWED_HOSTS = ['mbillingtool.pythonanywhere.com']
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -76,9 +79,13 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ROOT_URLCONF = 'vegitable.urls'
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()],
+)
 SESSION_COOKIE_AGE = 3600
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
@@ -123,10 +130,10 @@ if config('USE_CLOUD_DB', cast=bool, default=False):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'mbillingtool$vegitableshop',
-            'USER': 'mbillingtool',
-            'PASSWORD': 'admin@123',
-            'HOST': 'mbillingtool.mysql.pythonanywhere-services.com',
+            'NAME': config('CLOUD_DB_NAME', default='mbillingtool$vegitableshop'),
+            'USER': config('CLOUD_DB_USER', default='mbillingtool'),
+            'PASSWORD': config('CLOUD_DB_PASSWORD', default=''),
+            'HOST': config('CLOUD_DB_HOST', default='mbillingtool.mysql.pythonanywhere-services.com'),
             'OPTIONS': {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
             }
@@ -135,17 +142,18 @@ if config('USE_CLOUD_DB', cast=bool, default=False):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'vegitable_shop',
-            'USER': 'jebran',
-            'PASSWORD': 'MoXg.uy3T*u0uOEZ',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-            }
+            'ENGINE': config('LOCAL_DB_ENGINE', default='django.db.backends.sqlite3'),
+            'NAME': config('LOCAL_DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
+            'USER': config('LOCAL_DB_USER', default=''),
+            'PASSWORD': config('LOCAL_DB_PASSWORD', default=''),
+            'HOST': config('LOCAL_DB_HOST', default=''),
+            'PORT': config('LOCAL_DB_PORT', default=''),
         }
     }
+
+if DATABASES['default']['ENGINE'].endswith('mysql'):
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS'].setdefault('init_command', "SET sql_mode='STRICT_TRANS_TABLES'")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

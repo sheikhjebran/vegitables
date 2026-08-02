@@ -16,9 +16,8 @@ class ConsoleType(Enum):
 class APIClient:
     """Handles HTTP requests to the PythonAnywhere API."""
 
-    BASE_URL = "https://www.pythonanywhere.com/api/v0/user/mbillingtool/"
-
-    def __init__(self, api_token: str):
+    def __init__(self, api_token: str, username: str):
+        self.base_url = f"https://www.pythonanywhere.com/api/v0/user/{username}/"
         self.headers = {
             'Authorization': f'Token {api_token}',
             'Content-Type': 'application/json',
@@ -26,15 +25,15 @@ class APIClient:
 
     def get(self, endpoint: str) -> requests.Response:
         """Send a GET request to the API."""
-        return requests.get(f"{self.BASE_URL}{endpoint}", headers=self.headers)
+        return requests.get(f"{self.base_url}{endpoint}", headers=self.headers)
 
     def post(self, endpoint: str, payload: dict) -> requests.Response:
         """Send a POST request to the API."""
-        return requests.post(f"{self.BASE_URL}{endpoint}", headers=self.headers, data=json.dumps(payload))
+        return requests.post(f"{self.base_url}{endpoint}", headers=self.headers, data=json.dumps(payload))
 
     def delete(self, endpoint: str) -> requests.Response:
         """Send a DELETE request to the API."""
-        return requests.delete(f"{self.BASE_URL}{endpoint}", headers=self.headers)
+        return requests.delete(f"{self.base_url}{endpoint}", headers=self.headers)
 
 
 class PythonAnywhereConsole:
@@ -115,7 +114,13 @@ class BuildCloud(PythonAnywhereConsole):
 
     def pull_latest_changes_on_pythonanywhere(self, console_id: int):
         """Send commands to a specific console."""
-        payload = {"input": "cd vegitables/vegitable/\ngit pull\npython manage.py migrate\npython manage.py collectstatic --noinput\ncd ..\ncd ..\n"}
+        deploy_commands = [
+            "cd ~/vegitables/vegitable",
+            "git pull",
+            "python3 manage.py migrate",
+            "python3 manage.py collectstatic --noinput",
+        ]
+        payload = {"input": "\n".join(deploy_commands) + "\n"}
         response = self.api_client.post(
             f"consoles/{console_id}/send_input/", payload)
 
@@ -129,11 +134,12 @@ class BuildCloud(PythonAnywhereConsole):
 if __name__ == "__main__":
     # Load API token from environment variables
     API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
+    PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME", "mbillingtool")
 
     if not API_TOKEN:
         print("Error: API token is not set. Please set PYTHONANYWHERE_API_TOKEN environment variable.")
         sys.exit(1)
 
-    api_client = APIClient(api_token=API_TOKEN)
+    api_client = APIClient(api_token=API_TOKEN, username=PYTHONANYWHERE_USERNAME)
     build_cloud = BuildCloud(api_client=api_client)
     build_cloud.execute()

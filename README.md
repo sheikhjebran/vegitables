@@ -1,31 +1,99 @@
 # Vegitables Project
 
-### List all install package
-```
-pip freeze > requirements.txt
+## Local setup
+
+1. Create and activate virtualenv.
+2. Install dependencies.
+3. Configure environment values.
+4. Run migrations and start server.
+
+Example (PowerShell):
+
+```powershell
+cd vegitable
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r ..\requirements.txt
 ```
 
-### To check python package 
-```
-pip-check
-```
-### To upgrade the insatlled package 
-```
-pip install pip-upgrader
-pip-upgrade requirements.txt
-```[README.md](README.md)
+Create a `.env` file in `vegitable/` with at least:
 
-### To migrate the sql
-```
-python3 manage.py sqlmigrate shops 0003
-```
+```env
+DEBUG=True
+SECRET_KEY=replace-with-long-random-key
 
-### necessary plugin for django
-```
-pip install whitenoise
+# Local DB defaults to sqlite, no extra values required.
+# Optional for local MySQL:
+# LOCAL_DB_ENGINE=django.db.backends.mysql
+# LOCAL_DB_NAME=vegitable_shop
+# LOCAL_DB_USER=your_user
+# LOCAL_DB_PASSWORD=your_password
+# LOCAL_DB_HOST=127.0.0.1
+# LOCAL_DB_PORT=3306
 ```
 
-### Remove all .pyc file from project
+Run:
+
+```powershell
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py runserver
 ```
-find . -name "*.pyc" -exec rm -f {} \;
+
+## PythonAnywhere setup (new account)
+
+1. Create a Python 3.10+ web app (Manual config, Django).
+2. Open a Bash console and clone repo:
+
+```bash
+git clone https://github.com/sheikhjebran/vegitables.git
+cd vegitables/vegitable
+python3.10 -m venv .venv
+source .venv/bin/activate
+pip install -r ../requirements.txt
+```
+
+3. Create `vegitable/.env`:
+
+```env
+DEBUG=False
+SECRET_KEY=replace-with-long-random-key
+ALLOWED_HOSTS=mbillingtool.pythonanywhere.com
+USE_CLOUD_DB=True
+CLOUD_DB_NAME=mbillingtool$vegitableshop
+CLOUD_DB_USER=mbillingtool
+CLOUD_DB_PASSWORD=replace-with-your-db-password
+CLOUD_DB_HOST=mbillingtool.mysql.pythonanywhere-services.com
+```
+
+4. In PythonAnywhere Web tab:
+1. Set source code path to `/home/mbillingtool/vegitables`.
+2. Set working directory to `/home/mbillingtool/vegitables/vegitable`.
+3. Set virtualenv path to `/home/mbillingtool/vegitables/vegitable/.venv`.
+4. Set static files mapping: URL `/static/` -> `/home/mbillingtool/vegitables/vegitable/assets`.
+
+5. Update WSGI file to load Django app from this project path and settings module `vegitable.settings`.
+6. Run:
+
+```bash
+cd ~/vegitables/vegitable
+python3 manage.py migrate
+python3 manage.py collectstatic --noinput
+```
+
+7. Reload the web app from PythonAnywhere Web tab.
+
+## PythonAnywhere API scripts
+
+Two helper scripts are available in `script/`:
+
+- `build_cloud.py`: send deployment commands to an existing PythonAnywhere console.
+- `reload_webapp.py`: trigger web app reload via API.
+
+Required env vars:
+
+```env
+PYTHONANYWHERE_USERNAME=mbillingtool
+PYTHONANYWHERE_API_TOKEN=replace-with-api-token
+PYTHONANYWHERE_WEBAPP=mbillingtool.pythonanywhere.com
 ```
