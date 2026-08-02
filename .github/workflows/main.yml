@@ -31,6 +31,7 @@ jobs:
         env:
           PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
           PYTHONANYWHERE_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+          PYTHONANYWHERE_PYTHON: python3.14
         run: python script/build_cloud.py
 
   reload_webapp:

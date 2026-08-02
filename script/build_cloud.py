@@ -117,6 +117,10 @@ class BuildCloud(PythonAnywhereConsole):
 
     DEPLOY_DONE_MARKER = "__DEPLOY_DONE__"
 
+    def __init__(self, api_client: APIClient):
+        super().__init__(api_client)
+        self.remote_python = os.getenv("PYTHONANYWHERE_PYTHON", "python")
+
     def execute(self):
         """Execute commands to pull latest changes and migrate database."""
         console_ids = self.get_all_console_ids()
@@ -136,12 +140,13 @@ class BuildCloud(PythonAnywhereConsole):
 
     def pull_latest_changes_on_pythonanywhere(self, console_id: int):
         """Send commands to a specific console."""
+        print(f"Using remote Python command: {self.remote_python}")
         deploy_commands = [
             "cd ~/vegitables/vegitable",
             "source .venv/bin/activate",
             "git pull",
-            "python manage.py migrate --noinput",
-            "python manage.py collectstatic --noinput",
+            f"{self.remote_python} manage.py migrate --noinput",
+            f"{self.remote_python} manage.py collectstatic --noinput",
             f"echo {self.DEPLOY_DONE_MARKER}",
         ]
         payload = {"input": "\n".join(deploy_commands) + "\n"}

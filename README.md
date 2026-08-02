@@ -97,6 +97,7 @@ Required env vars:
 PYTHONANYWHERE_USERNAME=mbillingtool
 PYTHONANYWHERE_API_TOKEN=replace-with-api-token
 PYTHONANYWHERE_WEBAPP=mbillingtool.pythonanywhere.com
+PYTHONANYWHERE_PYTHON=python3.14
 ```
 
 Use `vegitable/.env.example` as a base template and create your real `vegitable/.env`.
