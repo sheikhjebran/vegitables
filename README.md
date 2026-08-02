@@ -42,13 +42,13 @@ python manage.py runserver
 
 ## PythonAnywhere setup (new account)
 
-1. Create a Python 3.10+ web app (Manual config, Django).
+1. Create a Python 3.14 web app (Manual config, Django).
 2. Open a Bash console and clone repo:
 
 ```bash
 git clone https://github.com/sheikhjebran/vegitables.git
 cd vegitables/vegitable
-python3.10 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 pip install -r ../requirements.txt
 ```

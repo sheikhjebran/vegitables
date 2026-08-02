@@ -10,7 +10,7 @@ from typing import List, Optional
 class ConsoleType(Enum):
     """Enum for specifying console types."""
     BASH = "bash"
-    PYTHON_3_10 = "python3.13"
+    PYTHON_3_14 = "python3.14"
 
 
 class APIClient:
@@ -76,6 +76,18 @@ class PythonAnywhereConsole:
             print(f"Error creating console: {response.text}")
             return None
 
+    def get_console_output(self, console_id: int) -> str:
+        """Read the latest output from a console."""
+        response = self.api_client.get(f"consoles/{console_id}/get_latest_output/")
+        if response.status_code != 200:
+            print(f"Error reading console output: {response.text}")
+            return ""
+
+        data = response.json()
+        if isinstance(data, dict):
+            return str(data.get("output", ""))
+        return ""
+
     def is_console_ready(self, console_id: int) -> bool:
         """Check if a console is ready to accept commands."""
         response = self.api_client.get(f"consoles/{console_id}/")
@@ -103,22 +115,34 @@ class PythonAnywhereConsole:
 class BuildCloud(PythonAnywhereConsole):
     """Build and manage cloud services using PythonAnywhere consoles."""
 
+    DEPLOY_DONE_MARKER = "__DEPLOY_DONE__"
+
     def execute(self):
         """Execute commands to pull latest changes and migrate database."""
         console_ids = self.get_all_console_ids()
         if console_ids:
-            self.pull_latest_changes_on_pythonanywhere(
-                console_id=console_ids[0])
+            console_id = console_ids[0]
+            print(f"Using existing console: {console_id}")
         else:
-            print("No active consoles found. Exiting.")
+            print("No active consoles found. Creating a new bash console...")
+            console_id = self.create_new_console(ConsoleType.BASH)
+            if not console_id:
+                print("Unable to create PythonAnywhere console.")
+                sys.exit(1)
+            self.wait_for_console_to_start(console_id)
+
+        self.pull_latest_changes_on_pythonanywhere(console_id=console_id)
+        self.wait_for_deploy_completion(console_id=console_id)
 
     def pull_latest_changes_on_pythonanywhere(self, console_id: int):
         """Send commands to a specific console."""
         deploy_commands = [
             "cd ~/vegitables/vegitable",
+            "source .venv/bin/activate",
             "git pull",
-            "python3 manage.py migrate",
-            "python3 manage.py collectstatic --noinput",
+            "python manage.py migrate --noinput",
+            "python manage.py collectstatic --noinput",
+            f"echo {self.DEPLOY_DONE_MARKER}",
         ]
         payload = {"input": "\n".join(deploy_commands) + "\n"}
         response = self.api_client.post(
@@ -129,6 +153,28 @@ class BuildCloud(PythonAnywhereConsole):
         else:
             print(f"Error sending commands: {response.text}")
             sys.exit(1)
+
+    def wait_for_deploy_completion(self, console_id: int, max_attempts: int = 45, delay: int = 4):
+        """Wait until deploy marker appears in console output and fail on common errors."""
+        error_signals = ["Traceback", "CommandError", "ModuleNotFoundError", "ERROR:"]
+
+        for attempt in range(max_attempts):
+            output = self.get_console_output(console_id)
+
+            if any(signal in output for signal in error_signals):
+                print("Deploy command output indicates a failure:")
+                print(output)
+                sys.exit(1)
+
+            if self.DEPLOY_DONE_MARKER in output:
+                print("Deploy commands completed successfully.")
+                return
+
+            print(f"Waiting for deploy completion ({attempt + 1}/{max_attempts})...")
+            time.sleep(delay)
+
+        print("Timed out waiting for deploy completion marker.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
