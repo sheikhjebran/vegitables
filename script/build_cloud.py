@@ -142,11 +142,12 @@ class BuildCloud(PythonAnywhereConsole):
         """Send commands to a specific console."""
         print(f"Using remote Python command: {self.remote_python}")
         deploy_commands = [
-             "cd ~/home/mbillingtool",
-            "cd vegitables/",
+            "cd /home/mbillingtool/vegitables/vegitable",
+            "git pull --ff-only",
+            "if [ ! -d .venv ]; then python3 -m venv .venv; fi",
             "source .venv/bin/activate",
-            "cd vegitable/",
-            "git pull",
+            "python -m pip install --upgrade pip",
+            "python -m pip install -r ../requirements.txt",
             f"{self.remote_python} manage.py migrate --noinput",
             f"{self.remote_python} manage.py collectstatic --noinput",
             "cd /home/mbillingtool",
