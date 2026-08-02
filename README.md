@@ -73,6 +73,7 @@ CLOUD_DB_HOST=mbillingtool.mysql.pythonanywhere-services.com
 4. Set static files mapping: URL `/static/` -> `/home/mbillingtool/vegitables/vegitable/assets`.
 
 5. Update WSGI file to load Django app from this project path and settings module `vegitable.settings`.
+	A ready-to-paste template is provided at `script/pythonanywhere_wsgi_template.py`.
 6. Run:
 
 ```bash
@@ -97,3 +98,5 @@ PYTHONANYWHERE_USERNAME=mbillingtool
 PYTHONANYWHERE_API_TOKEN=replace-with-api-token
 PYTHONANYWHERE_WEBAPP=mbillingtool.pythonanywhere.com
 ```
+
+Use `vegitable/.env.example` as a base template and create your real `vegitable/.env`.
