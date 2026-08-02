@@ -10,7 +10,7 @@ from typing import List, Optional
 class ConsoleType(Enum):
     """Enum for specifying console types."""
     BASH = "bash"
-    PYTHON_3_10 = "python3.10"
+    PYTHON_3_10 = "python3.13"
 
 
 class APIClient:
