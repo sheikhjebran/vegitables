@@ -14,8 +14,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--shop-id',
             type=int,
-            default=999999,
-            help='Temporary shop_id to use for the Firebase smoke test.',
+            default=None,
+            help='Temporary shop_id to use for the Firebase smoke test. If omitted, a unique ID is generated per run.',
         )
 
     def handle(self, *args, **options):
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             )
 
         token = uuid4().hex[:12]
-        shop_id = options['shop_id']
+        shop_id = options['shop_id'] if options['shop_id'] is not None else _generated_shop_id(token)
         arrival_record = None
         sales_record = None
         credit_record = None
@@ -156,3 +156,8 @@ class Command(BaseCommand):
                 sales_repository.delete(sales_record.id, restore_stock=True)
             if arrival_record is not None:
                 arrival_repository.delete(arrival_record.id)
+
+
+def _generated_shop_id(token):
+    # Keep generated IDs in a high range to avoid clashing with real shops.
+    return 900000 + (int(token[:6], 16) % 90000)

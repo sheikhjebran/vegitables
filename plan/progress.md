@@ -74,6 +74,7 @@
 - Removed remaining mixed-backend fallback reads from Firestore Shilk mode by requiring `USE_FIREBASE_PATTI=True` and `USE_FIREBASE_EXPENDITURE=True` (HTTP 400 guidance when disabled).
 - Updated report smoke commands to match Shilk guardrails (`USE_FIREBASE_PATTI` and `USE_FIREBASE_EXPENDITURE` now required in preflight checks).
 - Hardened report smoke commands to generate unique temporary `shop_id` values per run by default, eliminating false failures from historical Firestore data collisions.
+- Added Shilk guardrail for `USE_FIREBASE_ARRIVAL` when `USE_FIREBASE_SALES=True`, preventing silent SQL fallback when sales are stored in Firestore.
 
 ## Verified facts
 
@@ -208,6 +209,9 @@
 - Passed: `uv run python manage.py check` after report-smoke preflight/unique-shop-id hardening
 - Passed: `uv run python manage.py smoke_test_report_firebase` after report-smoke preflight/unique-shop-id hardening
 - Passed: `uv run python manage.py smoke_test_report_http_firebase` after report-smoke preflight/unique-shop-id hardening
+- Passed: `uv run python manage.py check` after adding Firestore arrival guard to Shilk
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after adding Firestore arrival guard to Shilk
+- Transient runtime issue observed: standalone `smoke_test_shilk_patti_firebase` intermittently hit Firestore gRPC `KeyboardInterrupt` during document create; this appears environmental/network-related rather than a deterministic assertion failure.
 
 ## Current slice
 
@@ -252,6 +256,7 @@
 	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
 	- `vegitable/shops/shop_views/shilk_view.py`
+	- `vegitable/shops/management/commands/smoke_test_shilk_patti_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_pdf_firebase.py`
 	- `vegitable/template/Entry/Sales/modify_sales_bill_entry.html`
 	- `vegitable/template/Entry/Sales/sales_bill_entry.html`

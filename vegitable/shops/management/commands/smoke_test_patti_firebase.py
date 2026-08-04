@@ -19,8 +19,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--shop-id',
             type=int,
-            default=999996,
-            help='Temporary shop_id to use for the Firebase patti smoke test.',
+            default=None,
+            help='Temporary shop_id to use for the Firebase patti smoke test. If omitted, a unique ID is generated per run.',
         )
 
     def handle(self, *args, **options):
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             )
 
         token = uuid4().hex[:8]
-        shop_id = options['shop_id']
+        shop_id = options['shop_id'] if options['shop_id'] is not None else _generated_shop_id(token)
         request_factory = RequestFactory()
         fake_user = SimpleNamespace(
             is_authenticated=True,
@@ -237,3 +237,8 @@ def _to_payload(response):
     if hasattr(response, 'render'):
         response.render()
     return json.loads(response.content)
+
+
+def _generated_shop_id(token):
+    # Keep generated IDs in a high range to avoid clashing with real shops.
+    return 900000 + (int(token[:6], 16) % 90000)
