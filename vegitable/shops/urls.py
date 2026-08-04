@@ -73,7 +73,7 @@ urlpatterns = [
          name='navigate_to_add_sales_bill_entry'),
     path('add_sales_bill', sales_view.modify_sales_bill_entry,
          name='modify_sales_bill_entry'),
-    path('edit_sales_bill_entry/<int:sales_id>',
+     path('edit_sales_bill_entry/<str:sales_id>',
          sales_view.edit_sales_bill_entry, name='edit_sales_bill_entry'),
     path('get_mobile_customer_detail', sales_view.get_mobile_customer_detail,
          name='get_mobile_customer_detail'),

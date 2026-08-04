@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import json
 import os
 import mimetypes
 from decouple import config
@@ -20,6 +21,41 @@ mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _split_csv(value):
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def _resolve_optional_path(value):
+    if not value:
+        return None
+    candidate = Path(value)
+    if candidate.is_absolute():
+        return str(candidate)
+    return str(BASE_DIR / candidate)
+
+
+def _load_optional_json_object(value, setting_name):
+    if not value:
+        return {}
+    parsed_value = json.loads(value)
+    if not isinstance(parsed_value, dict):
+        raise ValueError(f'{setting_name} must be a JSON object.')
+    return parsed_value
+
+
+def _load_optional_json_file(path_value):
+    if not path_value:
+        return {}
+    candidate = Path(path_value)
+    if not candidate.exists():
+        return {}
+    with candidate.open('r', encoding='utf-8') as file_handle:
+        parsed_value = json.load(file_handle)
+    if not isinstance(parsed_value, dict):
+        return {}
+    return parsed_value
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config(
     'SECRET_KEY',
@@ -28,10 +64,37 @@ SECRET_KEY = config(
 
 # Determine environment
 DEBUG = config('DEBUG', cast=bool, default=False)
+FIREBASE_ENABLED = config('FIREBASE_ENABLED', cast=bool, default=False)
+FIREBASE_AUTO_INIT = config('FIREBASE_AUTO_INIT', cast=bool, default=False)
+USE_FIREBASE_MOBILE_SALES = config('USE_FIREBASE_MOBILE_SALES', cast=bool, default=False)
+USE_FIREBASE_CUSTOMER_LEDGER = config('USE_FIREBASE_CUSTOMER_LEDGER', cast=bool, default=False)
+USE_FIREBASE_FARMER_LEDGER = config('USE_FIREBASE_FARMER_LEDGER', cast=bool, default=False)
+USE_FIREBASE_ARRIVAL = config('USE_FIREBASE_ARRIVAL', cast=bool, default=False)
+USE_FIREBASE_SALES = config('USE_FIREBASE_SALES', cast=bool, default=False)
+USE_FIREBASE_CREDIT = config('USE_FIREBASE_CREDIT', cast=bool, default=False)
+FIREBASE_CREDENTIAL_PATH = _resolve_optional_path(
+    config('FIREBASE_CREDENTIAL_PATH', default='')
+)
+FIREBASE_WEB_CONFIG_PATH = _resolve_optional_path(
+    config('FIREBASE_WEB_CONFIG_PATH', default='../firebase.json')
+)
+FIREBASE_WEB_CONFIG = _load_optional_json_file(FIREBASE_WEB_CONFIG_PATH)
+FIREBASE_PROJECT_ID = config(
+    'FIREBASE_PROJECT_ID',
+    default=FIREBASE_WEB_CONFIG.get('projectId', ''),
+).strip()
+FIREBASE_OPTIONS = _load_optional_json_object(
+    config('FIREBASE_OPTIONS_JSON', default='').strip(),
+    'FIREBASE_OPTIONS_JSON',
+)
+if FIREBASE_PROJECT_ID:
+    FIREBASE_OPTIONS.setdefault('projectId', FIREBASE_PROJECT_ID)
+if not FIREBASE_OPTIONS:
+    FIREBASE_OPTIONS = None
 
 # Allow all hosts in development, restrict in production
 DEFAULT_ALLOWED_HOSTS = 'mbillingtool.pythonanywhere.com,localhost,127.0.0.1'
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=DEFAULT_ALLOWED_HOSTS, cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=DEFAULT_ALLOWED_HOSTS, cast=_split_csv)
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 
@@ -49,6 +112,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'shops'
 ]
+
+if FIREBASE_ENABLED or FIREBASE_AUTO_INIT:
+    INSTALLED_APPS.append('django_firebase_orm.apps.DjangoFirebaseOrmConfig')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -84,7 +150,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     default='',
-    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()],
+    cast=_split_csv,
 )
 SESSION_COOKIE_AGE = 3600
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

@@ -40,6 +40,12 @@
 3. Decide whether search will use normalized prefix fields, exact-match indexes, or external search.
 4. Keep a rollback flag for each ledger slice.
 
+### Current execution note
+
+- `CustomerLedger` is now the active next migration slice.
+- Initial Firebase implementation may use app-layer substring filtering over shop-scoped Firestore results until a more scalable search design is introduced.
+- `FarmerLedger` should follow only after `CustomerLedger` CRUD and search behavior are validated.
+
 ## Phase 5: redesign transactional inventory flows
 
 1. Redesign `Index` counters as Firestore transaction-backed counters.
@@ -47,12 +53,24 @@
 3. Use Firestore transactions or batched writes for stock decrements.
 4. Add idempotency keys for form submissions that currently rely on session tokens.
 
+### Current execution note
+
+- `ArrivalEntry` plus `ArrivalGoods` is the active inventory migration slice.
+- The first Firebase boundary uses one arrival document with embedded goods rows.
+- Live view cutover is deferred until dependent sales and inventory flows can read the new stock representation safely.
+
 ## Phase 6: redesign sales and credit flows
 
 1. Model `SalesBillEntry` and `SalesBillItem` either as parent document plus embedded line items or as parent-child collections.
 2. Redesign credit-bill derivation so balance data is either stored denormalized or recomputed safely.
 3. Replace aggregate report queries with precomputed fields or Firestore-specific read models.
 4. Validate monetary calculations with snapshot tests before cutover.
+
+### Current execution note
+
+- The active sales migration boundary is a Firestore-native sales bill document with embedded line items.
+- Firestore sales items reference Firestore arrival goods local IDs rather than SQL foreign keys.
+- Stock decrement and restore behavior is being validated at the repository level before live view cutover.
 
 ## Phase 7: reporting strategy
 

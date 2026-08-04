@@ -8,6 +8,12 @@ from rest_framework import status, serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from ..models import Shop, ArrivalGoods, MobileSalesBill
 from django.db import transaction
+from ..repositories.arrival_repository import ArrivalRepository
+from ..repositories.mobile_sales_repository import MobileSalesRepository
+
+
+mobile_sales_repository = MobileSalesRepository()
+arrival_repository = ArrivalRepository()
 
 
 class ArrivalGoodsSerializer(serializers.ModelSerializer):
@@ -57,12 +63,32 @@ def get_arrival_goods(request):
 
     try:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        arrival_detail_object = ArrivalGoods.objects.filter(
-            Q(shop=shop_detail_object) & Q(qty__gte=1)
-        )
-        serializer = ArrivalGoodsSerializer(arrival_detail_object, many=True)
+        if arrival_repository.using_firebase():
+            arrival_detail_object = arrival_repository.list_available_goods_by_shop(shop_detail_object.pk)
+            response_data = [
+                {
+                    'id': goods.local_id,
+                    'shop': shop_detail_object.pk,
+                    'arrival_entry': entry.id,
+                    'former_name': goods.former_name,
+                    'initial_qty': goods.initial_qty,
+                    'qty': goods.qty,
+                    'weight': goods.weight,
+                    'remarks': goods.remarks,
+                    'item_name': goods.item_name,
+                    'advance': goods.advance,
+                    'patti_status': goods.patti_status,
+                }
+                for entry, goods in arrival_detail_object
+            ]
+        else:
+            arrival_detail_object = ArrivalGoods.objects.filter(
+                Q(shop=shop_detail_object) & Q(qty__gte=1)
+            )
+            serializer = ArrivalGoodsSerializer(arrival_detail_object, many=True)
+            response_data = serializer.data
 
-        return Response({"data": serializer.data, "message": "Get arrival"}, status=status.HTTP_200_OK)
+        return Response({"data": response_data, "message": "Get arrival"}, status=status.HTTP_200_OK)
     except Shop.DoesNotExist:
         return Response({"message": "Shop not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
@@ -97,12 +123,12 @@ def add_sales_data(request):
 
         # Create and save the MobileSalesBill instance
         with transaction.atomic():  # Ensures atomicity for database operations
-            sales_bill = MobileSalesBill.objects.create(
-                shop=shop,
+            sales_bill = mobile_sales_repository.create(
+                shop_id=shop.id,
                 name=name,
                 lot_no=lot_no,
-                total_bags=int(total_bags),
-                net_weight=float(net_weight),
+                total_bags=total_bags,
+                net_weight=net_weight,
             )
 
         return Response(

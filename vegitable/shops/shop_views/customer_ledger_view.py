@@ -7,6 +7,10 @@ from rest_framework.decorators import api_view
 
 from .. import utility
 from ..models import Shop, CustomerLedger
+from ..repositories.customer_ledger_repository import CustomerLedgerRepository
+
+
+customer_ledger_repository = CustomerLedgerRepository()
 
 @csrf_protect
 def customer_ledger(request, current_page=1, customer_ledger_entry=None, message=None):
@@ -21,8 +25,7 @@ def customer_ledger(request, current_page=1, customer_ledger_entry=None, message
         items_per_page = 10
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         request.session['form_token'] = utility.generate_unique_number()
-        customer_ledger_list = CustomerLedger.objects.filter(
-            shop=shop_detail_object).order_by('-id')
+        customer_ledger_list = customer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(customer_ledger_list, items_per_page)
         customer_ledger_list = paginator.get_page(current_page)
         return render(request, 'Ledger/customer_ledger.html',
@@ -39,26 +42,25 @@ def add_customer_ledger(request):
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 # Remove the token from the session
                 del request.session['form_token']
+                shop = Shop.objects.get(shop_owner=request.user.id)
                 if request.POST['customer_ledger_id'] == "None":
-                    if not CustomerLedger.objects.filter(contact=request.POST['contact']).exists():
-                        customer_ledger_obj = CustomerLedger(
+                    if not customer_ledger_repository.exists_by_contact(request.POST['contact']):
+                        customer_ledger_repository.create(
+                            shop_id=shop.pk,
                             name=request.POST['name'],
                             contact=request.POST['contact'],
                             address=request.POST['address'],
-                            shop=Shop.objects.get(shop_owner=request.user.id)
                         )
-                        customer_ledger_obj.save()
                     else:
                         return customer_ledger(request, message="Customer Entry already exists")
                 else:
-                    customer_ledger_obj = CustomerLedger.objects.get(
-                        id=request.POST['customer_ledger_id'])
-                    customer_ledger_obj.name = request.POST['name']
-                    customer_ledger_obj.contact = request.POST['contact']
-                    customer_ledger_obj.address = request.POST['address']
-                    customer_ledger_obj.shop = Shop.objects.get(
-                        shop_owner=request.user.id)
-                    customer_ledger_obj.save()
+                    customer_ledger_repository.update(
+                        record_id=request.POST['customer_ledger_id'],
+                        shop_id=shop.pk,
+                        name=request.POST['name'],
+                        contact=request.POST['contact'],
+                        address=request.POST['address'],
+                    )
         request.session['form_token'] = utility.generate_unique_number()
         return customer_ledger(request)
 
@@ -67,10 +69,10 @@ def add_customer_ledger(request):
 @api_view(['GET'])
 def search_customer_ledger(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    customerLedgerObject = CustomerLedger.objects.filter(shop=shop_detail_object).filter(
-        name__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
-        contact__icontains=request.GET['search_text']) | CustomerLedger.objects.filter(shop=shop_detail_object).filter(
-        address__icontains=request.GET['search_text'])
+    customerLedgerObject = customer_ledger_repository.search(
+        shop_id=shop_detail_object.pk,
+        search_text=request.GET['search_text'],
+    )
     response = []
     for customer in customerLedgerObject:
         customer_dict = {
@@ -97,8 +99,7 @@ def default_customer_ledger(request, current_page=1, customer_ledger_entry=None)
         items_per_page = 10
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         request.session['form_token'] = utility.generate_unique_number()
-        customer_ledger_list = CustomerLedger.objects.filter(
-            shop=shop_detail_object).order_by('-id')
+        customer_ledger_list = customer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(customer_ledger_list, items_per_page)
         customer_ledger_list = paginator.get_page(current_page)
         response = [
@@ -128,7 +129,7 @@ def customer_ledger_prev_page(request, page_number):
 @csrf_protect
 def edit_customer_ledger(request, customer_id):
     if request.user.is_authenticated:
-        customer_ledger_detail = CustomerLedger.objects.get(pk=customer_id)
+        customer_ledger_detail = customer_ledger_repository.get_by_id(customer_id)
         return customer_ledger(request, customer_ledger_entry=customer_ledger_detail)
     return render(request, 'index.html')
 
@@ -136,7 +137,6 @@ def edit_customer_ledger(request, customer_id):
 @csrf_protect
 def delete_customer_ledger(request, customer_id):
     if request.user.is_authenticated:
-        customer_ledger_detail = CustomerLedger.objects.get(pk=customer_id)
-        customer_ledger_detail.delete()
+        customer_ledger_repository.delete(customer_id)
         return customer_ledger(request)
     return render(request, 'index.html')

@@ -7,6 +7,10 @@ from rest_framework.decorators import api_view
 
 from .. import utility
 from ..models import Shop, FarmerLedger
+from ..repositories.farmer_ledger_repository import FarmerLedgerRepository
+
+
+farmer_ledger_repository = FarmerLedgerRepository()
 
 
 @csrf_protect
@@ -22,8 +26,7 @@ def farmer_ledger(request, current_page=1, farmer_ledger_entry=None, message=Non
         items_per_page = 10
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         request.session['form_token'] = utility.generate_unique_number()
-        farmer_ledger_list = FarmerLedger.objects.filter(
-            shop=shop_detail_object).order_by('-id')
+        farmer_ledger_list = farmer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(farmer_ledger_list, items_per_page)
         farmer_ledger_list = paginator.get_page(current_page)
         return render(request, 'Ledger/farmer_ledger.html',
@@ -40,26 +43,25 @@ def add_farmer_ledger(request):
         if request.method == 'POST':
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 del request.session['form_token']
+                shop = Shop.objects.get(shop_owner=request.user.id)
                 if request.POST['farmer_ledger_id'] == "None" or len(request.POST['farmer_ledger_id']) == 0:
-                    if not FarmerLedger.objects.filter(contact=request.POST['contact']).exists():
-                        farmer_ledger_obj = FarmerLedger(
+                    if not farmer_ledger_repository.exists_by_contact(request.POST['contact']):
+                        farmer_ledger_repository.create(
+                            shop_id=shop.pk,
                             name=request.POST['name'],
                             contact=request.POST['contact'],
                             place=request.POST['place'],
-                            shop=Shop.objects.get(shop_owner=request.user.id)
                         )
-                        farmer_ledger_obj.save()
                     else:
                         return farmer_ledger(request, message="Farmer Entry already exists")
                 else:
-                    farmer_ledger_obj = FarmerLedger.objects.get(
-                        id=request.POST['farmer_ledger_id'])
-                    farmer_ledger_obj.name = request.POST['name']
-                    farmer_ledger_obj.contact = request.POST['contact']
-                    farmer_ledger_obj.place = request.POST['place']
-                    farmer_ledger_obj.shop = Shop.objects.get(
-                        shop_owner=request.user.id)
-                    farmer_ledger_obj.save()
+                    farmer_ledger_repository.update(
+                        record_id=request.POST['farmer_ledger_id'],
+                        shop_id=shop.pk,
+                        name=request.POST['name'],
+                        contact=request.POST['contact'],
+                        place=request.POST['place'],
+                    )
         request.session['form_token'] = utility.generate_unique_number()
         return farmer_ledger(request)
 
@@ -73,13 +75,12 @@ def search_farmer_ledger(request):
     search_text = request.GET.get('search_text', '').strip()
 
     if search_text:
-        farmer_ledger_objects = FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-            name__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-            contact__icontains=search_text) | FarmerLedger.objects.filter(shop=shop_detail_object).filter(
-            place__icontains=search_text)
+        farmer_ledger_objects = farmer_ledger_repository.search(
+            shop_id=shop_detail_object.pk,
+            search_text=search_text,
+        )
     else:
-        farmer_ledger_objects = FarmerLedger.objects.filter(
-            shop=shop_detail_object)
+        farmer_ledger_objects = farmer_ledger_repository.list_by_shop(shop_detail_object.pk)
 
     response = [
         {
@@ -105,8 +106,7 @@ def default_farmer_ledger(request):
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         request.session['form_token'] = utility.generate_unique_number()
-        farmer_ledger_list = FarmerLedger.objects.filter(
-            shop=shop_detail_object)
+        farmer_ledger_list = farmer_ledger_repository.list_by_shop(shop_detail_object.pk)
 
         paginator = Paginator(farmer_ledger_list, items_per_page)
         farmer_ledger_list = paginator.get_page(current_page)
@@ -141,7 +141,7 @@ def farmer_ledger_next_page(request, page_number):
 @csrf_protect
 def edit_farmer_ledger(request, farmer_id):
     if request.user.is_authenticated:
-        farmer_ledger_detail = FarmerLedger.objects.get(pk=farmer_id)
+        farmer_ledger_detail = farmer_ledger_repository.get_by_id(farmer_id)
         return farmer_ledger(request, farmer_ledger_entry=farmer_ledger_detail)
     return render(request, 'index.html')
 
@@ -149,7 +149,6 @@ def edit_farmer_ledger(request, farmer_id):
 @csrf_protect
 def delete_farmer_ledger(request, farmer_id):
     if request.user.is_authenticated:
-        farmer_ledger_detail = FarmerLedger.objects.get(pk=farmer_id)
-        farmer_ledger_detail.delete()
+        farmer_ledger_repository.delete(farmer_id)
         return farmer_ledger(request)
     return render(request, 'index.html')

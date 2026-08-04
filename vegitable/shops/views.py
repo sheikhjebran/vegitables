@@ -19,8 +19,12 @@ from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry
     ArrivalGoods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory, Index
 import datetime
 from .report.report import Report
+from .repositories.arrival_repository import ArrivalRepository
 from .utility import consolidate_result_for_report, get_float_number, getDate_from_string
 from django.db.models import Sum, F, Q
+
+
+arrival_repository = ArrivalRepository()
 
 
 def index(request):
@@ -42,17 +46,20 @@ def inventory(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        entries = ArrivalGoods.objects.filter(shop_id=shop_detail_object).values(
-            'id',
-            'arrival_entry__date',
-            'remarks',
-            'item_name',
-            'initial_qty',
-            'qty',
-        ).annotate(
-            sold=F('initial_qty') - F('qty'),
-            balance=F('qty')
-        ).filter(qty__gt=0)
+        if arrival_repository.using_firebase():
+            entries = arrival_repository.build_inventory_entries(shop_detail_object.pk)
+        else:
+            entries = ArrivalGoods.objects.filter(shop_id=shop_detail_object).values(
+                'id',
+                'arrival_entry__date',
+                'remarks',
+                'item_name',
+                'initial_qty',
+                'qty',
+            ).annotate(
+                sold=F('initial_qty') - F('qty'),
+                balance=F('qty')
+            ).filter(qty__gt=0)
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
@@ -105,11 +112,19 @@ def get_arrival_goods_item_name(request):
     [...]
     item_name_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = ArrivalGoods.objects.filter(
-        shop=shop_detail_object).filter(id=request.GET['selected_lot'])
+    if arrival_repository.using_firebase():
+        _, arrival_goods = arrival_repository.get_goods_by_local_id(
+            shop_detail_object.pk,
+            request.GET['selected_lot'],
+        )
+        if arrival_goods is not None:
+            item_name_list[arrival_goods.item_name] = arrival_goods.qty
+    else:
+        arrival_detail_object = ArrivalGoods.objects.filter(
+            shop=shop_detail_object).filter(id=request.GET['selected_lot'])
 
-    for arrival_entry in arrival_detail_object:
-        item_name_list[arrival_entry.item_name] = arrival_entry.qty
+        for arrival_entry in arrival_detail_object:
+            item_name_list[arrival_entry.item_name] = arrival_entry.qty
 
     data = {'item_name_list': item_name_list}
     return Response(data, status=status.HTTP_200_OK)
@@ -120,12 +135,16 @@ def get_arrival_goods_item_name(request):
 def get_arrival_goods_api(request):
     [...]
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_goods_obj = ArrivalGoods.objects.filter(
-        shop=shop_detail_object, qty__gte=1)
-
     mylist = {}
-    for item in arrival_goods_obj:
-        mylist[item.id] = item.qty
+    if arrival_repository.using_firebase():
+        for _, item in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
+            mylist[item.local_id] = item.qty
+    else:
+        arrival_goods_obj = ArrivalGoods.objects.filter(
+            shop=shop_detail_object, qty__gte=1)
+
+        for item in arrival_goods_obj:
+            mylist[item.id] = item.qty
 
     return JsonResponse(mylist, status=status.HTTP_200_OK)
 
@@ -134,10 +153,19 @@ def get_arrival_goods_api(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_duplicate_validation_api(request):
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    respones = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
-        date=request.GET['date'])
+    if arrival_repository.using_firebase():
+        responses = arrival_repository.find_duplicate(
+            shop_id=shop_detail_object.pk,
+            lorry_no=request.GET['lorry_no'],
+            date=request.GET['date'],
+        )
+        found = len(responses) > 0
+    else:
+        responses = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
+            date=request.GET['date'])
+        found = responses.count() > 0
 
-    if respones.count() <= 0:
+    if not found:
         return JsonResponse(data={'NOT_FOUND': True}, status=status.HTTP_200_OK)
     else:
         return JsonResponse(data={'NOT_FOUND': False}, status=status.HTTP_404_NOT_FOUND)
@@ -149,11 +177,15 @@ def get_arrival_goods_list(request):
     [...]
     item_goods_list = {}
     shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    arrival_detail_object = ArrivalGoods.objects.filter(
-        shop=shop_detail_object, qty__gte=1)
+    if arrival_repository.using_firebase():
+        for _, arrival_entry in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
+            item_goods_list[arrival_entry.local_id] = arrival_entry.remarks
+    else:
+        arrival_detail_object = ArrivalGoods.objects.filter(
+            shop=shop_detail_object, qty__gte=1)
 
-    for arrival_entry in arrival_detail_object:
-        item_goods_list[arrival_entry.id] = arrival_entry.remarks
+        for arrival_entry in arrival_detail_object:
+            item_goods_list[arrival_entry.id] = arrival_entry.remarks
 
     data = {'item_goods_list': item_goods_list}
     return Response(data, status=status.HTTP_200_OK)

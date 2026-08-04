@@ -121,6 +121,53 @@
                         </td>
                     </tr>
                     {% else %}
+                    {% if use_firebase_sales %}
+                    {% for item in sales_item_objs %}
+                    <tr style='margin-top:3%;margin-bottom:3%;' id ="{{item.row_id}}_modify_child">
+                        <td class="custom-select">
+                            <div class='comment-your'>
+                                <select class="add_new_sales_custom_select" name="{{item.row_id}}_modify_lot_number" id ="{{item.row_id}}_modify_lot_number">
+                                    {% for arrival_detail in arrival_goods_detail %}
+                                        <option value="{{ arrival_detail.id }}" {% if item.arrival_goods_local_id == arrival_detail.id %}selected{% endif %}>
+                                            {{ arrival_detail.remarks }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='item Name' name ="{{item.row_id}}_modify_item_name" id="{{item.row_id}}_modify_item_name" required='' value = "{{item.item_name}}" readonly>
+                                <input type='text' placeholder='qty' name ="{{item.row_id}}_modify_qty" id="{{item.row_id}}_modify_qty" value= "{{item.available_qty}}" required=''  readonly hidden>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Bags' name ="{{item.row_id}}_modify_bags" class= "sales_bag_count number_only" value= "{{item.bags}}" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Net Weigth' name ="{{item.row_id}}_modify_net_weight" id="{{item.row_id}}_modify_net_weight" class= "decimal_number_only" value="{{item.net_weight}}" required=''>
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Rates' name ="{{item.row_id}}_modify_rates" required='' id= "{{item.row_id}}_modify_rates" value="{{item.rates}}" class="calculate_amount decimal_number_only">
+                            </div>
+                        </td>
+                        <td>
+                            <div class='comment-your'>
+                                <input type='text' placeholder='Amount' name ="{{item.row_id}}_modify_amount" id= "{{item.row_id}}_modify_amount" class= " amount_validation decimal_number_only" value= "{{item.amount}}" required='' readonly>
+                            </div>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                    {% else %}
                     {% for item in sales_item_objs %}
                     <tr style='margin-top:3%;margin-bottom:3%;' id ="{{item.id}}_modify_child">
                         <td class="custom-select">
@@ -170,6 +217,7 @@
                        
                     </tr>
                     {% endfor %}
+                    {% endif %}
                     {% endif %}
                     </tbody>
                 </table>

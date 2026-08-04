@@ -34,12 +34,15 @@
 - Migrate as independent top-level collections.
 - Add normalized search fields such as `name_lower`, `contact_normalized`, and maybe `search_prefixes`.
 - Replace `icontains` with a defined search capability instead of pretending Firestore supports it.
+- Current `CustomerLedger` migration will start with normalized fields plus app-layer substring filtering on shop-scoped results.
+- `FarmerLedger` should mirror the same approach, using normalized `place` search plus app-layer filtering first.
 
 ### `ArrivalEntry` and `ArrivalGoods`
 
 - Decide whether goods should be embedded inside the arrival document or stored as a subcollection.
 - Stock decrements must become transactional.
 - Avoid depending on SQL-style reverse relations.
+- Current migration starts with embedded goods rows inside the arrival document so Firestore validation can proceed before live stock consumers are switched.
 
 ### `PattiEntry` and `PattiEntryList`
 
@@ -51,6 +54,7 @@
 - Consider embedding item rows directly inside the bill document.
 - Persist derived totals explicitly to avoid runtime aggregation.
 - Capture `shop_id`, customer name, payment mode, and balance fields directly on the document.
+- Current migration starts with embedded items that store `arrival_entry_id` and `arrival_goods_local_id` so stock can be mutated without SQL foreign keys.
 
 ### `CreditBillEntry` and `CreditBillHistory`
 

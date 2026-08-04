@@ -5,7 +5,11 @@ import re
 from ..models import Shop, ArrivalEntry, ArrivalGoods, Index
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages, auth
+from ..repositories.arrival_repository import ArrivalRepository
 from ..utility import getDate_from_string
+
+
+arrival_repository = ArrivalRepository()
 
 
 def add_new_arrival_entry(request):
@@ -75,11 +79,16 @@ def add_arrival(request):
 @csrf_protect
 def modify_arrival(request, arrival_id):
     if request.user.is_authenticated:
-        arrival_entry_obj = ArrivalEntry.objects.get(pk=arrival_id)
-        arrival_goods_objs = ArrivalGoods.objects.filter(
-            arrival_entry=arrival_entry_obj).order_by('-id')
+        if arrival_repository.using_firebase():
+            arrival_entry_obj = arrival_repository.get_by_id(arrival_id)
+            arrival_goods_objs = [] if arrival_entry_obj is None else arrival_entry_obj.goods
+            today = '' if arrival_entry_obj is None else arrival_entry_obj.date
+        else:
+            arrival_entry_obj = ArrivalEntry.objects.get(pk=arrival_id)
+            arrival_goods_objs = ArrivalGoods.objects.filter(
+                arrival_entry=arrival_entry_obj).order_by('-id')
 
-        today = arrival_entry_obj.date
+            today = arrival_entry_obj.date
 
         return render(request, 'Entry/Arrival/modify_arrival_entry.html',
                       {'arrival_detail': arrival_entry_obj, 'arrival_goods_objs': arrival_goods_objs, 'new': False,
@@ -167,9 +176,11 @@ def home(request, current_page=1):
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         arrival_entry_detail = None
         try:
-
-            arrival_entry_detail = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(
-                Empty_data=False).order_by('-id')
+            if arrival_repository.using_firebase():
+                arrival_entry_detail = arrival_repository.list_non_empty_by_shop(shop_detail_object.pk)
+            else:
+                arrival_entry_detail = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(
+                    Empty_data=False).order_by('-id')
             items_per_page = 10
             paginator = Paginator(arrival_entry_detail, items_per_page)
             arrival_entry_detail = paginator.get_page(current_page)

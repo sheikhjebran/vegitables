@@ -1,5 +1,8 @@
 /venv/
 *.pyc
+*.firebase-adminsdk-*.json
+serviceAccountKey.json
+/vegitable/serviceAccountKey.json
 
 vegitable/shops/__pycache__/*
 
