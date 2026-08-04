@@ -3,11 +3,30 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from ..models import Shop, CreditBillEntry, ExpenditureEntry, CreditBillHistory, PattiEntry, SalesBillEntry, \
     ArrivalGoods, ArrivalEntry
+from ..repositories.arrival_repository import ArrivalRepository
+from ..repositories.credit_bill_repository import CreditBillRepository
+from ..repositories.sales_bill_repository import SalesBillRepository
 from django.db.models import Sum, F, Q
 from django.db import models
+from django.db.utils import OperationalError
 from rest_framework import status
 
 from ..utility import getDate_from_string
+
+
+arrival_repository = ArrivalRepository()
+sales_bill_repository = SalesBillRepository()
+credit_bill_repository = CreditBillRepository()
+
+
+def _shop_pk(shop_or_id):
+    return int(getattr(shop_or_id, 'pk', shop_or_id))
+
+
+def _iso_date(value):
+    if isinstance(value, str):
+        return value
+    return value.isoformat()
 
 
 def shilk_report(request):
@@ -30,6 +49,96 @@ def retrieve_shilk(request):
 
 def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
     selected_date = getDate_from_string(selected_date)
+    selected_date_iso = _iso_date(selected_date)
+    shop_pk = _shop_pk(shop_id)
+
+    if arrival_repository.using_firebase() and sales_bill_repository.using_firebase():
+        arrival_entries = [
+            record for record in arrival_repository.list_by_shop(shop_pk)
+            if str(record.date) == selected_date_iso
+        ]
+        total_bags_sum = sum(int(entry.total_bags) for entry in arrival_entries)
+        balance_bags_sum = sum(
+            int(goods.qty)
+            for entry in arrival_entries
+            for goods in entry.goods
+        )
+        bags_sold_sum = total_bags_sum - balance_bags_sum
+
+        sales_records = [
+            record for record in sales_bill_repository.list_by_shop(shop_pk)
+            if str(record.date) == selected_date_iso
+        ]
+        cash_bill_amount = sum(
+            float(record.paid_amount)
+            for record in sales_records
+            if str(record.payment_type).lower() == 'cash'
+        )
+        upi_amount = sum(
+            float(record.paid_amount)
+            for record in sales_records
+            if str(record.payment_type).lower() == 'upi'
+        )
+        total_sales = sum(float(record.total_amount) for record in sales_records)
+
+        credit_bill_amount = 0.0
+        collection = 0.0
+        if credit_bill_repository.using_firebase():
+            sales_by_id = {str(record.id): record for record in sales_records}
+            for credit in credit_bill_repository.list_by_shop(shop_pk):
+                sales_record = sales_by_id.get(str(credit.sales_bill_record_id))
+                if sales_record is not None:
+                    credit_bill_amount += float(credit.initial_credit_bill_amount)
+                for payment in credit.histories:
+                    if str(payment.date) == selected_date_iso:
+                        collection += float(payment.amount)
+        else:
+            # Fallback to SQL credit collections while sales/arrival are on Firestore.
+            try:
+                collection = CreditBillHistory.objects.filter(
+                    credit_bill__shop_id=shop_pk,
+                    date=selected_date
+                ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+            except OperationalError:
+                collection = 0
+
+        try:
+            patti_entries = PattiEntry.objects.filter(
+                date=selected_date,
+                shop_id=shop_pk
+            ).aggregate(
+                net_amount=Sum('net_amount')
+            )['net_amount'] or 0
+        except OperationalError:
+            patti_entries = 0
+
+        try:
+            total_expenditure = ExpenditureEntry.objects.filter(
+                shop_id=shop_pk,
+                date=selected_date
+            ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+        except OperationalError:
+            total_expenditure = 0
+
+        patti = round(patti_entries, 2)
+        cash_balance = cash_bill_amount + collection - total_expenditure
+        net_amount = (total_sales + collection) - \
+            (credit_bill_amount + upi_amount + patti + total_expenditure)
+
+        return {
+            'total_bags_sum': total_bags_sum,
+            'bags_sold_sum': bags_sold_sum,
+            'balance_bags_sum': balance_bags_sum,
+            'cash_bill_amount': round(cash_bill_amount, 2),
+            'total_sales': round(total_sales, 2),
+            'credit_bill_amount': round(credit_bill_amount, 2),
+            'collection': round(collection, 2),
+            'upi_amount': round(upi_amount, 2),
+            'total_expenditure': total_expenditure,
+            'net_amount': round(net_amount, 2),
+            'patti_amount': patti,
+            'cash_balance': round(cash_balance, 2)
+        }
 
     # Aggregate total bags
     arrival_entries = ArrivalEntry.objects.filter(

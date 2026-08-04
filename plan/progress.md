@@ -44,6 +44,11 @@
 - Verified the Firestore-native `SalesBillEntry` repository path with a successful stock decrement and restore smoke test.
 - Switched live sales-bill listing and new sales-bill creation to the Firestore-native sales repository behind `USE_FIREBASE_SALES`.
 - Implemented Firestore-native sales-bill edit/update with stock reconciliation and enabled live edit routing behind `USE_FIREBASE_SALES`.
+- Implemented Firestore-native credit bill flow (search, payment posting, history retrieval) behind `USE_FIREBASE_CREDIT`, including sales balance updates in Firestore.
+- Switched RMC and Shilk report sales/credit aggregations to Firestore-backed computations for migrated domains, with SQL fallback kept for non-migrated domains.
+- Added `smoke_test_report_firebase` to validate Firestore-backed RMC/Shilk report payload builders with temporary Firestore data.
+- Added `smoke_test_report_http_firebase` to validate Firestore-backed RMC/Shilk HTTP endpoint payloads with temporary Firestore data.
+- Added `smoke_test_report_pdf_firebase` to validate Firestore-backed RMC daily/weekly PDF endpoint responses with temporary Firestore data.
 
 ## Verified facts
 
@@ -73,7 +78,9 @@
 - Validate the Firestore-native sales bill repository with stock decrement and restore behavior.
 - Decide how and when to cut live sales-bill creation over from SQL `SalesBillItem` to the Firestore-native sales repository.
 - Decide how to implement Firestore-native sales bill editing and Firestore-native credit bill flows.
-- Design and migrate Firestore-native credit bill flows for partially paid sales.
+- Validate Firestore credit flow on live UI interactions and settle payment-type mapping rules for fully cleared balances.
+- Migrate remaining SQL-only reporting domains (Patti/Expense-only sections can remain SQL until those domains are migrated).
+- Add response-content assertions (table totals and bill IDs) for Firestore PDF report generation outputs.
 - Decide when to make Firebase the default enabled path for `MobileSalesBill` and `CustomerLedger` in the target environment.
 - Decide when to make Firebase the default enabled path for `FarmerLedger` in the target environment.
 - Decide whether the next implementation step is live inventory/read cutover or Firestore-side backfill for arrival history.
@@ -105,11 +112,19 @@
 - Passed: `uv run python manage.py check` after the live Firestore sales create/list cutover
 - Passed: `uv run python manage.py check` after the live Firestore sales edit/update cutover
 - Passed: `uv run python manage.py smoke_test_sales_bill_firebase` with create/update/delete stock reconciliation checks
+- Passed: `uv run python manage.py check` after the Firestore credit flow cutover
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase`
+- Passed: `uv run python manage.py check` after Firestore report aggregation cutover
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` after report cutover
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase` after report cutover
+- Passed: `uv run python manage.py smoke_test_report_firebase`
+- Passed: `uv run python manage.py smoke_test_report_http_firebase`
+- Passed: `uv run python manage.py smoke_test_report_pdf_firebase`
 
 ## Current slice
 
-- Slice: live sales-bill create/list/edit Firebase cutover
-- Strategy: Firestore-native sales repository behind `USE_FIREBASE_SALES`, with Firestore-backed new-bill creation, listing, and editing, while credit flows remain partial
+- Slice: Firestore reporting cutover for migrated sales/credit domains
+- Strategy: Use Firestore repositories for RMC and Shilk sales/credit aggregates while retaining SQL-only sources for yet-unmigrated domains
 - Files touched:
 	- `vegitable/vegitable/settings.py`
 	- `vegitable/shops/firebase_models/sales_bill.py`
@@ -117,8 +132,22 @@
 	- `vegitable/shops/repositories/arrival_repository.py`
 	- `vegitable/shops/management/commands/smoke_test_sales_bill_firebase.py`
 	- `vegitable/shops/shop_views/sales_view.py`
+	- `vegitable/shops/shop_views/credit_bill_view.py`
+	- `vegitable/shops/shop_views/rmc_view.py`
+	- `vegitable/shops/shop_views/shilk_view.py`
+	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_report_pdf_firebase.py`
 	- `vegitable/template/Entry/Sales/modify_sales_bill_entry.html`
 	- `vegitable/template/Entry/Sales/sales_bill_entry.html`
+	- `vegitable/template/Entry/CreditBill/credit_bill.html`
+	- `vegitable/template/Entry/CreditBill/partial_table_rows.html`
+	- `vegitable/shops/repositories/credit_bill_repository.py`
+	- `vegitable/shops/firebase_models/credit_bill.py`
+	- `vegitable/shops/management/commands/smoke_test_credit_bill_firebase.py`
+	- `vegitable/shops/urls.py`
+	- `vegitable/vegitable/settings.py`
+	- `vegitable/.env.example`
 	- `plan/04-migration-runbook.md`
 	- `plan/05-data-mapping.md`
 	- `plan/progress.md`

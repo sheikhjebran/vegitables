@@ -48,7 +48,7 @@
             {%for credit in results %}
                 <tr>
                     <td>
-                        <span class="no_border credit_id" value="{{credit.bill_no}}" amount_balance="{{credit.balance}}">{{credit.bill_no}}</span>
+                        <span class="no_border credit_id" value="{{credit.bill_no}}" amount_balance="{{credit.balance}}">{{credit.bill_label|default:credit.bill_no}}</span>
                     </td>
                     <td>{{credit.customer_name}}</td>
                     <td>{{credit.date}}</td>

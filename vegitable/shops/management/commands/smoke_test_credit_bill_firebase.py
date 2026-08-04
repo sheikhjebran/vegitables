@@ -1,0 +1,158 @@
+from uuid import uuid4
+
+from django.core.management.base import BaseCommand, CommandError
+
+from ...repositories.arrival_repository import ArrivalGoodsRecord, ArrivalRepository
+from ...repositories.credit_bill_repository import CreditBillRepository
+from ...repositories.sales_bill_repository import SalesBillItemRecord, SalesBillRepository
+
+
+class Command(BaseCommand):
+    help = 'Write, search, payment-update, and history-read a temporary Firestore credit bill record.'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--shop-id',
+            type=int,
+            default=999999,
+            help='Temporary shop_id to use for the Firebase smoke test.',
+        )
+
+    def handle(self, *args, **options):
+        arrival_repository = ArrivalRepository()
+        sales_repository = SalesBillRepository()
+        credit_repository = CreditBillRepository()
+
+        if not (sales_repository.using_firebase() and credit_repository.using_firebase()):
+            raise CommandError(
+                'Set FIREBASE_ENABLED=True, USE_FIREBASE_ARRIVAL=True, USE_FIREBASE_SALES=True, and USE_FIREBASE_CREDIT=True before running this command.'
+            )
+
+        token = uuid4().hex[:12]
+        shop_id = options['shop_id']
+        arrival_record = None
+        sales_record = None
+        credit_record = None
+
+        try:
+            arrival_record = arrival_repository.create(
+                shop_id=shop_id,
+                arrival_id=f'ARR-CREDIT-{token}',
+                gp_no=f'GP-CREDIT-{token}',
+                lorry_no=f'LORRY-CR-{token[:6]}',
+                date='2026-08-04',
+                patti_name=f'patti-credit-{token[:5]}',
+                total_bags=12,
+                empty_data=False,
+                goods=[
+                    ArrivalGoodsRecord(
+                        local_id='credit-goods-1',
+                        former_name='Farmer Credit',
+                        item_name='Tomato',
+                        initial_qty=12,
+                        qty=12,
+                        weight=120.0,
+                        remarks='Lot C1',
+                        advance=0.0,
+                        patti_status=False,
+                    )
+                ],
+            )
+
+            sales_record = sales_repository.create(
+                shop_id=shop_id,
+                sales_bill_id=f'SBC-{token}',
+                payment_type='credit',
+                customer_name=f'customer-{token[:6]}',
+                date='2026-08-04',
+                rmc=1.0,
+                commission=2.0,
+                cooli=3.0,
+                total_amount=100.0,
+                paid_amount=60.0,
+                balance_amount=40.0,
+                empty_data=False,
+                items=[
+                    SalesBillItemRecord(
+                        arrival_entry_id=str(arrival_record.id),
+                        arrival_goods_local_id='credit-goods-1',
+                        item_name='Tomato',
+                        bags=2,
+                        net_weight=20.0,
+                        rates=10.0,
+                        amount=20.0,
+                    )
+                ],
+            )
+
+            credit_record = credit_repository.upsert_for_sales_bill(
+                shop_id=shop_id,
+                customer_name=sales_record.customer_name,
+                sales_bill_record_id=sales_record.id,
+                sales_bill_id=sales_record.sales_bill_id,
+                initial_credit_bill_amount=sales_record.balance_amount,
+            )
+
+            payment_amount = 15.0
+            updated_sales = sales_repository.update(
+                record_id=sales_record.id,
+                shop_id=sales_record.shop_id,
+                sales_bill_id=sales_record.sales_bill_id,
+                payment_type='credit',
+                customer_name=sales_record.customer_name,
+                date=sales_record.date,
+                rmc=sales_record.rmc,
+                commission=sales_record.commission,
+                cooli=sales_record.cooli,
+                total_amount=sales_record.total_amount,
+                paid_amount=round(float(sales_record.paid_amount) + payment_amount, 2),
+                balance_amount=round(float(sales_record.balance_amount) - payment_amount, 2),
+                empty_data=sales_record.empty_data,
+                items=sales_record.items,
+            )
+
+            credit_repository.add_payment(
+                credit_bill_record_id=credit_record.id,
+                amount=payment_amount,
+                payment_mode='CASH',
+                date='2026-08-04',
+            )
+
+            refreshed_sales = sales_repository.get_by_id(sales_record.id)
+            if refreshed_sales is None:
+                raise CommandError('Updated Firestore sales bill could not be fetched.')
+            if round(float(refreshed_sales.balance_amount), 2) != 25.0:
+                raise CommandError('Firestore credit payment did not reduce sales balance as expected.')
+
+            history_rows = credit_repository.list_history(credit_record.id)
+            if len(history_rows) != 1:
+                raise CommandError('Firestore credit payment history was not recorded.')
+            if round(float(history_rows[0].amount), 2) != payment_amount:
+                raise CommandError('Firestore credit payment history amount does not match posted payment.')
+
+            self.stdout.write(self.style.SUCCESS('Firebase CreditBill smoke test passed.'))
+            self.stdout.write(f'Created temporary credit record id={credit_record.id} for shop_id={shop_id}.')
+        except Exception:
+            if credit_record is not None:
+                try:
+                    credit_repository.delete(credit_record.id)
+                except Exception:
+                    pass
+            if sales_record is not None:
+                try:
+                    sales_repository.delete(sales_record.id, restore_stock=True)
+                except Exception:
+                    pass
+            if arrival_record is not None:
+                try:
+                    arrival_repository.delete(arrival_record.id)
+                except Exception:
+                    pass
+            raise
+        else:
+            if credit_record is not None:
+                credit_repository.delete(credit_record.id)
+            if sales_record is not None:
+                sales_repository.delete(sales_record.id, restore_stock=True)
+            if arrival_record is not None:
+                arrival_repository.delete(arrival_record.id)
