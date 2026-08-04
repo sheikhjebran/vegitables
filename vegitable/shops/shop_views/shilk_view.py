@@ -10,7 +10,6 @@ from ..repositories.patti_repository import PattiRepository
 from ..repositories.sales_bill_repository import SalesBillRepository
 from django.db.models import Sum, F, Q
 from django.db import models
-from django.db.utils import OperationalError
 from rest_framework import status
 
 from ..utility import getDate_from_string
@@ -43,10 +42,16 @@ def shilk_report(request):
 def retrieve_shilk(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        response = get_sales_bag_count_detail_for_selected_date(
-            selected_date=request.GET['selected_date'],
-            shop_id=shop_detail_object
-        )
+        try:
+            response = get_sales_bag_count_detail_for_selected_date(
+                selected_date=request.GET['selected_date'],
+                shop_id=shop_detail_object
+            )
+        except ValueError as error:
+            return JsonResponse(
+                data={'FOUND': False, 'error': str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
     return JsonResponse(data={'FOUND': False}, status=status.HTTP_404_NOT_FOUND)
 
@@ -55,6 +60,11 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
     selected_date = getDate_from_string(selected_date)
     selected_date_iso = _iso_date(selected_date)
     shop_pk = _shop_pk(shop_id)
+
+    if sales_bill_repository.using_firebase() and not arrival_repository.using_firebase():
+        raise ValueError(
+            'Enable USE_FIREBASE_ARRIVAL=True when USE_FIREBASE_SALES=True for shilk report workflows.'
+        )
 
     if arrival_repository.using_firebase() and sales_bill_repository.using_firebase():
         arrival_entries = [
@@ -85,57 +95,42 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
         )
         total_sales = sum(float(record.total_amount) for record in sales_records)
 
+        if not credit_bill_repository.using_firebase():
+            raise ValueError(
+                'Enable USE_FIREBASE_CREDIT=True when USE_FIREBASE_SALES=True for shilk report workflows.'
+            )
+
         credit_bill_amount = 0.0
         collection = 0.0
-        if credit_bill_repository.using_firebase():
-            sales_by_id = {str(record.id): record for record in sales_records}
-            for credit in credit_bill_repository.list_by_shop(shop_pk):
-                sales_record = sales_by_id.get(str(credit.sales_bill_record_id))
-                if sales_record is not None:
-                    credit_bill_amount += float(credit.initial_credit_bill_amount)
-                for payment in credit.histories:
-                    if str(payment.date) == selected_date_iso:
-                        collection += float(payment.amount)
-        else:
-            # Fallback to SQL credit collections while sales/arrival are on Firestore.
-            try:
-                collection = CreditBillHistory.objects.filter(
-                    credit_bill__shop_id=shop_pk,
-                    date=selected_date
-                ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-            except OperationalError:
-                collection = 0
+        sales_by_id = {str(record.id): record for record in sales_records}
+        for credit in credit_bill_repository.list_by_shop(shop_pk):
+            sales_record = sales_by_id.get(str(credit.sales_bill_record_id))
+            if sales_record is not None:
+                credit_bill_amount += float(credit.initial_credit_bill_amount)
+            for payment in credit.histories:
+                if str(payment.date) == selected_date_iso:
+                    collection += float(payment.amount)
 
-        if patti_repository.using_firebase():
-            patti_entries = sum(
-                float(record.net_amount)
-                for record in patti_repository.list_by_shop(shop_pk)
-                if str(record.date) == selected_date_iso
+        if not patti_repository.using_firebase():
+            raise ValueError(
+                'Enable USE_FIREBASE_PATTI=True when USE_FIREBASE_SALES=True for shilk report workflows.'
             )
-        else:
-            try:
-                patti_entries = PattiEntry.objects.filter(
-                    date=selected_date,
-                    shop_id=shop_pk
-                ).aggregate(
-                    net_amount=Sum('net_amount')
-                )['net_amount'] or 0
-            except OperationalError:
-                patti_entries = 0
 
-        if expenditure_repository.using_firebase():
-            total_expenditure = expenditure_repository.sum_amount_by_shop_and_date(
-                shop_pk,
-                selected_date_iso,
+        patti_entries = sum(
+            float(record.net_amount)
+            for record in patti_repository.list_by_shop(shop_pk)
+            if str(record.date) == selected_date_iso
+        )
+
+        if not expenditure_repository.using_firebase():
+            raise ValueError(
+                'Enable USE_FIREBASE_EXPENDITURE=True when USE_FIREBASE_SALES=True for shilk report workflows.'
             )
-        else:
-            try:
-                total_expenditure = ExpenditureEntry.objects.filter(
-                    shop_id=shop_pk,
-                    date=selected_date
-                ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-            except OperationalError:
-                total_expenditure = 0
+
+        total_expenditure = expenditure_repository.sum_amount_by_shop_and_date(
+            shop_pk,
+            selected_date_iso,
+        )
 
         patti = round(patti_entries, 2)
         cash_balance = cash_bill_amount + collection - total_expenditure

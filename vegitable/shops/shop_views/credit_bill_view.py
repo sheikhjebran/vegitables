@@ -30,6 +30,12 @@ def search_credit(request):
 
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
+        if sales_bill_repository.using_firebase() and not credit_bill_repository.using_firebase():
+            return JsonResponse({
+                'success': False,
+                'message': 'Enable USE_FIREBASE_CREDIT=True when USE_FIREBASE_SALES=True for credit workflows.',
+            }, status=400)
+
         if credit_bill_repository.using_firebase():
             search_name_lower = search_name.lower()
             results = []
@@ -105,6 +111,15 @@ def add_new_credit_bill_entry(request):
     bill_discount = get_float_number(request.POST['credit_bill_discount'])
 
     amount = round(amount_received + bill_discount, 2)
+
+    if sales_bill_repository.using_firebase() and not credit_bill_repository.using_firebase():
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Enable USE_FIREBASE_CREDIT=True when USE_FIREBASE_SALES=True for credit workflows.',
+            },
+            status=400,
+        )
 
     if credit_bill_repository.using_firebase():
         sales_record = sales_bill_repository.get_by_id(sales_bill_id)
@@ -187,6 +202,14 @@ def add_new_credit_bill_entry(request):
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def get_credit_bill_entry_list(request):
+    if sales_bill_repository.using_firebase() and not credit_bill_repository.using_firebase():
+        return Response(
+            data={
+                'error': 'Enable USE_FIREBASE_CREDIT=True when USE_FIREBASE_SALES=True for credit workflows.',
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     if credit_bill_repository.using_firebase():
         history_list = credit_bill_repository.list_history(request.GET['id'])
         data = []

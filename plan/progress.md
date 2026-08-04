@@ -66,6 +66,14 @@
 - Added `smoke_test_shilk_patti_firebase` to validate Shilk Firestore patti totals and net-amount computations.
 - Migrated live arrival create/update write-paths (including goods rows) to Firestore `ArrivalRepository` behind `USE_FIREBASE_ARRIVAL`, with SQL fallback preserved.
 - Updated arrival edit route to accept Firestore string IDs and aligned arrival edit template farmer-name rendering for repository records.
+- Added `backfill_arrival_to_firebase` and `compare_arrival_sources` commands for arrival historical migration and SQL-vs-Firestore parity checks.
+- Added explicit credit endpoint guardrails to block SQL credit fallback when sales are on Firestore without `USE_FIREBASE_CREDIT`, preventing mixed-backend credit inconsistencies.
+- Added sales-entry guardrail in Firestore mode to block outstanding-balance writes unless `USE_FIREBASE_CREDIT=True`, preventing mixed-backend credit creation during live sales entry.
+- Cleaned existing static analyzer `id`/`pk` mismatches in `sales_view.py` touched paths to keep Firestore migration branches warning-free.
+- Added Shilk endpoint guardrails to return HTTP 400 with actionable guidance when Firestore sales mode is enabled without `USE_FIREBASE_CREDIT`, removing mixed SQL/Firebase credit reads from active Shilk flows.
+- Removed remaining mixed-backend fallback reads from Firestore Shilk mode by requiring `USE_FIREBASE_PATTI=True` and `USE_FIREBASE_EXPENDITURE=True` (HTTP 400 guidance when disabled).
+- Updated report smoke commands to match Shilk guardrails (`USE_FIREBASE_PATTI` and `USE_FIREBASE_EXPENDITURE` now required in preflight checks).
+- Hardened report smoke commands to generate unique temporary `shop_id` values per run by default, eliminating false failures from historical Firestore data collisions.
 
 ## Verified facts
 
@@ -106,6 +114,11 @@
 - Execute expenditure backfill/parity in an environment that contains SQL expenditure source tables, then lock rollout sequencing for `USE_FIREBASE_EXPENDITURE`.
 - Continue reducing SQL dependencies in non-migrated report domains (remaining SQL joins in fallback paths and unmigrated slices).
 - Continue reducing SQL dependencies in remaining live entry domains (credit/sales/arrival fallback-heavy branches) while preserving hybrid fallback behavior.
+- Execute arrival backfill/parity in an environment that contains SQL arrival source tables, then lock rollout sequencing for `USE_FIREBASE_ARRIVAL`.
+- Continue migrating fallback-heavy sales/credit entry branches so active Firebase mode no longer touches SQL-only workflows.
+- Continue reducing SQL ORM usage in active Firebase report pathways (RMC/Shilk/Sales bill detail endpoints) by routing all Firestore-mode reads through repositories.
+- Continue reducing SQL ORM usage in Firestore report workflows by replacing remaining SQL fallback branches in Shilk with repository-backed implementations where corresponding Firebase slices are enabled.
+- Continue reducing SQL ORM usage in Firestore report workflows by applying the same explicit guard/consistency pattern to remaining report endpoints that still permit mixed-backend reads.
 - Decide when to make Firebase the default enabled path for `MobileSalesBill` and `CustomerLedger` in the target environment.
 - Decide when to make Firebase the default enabled path for `FarmerLedger` in the target environment.
 - Decide whether the next implementation step is live inventory/read cutover or Firestore-side backfill for arrival history.
@@ -174,11 +187,32 @@
 - Passed: `uv run python manage.py smoke_test_arrival_firebase` after arrival write-path Firestore cutover
 - Passed: `uv run python manage.py smoke_test_sales_bill_firebase` with all active Firebase domain flags
 - Passed: `uv run python manage.py smoke_test_report_http_firebase` with all active Firebase domain flags
+- Passed: `uv run python manage.py backfill_arrival_to_firebase --help`
+- Passed: `uv run python manage.py compare_arrival_sources --help`
+- Failed reading local SQLite source: `uv run python manage.py backfill_arrival_to_firebase --dry-run` reported missing arrival source tables
+- Failed reading local SQLite source: `uv run python manage.py compare_arrival_sources` reported missing arrival source tables
+- Passed: `uv run python manage.py check` after credit endpoint Firestore guardrail changes
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase` after credit endpoint Firestore guardrail changes
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after credit endpoint Firestore guardrail changes
+- Passed: `uv run python manage.py check` after sales-entry Firestore credit guardrail and `pk` cleanup
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` after sales-entry Firestore credit guardrail
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase` after sales-entry Firestore credit guardrail
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after sales-entry Firestore credit guardrail
+- Passed: `uv run python manage.py check` after Shilk Firestore credit consistency guardrail changes
+- Passed: `uv run python manage.py smoke_test_shilk_patti_firebase` with all active Firebase domain flags after Shilk guardrail changes
+- Passed: `uv run python manage.py smoke_test_report_firebase` with all active Firebase domain flags after Shilk guardrail changes
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with all active Firebase domain flags after Shilk guardrail changes
+- Passed: `uv run python manage.py check` after enforcing Firebase-only patti/expenditure dependencies in Firestore Shilk path
+- Passed: `uv run python manage.py smoke_test_shilk_patti_firebase` after enforcing Firebase-only patti/expenditure dependencies in Firestore Shilk path
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after enforcing Firebase-only patti/expenditure dependencies in Firestore Shilk path
+- Passed: `uv run python manage.py check` after report-smoke preflight/unique-shop-id hardening
+- Passed: `uv run python manage.py smoke_test_report_firebase` after report-smoke preflight/unique-shop-id hardening
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after report-smoke preflight/unique-shop-id hardening
 
 ## Current slice
 
-- Slice: Firestore arrival live write-path cutover plus report-path dependency reduction
-- Strategy: Route live arrival add/edit writes through `ArrivalRepository` in Firebase mode while keeping SQL fallback and validating downstream sales/report compatibility with existing smoke suites
+- Slice: Firestore sales/credit/report consistency hardening across live credit, sales entry, and Shilk endpoints
+- Strategy: Enforce Firebase-only repository workflows for Firestore sales across credit, patti, and expenditure dependencies in active Shilk/report reads, while keeping SQL fallback for non-Firebase sales mode
 - Files touched:
 	- `vegitable/vegitable/settings.py`
 	- `vegitable/shops/firebase_models/sales_bill.py`
@@ -203,6 +237,11 @@
 	- `vegitable/shops/shop_views/arrival_view.py`
 	- `vegitable/shops/urls.py`
 	- `vegitable/template/Entry/Arrival/modify_arrival_entry.html`
+	- `vegitable/shops/management/commands/backfill_arrival_to_firebase.py`
+	- `vegitable/shops/management/commands/compare_arrival_sources.py`
+	- `vegitable/shops/shop_views/credit_bill_view.py`
+	- `vegitable/shops/shop_views/sales_view.py`
+	- `vegitable/shops/shop_views/shilk_view.py`
 	- `vegitable/shops/management/commands/smoke_test_expenditure_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_shilk_patti_firebase.py`
 	- `vegitable/shops/management/commands/backfill_expenditure_to_firebase.py`
@@ -212,6 +251,7 @@
 	- `vegitable/shops/shop_views/shilk_view.py`
 	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
+	- `vegitable/shops/shop_views/shilk_view.py`
 	- `vegitable/shops/management/commands/smoke_test_report_pdf_firebase.py`
 	- `vegitable/template/Entry/Sales/modify_sales_bill_entry.html`
 	- `vegitable/template/Entry/Sales/sales_bill_entry.html`

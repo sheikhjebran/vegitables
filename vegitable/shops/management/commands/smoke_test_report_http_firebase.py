@@ -8,6 +8,8 @@ from django.test.client import RequestFactory
 
 from ...repositories.arrival_repository import ArrivalGoodsRecord, ArrivalRepository
 from ...repositories.credit_bill_repository import CreditBillRepository
+from ...repositories.expenditure_repository import ExpenditureRepository
+from ...repositories.patti_repository import PattiRepository
 from ...repositories.sales_bill_repository import SalesBillItemRecord, SalesBillRepository
 from ...shop_views.rmc_view import get_daily_rmc_selected_date, get_daily_rmc_start_and_end_date
 from ...shop_views.shilk_view import retrieve_shilk
@@ -20,23 +22,31 @@ class Command(BaseCommand):
         parser.add_argument(
             '--shop-id',
             type=int,
-            default=999997,
-            help='Temporary shop_id to use for the Firebase report HTTP smoke test.',
+            default=None,
+            help='Temporary shop_id to use for the Firebase report HTTP smoke test. If omitted, a unique ID is generated per run.',
         )
 
     def handle(self, *args, **options):
         arrival_repository = ArrivalRepository()
         sales_repository = SalesBillRepository()
         credit_repository = CreditBillRepository()
+        patti_repository = PattiRepository()
+        expenditure_repository = ExpenditureRepository()
 
-        if not arrival_repository.using_firebase() or not sales_repository.using_firebase() or not credit_repository.using_firebase():
+        if (
+            not arrival_repository.using_firebase()
+            or not sales_repository.using_firebase()
+            or not credit_repository.using_firebase()
+            or not patti_repository.using_firebase()
+            or not expenditure_repository.using_firebase()
+        ):
             raise CommandError(
-                'Set FIREBASE_ENABLED=True, USE_FIREBASE_ARRIVAL=True, USE_FIREBASE_SALES=True, and USE_FIREBASE_CREDIT=True before running this command.'
+                'Set FIREBASE_ENABLED=True, USE_FIREBASE_ARRIVAL=True, USE_FIREBASE_SALES=True, USE_FIREBASE_CREDIT=True, USE_FIREBASE_PATTI=True, and USE_FIREBASE_EXPENDITURE=True before running this command.'
             )
 
         token = uuid4().hex[:8]
         today = '2026-08-04'
-        shop_id = options['shop_id']
+        shop_id = options['shop_id'] if options['shop_id'] is not None else _generated_shop_id(token)
         request_factory = RequestFactory()
         fake_user = SimpleNamespace(
             is_authenticated=True,
@@ -215,6 +225,11 @@ class Command(BaseCommand):
             sales_repository.delete(sales_cash.id, restore_stock=True)
         if arrival_record is not None:
             arrival_repository.delete(arrival_record.id)
+
+
+def _generated_shop_id(token):
+    # Keep generated IDs in a high range to avoid clashing with real shops.
+    return 900000 + (int(token[:6], 16) % 90000)
 
 
 def _to_payload(response):

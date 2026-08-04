@@ -90,7 +90,7 @@ def navigate_to_add_sales_bill_entry(request):
             'sales_entry_counter': int(index.sales_bill_entry_counter) + 1
         }
 
-        mobile_sales_customer = mobile_sales_repository.list_by_shop(shop_detail_object.id)
+        mobile_sales_customer = mobile_sales_repository.list_by_shop(shop_detail_object.pk)
 
         customer_list = []
         for customer in mobile_sales_customer:
@@ -119,6 +119,13 @@ def modify_sales_bill_entry(request):
                 is_new = str(request.POST['new']) == "True"
 
                 balance_amount = round(float(request.POST['balance_amount']), 2)
+                if balance_amount > 0.0 and not credit_bill_repository.using_firebase():
+                    messages.error(
+                        request,
+                        'Enable USE_FIREBASE_CREDIT=True when using Firestore sales with outstanding balances.',
+                    )
+                    request.session['form_token'] = generate_unique_number()
+                    return sales_bill_entry(request)
 
                 mobile_sales_repository.delete_by_shop_and_customer_name(
                     shop_detail_object.pk,
@@ -191,7 +198,7 @@ def modify_sales_bill_entry(request):
                 )
 
                 mobile_sales_repository.delete_by_shop_and_customer_name(
-                    shop_detail_object.id,
+                    shop_detail_object.pk,
                     request.POST['sales_entry_customer_name'],
                 )
 
@@ -223,7 +230,7 @@ def modify_sales_bill_entry(request):
                 index_obj.sales_bill_entry_counter += 1
                 index_obj.save()
 
-            print(f"New Sales Bill entry  = {sales_bill_entry_Obj.id}")
+            print(f"New Sales Bill entry  = {sales_bill_entry_Obj.pk}")
             if sales_bill_entry_Obj.balance_amount > 0.0:
                 add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
                                       sales_bill_entry_Obj.balance_amount)
@@ -289,7 +296,7 @@ def add_sales_bill_item(request, request_list, sales):
 
             sales_bill_entry_Obj.save()
 
-            print(f"New Sales Bill item  = {sales_bill_entry_Obj.id}")
+            print(f"New Sales Bill item  = {sales_bill_entry_Obj.pk}")
     return render(request, 'index.html')
 
 
@@ -451,7 +458,7 @@ def get_mobile_customer_detail(request):
 
         # Fetch mobile sales data for the selected customer
         results = mobile_sales_repository.list_by_shop_and_customer_name(
-            shop_detail_object.id,
+            shop_detail_object.pk,
             selected_customer,
         )
 
