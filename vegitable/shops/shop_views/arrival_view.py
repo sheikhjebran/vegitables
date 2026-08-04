@@ -12,6 +12,59 @@ from ..utility import getDate_from_string
 arrival_repository = ArrivalRepository()
 
 
+def _parse_arrival_goods_payload(request, request_list, existing_goods_status=None):
+    former_name_list = []
+    item_name_list = []
+    qty_list = []
+    weight_list = []
+    remarks_list = []
+    arrival_goods_id = []
+    advance_amount_list = []
+
+    for key in request_list:
+        if re.search("^.*_farmer_name$", key):
+            former_name_list.append(key)
+        if re.search("^.*_item_name$", key):
+            item_name_list.append(key)
+        if re.search("^.*_qty$", key):
+            qty_list.append(key)
+        if re.search("^.*_weight$", key):
+            weight_list.append(key)
+        if re.search("^.*_remark$", key):
+            remarks_list.append(key)
+        if re.search("^.*_advance_amount$", key):
+            advance_amount_list.append(key)
+        if re.search("^.*_arrival_goods_id$", key):
+            arrival_goods_id.append(key)
+
+    goods = []
+    existing_goods_status = existing_goods_status or {}
+    for index in range(0, len(former_name_list)):
+        key_name = former_name_list[index]
+        is_modify = "modify" in key_name
+
+        local_id = None
+        if is_modify and index < len(arrival_goods_id):
+            local_id = str(request.POST[arrival_goods_id[index]]).split("_")[0]
+
+        goods.append(
+            {
+                'local_id': local_id,
+                'former_name': request.POST[former_name_list[index]],
+                'item_name': request.POST[item_name_list[index]],
+                'initial_qty': int(float(request.POST[qty_list[index]])),
+                'qty': int(float(request.POST[qty_list[index]])),
+                'weight': float(request.POST[weight_list[index]]),
+                'remarks': request.POST[remarks_list[index]],
+                'advance': float(request.POST[advance_amount_list[index]]),
+                # Preserve prior settlement status for existing goods during updates.
+                'patti_status': bool(existing_goods_status.get(str(local_id), False)),
+            }
+        )
+
+    return goods
+
+
 def add_new_arrival_entry(request):
     if request.user.is_authenticated:
         today = date.today()
@@ -36,40 +89,84 @@ def add_arrival(request):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
 
-        if str(request.POST['new']) == "True":
-            arrival_entry_obj = ArrivalEntry(
-                arrival_id=request.POST['arrival_id'],  # for indexing
-                gp_no=request.POST['gp_number'],
-                date=getDate_from_string(request.POST['arrival_entry_date']),
-                patti_name=request.POST['patti_name'],
-                total_bags=request.POST['total_number_of_bags'],
-                lorry_no=request.POST['lorry_number'],
-                shop=shop_detail_object,
-                Empty_data=False)
+        is_new = str(request.POST['new']) == "True"
+
+        if arrival_repository.using_firebase():
+            request_fields = list(request.POST)
+            existing_goods_status = {}
+            if not is_new:
+                existing_record = arrival_repository.get_by_id(request.POST['id'])
+                if existing_record is not None:
+                    existing_goods_status = {
+                        str(goods.local_id): bool(goods.patti_status)
+                        for goods in existing_record.goods
+                    }
+
+            goods_payload = _parse_arrival_goods_payload(
+                request,
+                request_fields,
+                existing_goods_status=existing_goods_status,
+            )
+
+            if is_new:
+                arrival_repository.create(
+                    shop_id=shop_detail_object.pk,
+                    arrival_id=request.POST['arrival_id'],
+                    gp_no=request.POST['gp_number'],
+                    lorry_no=request.POST['lorry_number'],
+                    date=getDate_from_string(request.POST['arrival_entry_date']).isoformat(),
+                    patti_name=request.POST['patti_name'],
+                    total_bags=request.POST['total_number_of_bags'],
+                    empty_data=False,
+                    goods=goods_payload,
+                )
+            else:
+                arrival_repository.update(
+                    record_id=request.POST['id'],
+                    shop_id=shop_detail_object.pk,
+                    arrival_id=request.POST['arrival_id'],
+                    gp_no=request.POST['gp_number'],
+                    lorry_no=request.POST['lorry_number'],
+                    date=getDate_from_string(request.POST['arrival_entry_date']).isoformat(),
+                    patti_name=request.POST['patti_name'],
+                    total_bags=request.POST['total_number_of_bags'],
+                    empty_data=False,
+                    goods=goods_payload,
+                )
         else:
-            arrival_entry_obj = ArrivalEntry.objects.get(
-                id=request.POST['id'])  # object to update
-            arrival_entry_obj.gp_no = request.POST['gp_number']
-            arrival_entry_obj.date = getDate_from_string(
-                request.POST['arrival_entry_date'])
-            arrival_entry_obj.patti_name = request.POST['patti_name']
-            arrival_entry_obj.total_bags = request.POST['total_number_of_bags']
-            arrival_entry_obj.lorry_no = request.POST['lorry_number']
-            arrival_entry_obj.shop = shop_detail_object
-            arrival_entry_obj.Empty_data = False
+            if is_new:
+                arrival_entry_obj = ArrivalEntry(
+                    arrival_id=request.POST['arrival_id'],  # for indexing
+                    gp_no=request.POST['gp_number'],
+                    date=getDate_from_string(request.POST['arrival_entry_date']),
+                    patti_name=request.POST['patti_name'],
+                    total_bags=request.POST['total_number_of_bags'],
+                    lorry_no=request.POST['lorry_number'],
+                    shop=shop_detail_object,
+                    Empty_data=False)
+            else:
+                arrival_entry_obj = ArrivalEntry.objects.get(
+                    id=request.POST['id'])  # object to update
+                arrival_entry_obj.gp_no = request.POST['gp_number']
+                arrival_entry_obj.date = getDate_from_string(
+                    request.POST['arrival_entry_date'])
+                arrival_entry_obj.patti_name = request.POST['patti_name']
+                arrival_entry_obj.total_bags = request.POST['total_number_of_bags']
+                arrival_entry_obj.lorry_no = request.POST['lorry_number']
+                arrival_entry_obj.shop = shop_detail_object
+                arrival_entry_obj.Empty_data = False
 
-        arrival_entry_obj.save()
-        print(f"New arrival entry  = {arrival_entry_obj.id}")
+            arrival_entry_obj.save()
+            print(f"New arrival entry  = {arrival_entry_obj.id}")
+            add_arrival_goods_item(request, list(
+                request.POST), arrival_entry_obj, shop_detail_object)
 
-        if str(request.POST['new']) == "True":
+        if is_new:
             index_obj = get_object_or_404(Index, shop=shop_detail_object)
 
             # Increment the arrival_entry_counter
             index_obj.arrival_entry_counter += 1
             index_obj.save()
-
-        add_arrival_goods_item(request, list(
-            request.POST), arrival_entry_obj, shop_detail_object)
 
         return home(request)
 

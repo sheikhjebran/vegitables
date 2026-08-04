@@ -72,6 +72,8 @@ USE_FIREBASE_FARMER_LEDGER = config('USE_FIREBASE_FARMER_LEDGER', cast=bool, def
 USE_FIREBASE_ARRIVAL = config('USE_FIREBASE_ARRIVAL', cast=bool, default=False)
 USE_FIREBASE_SALES = config('USE_FIREBASE_SALES', cast=bool, default=False)
 USE_FIREBASE_CREDIT = config('USE_FIREBASE_CREDIT', cast=bool, default=False)
+USE_FIREBASE_PATTI = config('USE_FIREBASE_PATTI', cast=bool, default=False)
+USE_FIREBASE_EXPENDITURE = config('USE_FIREBASE_EXPENDITURE', cast=bool, default=False)
 FIREBASE_CREDENTIAL_PATH = _resolve_optional_path(
     config('FIREBASE_CREDENTIAL_PATH', default='')
 )

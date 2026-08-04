@@ -123,6 +123,66 @@ class ArrivalRepository:
                     available.append((entry, goods))
         return available
 
+    def list_unsettled_entries(self, shop_id):
+        entries = []
+        for entry in self.list_by_shop(shop_id):
+            if any(not goods.patti_status for goods in entry.goods):
+                entries.append(entry)
+        return entries
+
+    def list_unsettled_farmer_names(self, shop_id, entry_id):
+        entry = self.get_by_id(entry_id)
+        if entry is None or int(entry.shop_id) != int(shop_id):
+            return []
+
+        names = {
+            goods.former_name
+            for goods in entry.goods
+            if goods.former_name and not goods.patti_status
+        }
+        return sorted(names)
+
+    def mark_goods_settled(self, *, shop_id, entry_id, former_name):
+        entry = self.get_by_id(entry_id)
+        if entry is None or int(entry.shop_id) != int(shop_id):
+            return 0
+
+        updated_goods = []
+        settled_count = 0
+        for goods in entry.goods:
+            if goods.former_name == former_name and not goods.patti_status:
+                updated_goods.append(ArrivalGoodsRecord(
+                    local_id=goods.local_id,
+                    former_name=goods.former_name,
+                    item_name=goods.item_name,
+                    initial_qty=goods.initial_qty,
+                    qty=goods.qty,
+                    weight=goods.weight,
+                    remarks=goods.remarks,
+                    advance=goods.advance,
+                    patti_status=True,
+                ))
+                settled_count += 1
+            else:
+                updated_goods.append(goods)
+
+        if settled_count <= 0:
+            return 0
+
+        self.update(
+            record_id=entry.id,
+            shop_id=entry.shop_id,
+            arrival_id=entry.arrival_id,
+            gp_no=entry.gp_no,
+            lorry_no=entry.lorry_no,
+            date=entry.date,
+            patti_name=entry.patti_name,
+            total_bags=entry.total_bags,
+            empty_data=entry.empty_data,
+            goods=updated_goods,
+        )
+        return settled_count
+
     def get_goods_by_local_id(self, shop_id, local_id):
         for entry, goods in self.list_available_goods_by_shop(shop_id):
             if str(goods.local_id) == str(local_id):

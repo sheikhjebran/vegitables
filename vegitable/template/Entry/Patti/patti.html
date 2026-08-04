@@ -35,7 +35,7 @@
         <tbody>
             {%for patti in patti_entry_detail %}
                 <tr>
-                    <td><a href="/edit_patti_entry/{{patti.id}}">{{ patti.id}}</a></td>
+                    <td><a href="/edit_patti_entry/{{patti.id}}">{{ patti.patti_id|default:patti.id}}</a></td>
                     <td>{{patti.date}}</td>
                     <td>{{patti.lorry_no}}</td>
                     <td>{{patti.farmer_name}}</td>

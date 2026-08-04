@@ -51,6 +51,21 @@
 - Added `smoke_test_report_pdf_firebase` to validate Firestore-backed RMC daily/weekly PDF endpoint responses with temporary Firestore data.
 - Upgraded `smoke_test_report_pdf_firebase` to assert generated PDF text includes expected Firestore bill IDs and totals.
 - Added mixed-date weekly PDF parity checks in `smoke_test_report_pdf_firebase`, including date/bill ordering assertions for Firestore output.
+- Switched sales-report data aggregation and patti sales-list lookup to Firestore-backed sales/arrival repositories behind existing flags, preserving SQL fallback.
+- Migrated patti settlement write-path (`patti_status`) to Firestore arrival goods updates behind `USE_FIREBASE_ARRIVAL`, with SQL fallback preserved.
+- Migrated patti unsettled-lorry and farmer-name lookups to Firestore arrival repository paths behind `USE_FIREBASE_ARRIVAL`, with SQL fallback preserved.
+- Added `smoke_test_patti_firebase` to validate patti Firestore read/write flows end to end.
+- Added Firestore-native `PattiEntry` repository/document slice and routed patti create/list/edit reads behind `USE_FIREBASE_PATTI` with SQL fallback.
+- Added Firestore-native patti update path and wired patti edit-form saves to repository updates behind `USE_FIREBASE_PATTI` with SQL fallback.
+- Added `backfill_patti_to_firebase` and `compare_patti_sources` commands for patti historical migration and SQL-vs-Firestore parity checks.
+- Added Firestore-native `ExpenditureEntry` repository/document slice and wired expenditure CRUD/search flows behind `USE_FIREBASE_EXPENDITURE` with SQL fallback.
+- Switched Shilk Firestore aggregate path to use Firestore expenditure totals behind `USE_FIREBASE_EXPENDITURE` with SQL fallback preserved.
+- Added `smoke_test_expenditure_firebase` to validate expenditure Firestore CRUD and date-based aggregate behavior.
+- Added `backfill_expenditure_to_firebase` and `compare_expenditure_sources` commands for expenditure historical migration and SQL-vs-Firestore parity checks.
+- Removed remaining SQL patti dependency from the Firestore Shilk path by consuming `PattiRepository` totals behind `USE_FIREBASE_PATTI` with SQL fallback preserved.
+- Added `smoke_test_shilk_patti_firebase` to validate Shilk Firestore patti totals and net-amount computations.
+- Migrated live arrival create/update write-paths (including goods rows) to Firestore `ArrivalRepository` behind `USE_FIREBASE_ARRIVAL`, with SQL fallback preserved.
+- Updated arrival edit route to accept Firestore string IDs and aligned arrival edit template farmer-name rendering for repository records.
 
 ## Verified facts
 
@@ -83,6 +98,14 @@
 - Validate Firestore credit flow on live UI interactions and settle payment-type mapping rules for fully cleared balances.
 - Migrate remaining SQL-only reporting domains (Patti/Expense-only sections can remain SQL until those domains are migrated).
 - Begin live inventory/stock-mutation cutover from SQL `ArrivalGoods` to Firestore arrival stock for all sales paths.
+- Continue live inventory/stock-mutation cutover by migrating patti settlement write-path (`patti_status`) from SQL `ArrivalGoods` to Firestore arrival goods documents.
+- Continue live inventory/stock-mutation cutover by migrating remaining SQL-only patti persistence (`PattiEntry` / `PattiEntryList`) to Firestore repositories.
+- Continue patti domain migration by adding parity/backfill strategy for historical patti rows and optional Firestore-side delete UI behavior.
+- Execute patti backfill/parity in an environment that contains SQL patti source tables, then lock default-flag rollout sequencing.
+- Add historical backfill/parity tooling for expenditure rows and execute it in an environment that contains SQL expenditure source tables.
+- Execute expenditure backfill/parity in an environment that contains SQL expenditure source tables, then lock rollout sequencing for `USE_FIREBASE_EXPENDITURE`.
+- Continue reducing SQL dependencies in non-migrated report domains (remaining SQL joins in fallback paths and unmigrated slices).
+- Continue reducing SQL dependencies in remaining live entry domains (credit/sales/arrival fallback-heavy branches) while preserving hybrid fallback behavior.
 - Decide when to make Firebase the default enabled path for `MobileSalesBill` and `CustomerLedger` in the target environment.
 - Decide when to make Firebase the default enabled path for `FarmerLedger` in the target environment.
 - Decide whether the next implementation step is live inventory/read cutover or Firestore-side backfill for arrival history.
@@ -123,20 +146,69 @@
 - Passed: `uv run python manage.py smoke_test_report_http_firebase`
 - Passed: `uv run python manage.py smoke_test_report_pdf_firebase`
 - Passed: `uv run python manage.py smoke_test_report_pdf_firebase` with mixed-date weekly ordering assertions
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` after sales-report/patti lookup Firestore cutover
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after sales-report/patti lookup Firestore cutover
+- Passed: `uv run python manage.py check` after patti Firestore settlement cutover
+- Passed: `uv run python manage.py smoke_test_patti_firebase`
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` after patti Firestore settlement cutover
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after patti Firestore settlement cutover
+- Passed: `uv run python manage.py smoke_test_patti_firebase` with `USE_FIREBASE_PATTI=True`
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` with patti Firestore repository enabled
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with patti Firestore repository enabled
+- Passed: `uv run python manage.py check` after patti edit-write Firestore update wiring
+- Passed: `uv run python manage.py smoke_test_patti_firebase` with repository update assertions
+- Passed: `uv run python manage.py backfill_patti_to_firebase --help`
+- Passed: `uv run python manage.py compare_patti_sources --help`
+- Failed reading local SQLite source: `uv run python manage.py backfill_patti_to_firebase --dry-run` reported missing patti source tables
+- Failed reading local SQLite source: `uv run python manage.py compare_patti_sources` reported missing patti source tables
+- Passed: `uv run python manage.py smoke_test_expenditure_firebase`
+- Passed: `uv run python manage.py smoke_test_report_firebase` with `USE_FIREBASE_EXPENDITURE=True`
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with `USE_FIREBASE_EXPENDITURE=True`
+- Passed: `uv run python manage.py backfill_expenditure_to_firebase --help`
+- Passed: `uv run python manage.py compare_expenditure_sources --help`
+- Failed reading local SQLite source: `uv run python manage.py backfill_expenditure_to_firebase --dry-run` reported missing expenditure source table
+- Failed reading local SQLite source: `uv run python manage.py compare_expenditure_sources` reported missing expenditure source table
+- Passed: `uv run python manage.py smoke_test_shilk_patti_firebase`
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with `USE_FIREBASE_PATTI=True` and `USE_FIREBASE_EXPENDITURE=True`
+- Passed: `uv run python manage.py check` after arrival write-path Firestore cutover
+- Passed: `uv run python manage.py smoke_test_arrival_firebase` after arrival write-path Firestore cutover
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` with all active Firebase domain flags
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with all active Firebase domain flags
 
 ## Current slice
 
-- Slice: Firestore reporting cutover for migrated sales/credit domains
-- Strategy: Use Firestore repositories for RMC and Shilk sales/credit aggregates while retaining SQL-only sources for yet-unmigrated domains
+- Slice: Firestore arrival live write-path cutover plus report-path dependency reduction
+- Strategy: Route live arrival add/edit writes through `ArrivalRepository` in Firebase mode while keeping SQL fallback and validating downstream sales/report compatibility with existing smoke suites
 - Files touched:
 	- `vegitable/vegitable/settings.py`
 	- `vegitable/shops/firebase_models/sales_bill.py`
 	- `vegitable/shops/repositories/sales_bill_repository.py`
 	- `vegitable/shops/repositories/arrival_repository.py`
+	- `vegitable/shops/repositories/patti_repository.py`
+	- `vegitable/shops/firebase_models/patti.py`
 	- `vegitable/shops/management/commands/smoke_test_sales_bill_firebase.py`
 	- `vegitable/shops/shop_views/sales_view.py`
 	- `vegitable/shops/shop_views/credit_bill_view.py`
 	- `vegitable/shops/shop_views/rmc_view.py`
+	- `vegitable/shops/views.py`
+	- `vegitable/shops/shop_views/patti_view.py`
+	- `vegitable/shops/urls.py`
+	- `vegitable/shops/management/commands/smoke_test_patti_firebase.py`
+	- `vegitable/shops/management/commands/backfill_patti_to_firebase.py`
+	- `vegitable/shops/management/commands/compare_patti_sources.py`
+	- `vegitable/shops/repositories/expenditure_repository.py`
+	- `vegitable/shops/firebase_models/expenditure.py`
+	- `vegitable/shops/shop_views/expenditure_view.py`
+	- `vegitable/shops/shop_views/shilk_view.py`
+	- `vegitable/shops/shop_views/arrival_view.py`
+	- `vegitable/shops/urls.py`
+	- `vegitable/template/Entry/Arrival/modify_arrival_entry.html`
+	- `vegitable/shops/management/commands/smoke_test_expenditure_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_shilk_patti_firebase.py`
+	- `vegitable/shops/management/commands/backfill_expenditure_to_firebase.py`
+	- `vegitable/shops/management/commands/compare_expenditure_sources.py`
+	- `vegitable/template/Entry/Patti/modify_patti_entry.html`
+	- `vegitable/template/Entry/Patti/patti.html`
 	- `vegitable/shops/shop_views/shilk_view.py`
 	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
@@ -150,6 +222,7 @@
 	- `vegitable/shops/management/commands/smoke_test_credit_bill_firebase.py`
 	- `vegitable/shops/urls.py`
 	- `vegitable/vegitable/settings.py`
+	- `vegitable/.env.example`
 	- `vegitable/.env.example`
 	- `plan/04-migration-runbook.md`
 	- `plan/05-data-mapping.md`

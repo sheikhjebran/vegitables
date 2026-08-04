@@ -10,6 +10,7 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index, SalesBillItem
 from ..repositories.arrival_repository import ArrivalRepository
+from ..repositories.patti_repository import PattiRepository
 from ..repositories.sales_bill_repository import SalesBillRepository
 from ..utility import getDate_from_string
 from django.http import HttpResponse
@@ -21,14 +22,18 @@ import uuid
 
 arrival_repository = ArrivalRepository()
 sales_bill_repository = SalesBillRepository()
+patti_repository = PattiRepository()
 
 def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
         shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        patti_entry_detail = None
+        patti_entry_detail = []
         try:
-            patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).order_by(
-                '-id')
+            if patti_repository.using_firebase():
+                patti_entry_detail = patti_repository.list_by_shop(shop_detail_object.pk)
+            else:
+                patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).order_by('-id')
+
             items_per_page = 10
             paginator = Paginator(patti_entry_detail, items_per_page)
             patti_entry_detail = paginator.get_page(current_page)
@@ -45,10 +50,20 @@ def patti_entry(request, current_page=1):
     return render(request, 'index.html')
 
 
-def get_unsettled_lorry_details():
-    # Filter ArrivalGoods with patti_status as False and get related ArrivalEntry fields
+def get_unsettled_lorry_details(shop_detail_object):
+    if arrival_repository.using_firebase():
+        return [
+            {
+                'id': record.id,
+                'lorry_no': record.lorry_no,
+            }
+            for record in arrival_repository.list_unsettled_entries(shop_detail_object.pk)
+        ]
+
+    # SQL fallback for non-Firestore shops.
     unsettled_entries = ArrivalEntry.objects.filter(
-        arrivalgoods__patti_status=False
+        arrivalgoods__shop=shop_detail_object,
+        arrivalgoods__patti_status=False,
     ).distinct().values('id', 'lorry_no')
 
     return list(unsettled_entries)
@@ -65,7 +80,7 @@ def add_new_patti_entry(request):
             'patti_entry_counter': int(index.patti_entry_counter) + 1
         }
 
-        un_settled_lorry_detail = get_unsettled_lorry_details()
+        un_settled_lorry_detail = get_unsettled_lorry_details(shop_detail_object)
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {
                           "un_settled_lorry_detail": un_settled_lorry_detail,
@@ -80,8 +95,18 @@ def add_new_patti_entry(request):
 def get_all_farmer_name(request):
     [...]
     arrival_entry_id = request.GET['lorry_number']
+    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+
+    if arrival_repository.using_firebase():
+        former_names = arrival_repository.list_unsettled_farmer_names(
+            shop_detail_object.pk,
+            arrival_entry_id,
+        )
+        return Response({'farmer_list': former_names}, status=status.HTTP_200_OK)
+
     arrival_entry = get_object_or_404(ArrivalEntry, id=arrival_entry_id)
     former_names = ArrivalGoods.objects.filter(
+        shop=shop_detail_object,
         arrival_entry=arrival_entry,
         patti_status=False
     ).values_list('former_name', flat=True)
@@ -95,9 +120,14 @@ def view_generate_patti_pdf_bill(request):
 
     shop_detail_object = get_object_or_404(Shop, shop_owner=request.user.id)
 
-    if str(request.POST.get('new')) == "True":
+    is_new = str(request.POST.get('new')) == "True"
+
+    if is_new:
         try:
-            patti_entry_obj = PattiEntry(
+            patti_items = build_patti_item_list(request, list(request.POST))
+
+            patti_entry_obj = patti_repository.create(
+                shop_id=shop_detail_object.pk,
                 lorry_no=request.POST['patti_lorry_number'],
                 date=getDate_from_string(request.POST['patti_entry_date']),
                 advance=request.POST['advance_amount'],
@@ -105,36 +135,64 @@ def view_generate_patti_pdf_bill(request):
                 total_weight=request.POST['total_weight'],
                 hamali=request.POST['hamali'],
                 net_amount=request.POST['net_amount'],
-                shop=shop_detail_object,
-                patti_id=request.POST['patti_bill_id']
+                patti_id=request.POST['patti_bill_id'],
+                items=patti_items,
             )
-            patti_entry_obj.save()
 
             index_obj = get_object_or_404(Index, shop=shop_detail_object)
             index_obj.patti_entry_counter += 1
             index_obj.save()
 
-            arrival_detail_object = get_object_or_404(
-                ArrivalEntry, id=request.POST['patti_lorry_number'])
+            if arrival_repository.using_firebase():
+                settled_count = arrival_repository.mark_goods_settled(
+                    shop_id=shop_detail_object.pk,
+                    entry_id=request.POST['patti_lorry_number'],
+                    former_name=request.POST['patti_farmer_name'],
+                )
+                if settled_count <= 0:
+                    return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
+            else:
+                arrival_detail_object = get_object_or_404(
+                    ArrivalEntry, id=request.POST['patti_lorry_number'])
 
-            arrival_good_objects = ArrivalGoods.objects.filter(
-                shop=shop_detail_object,
-                arrival_entry=arrival_detail_object,
-                former_name=request.POST['patti_farmer_name']
-            )
+                arrival_good_objects = ArrivalGoods.objects.filter(
+                    shop=shop_detail_object,
+                    arrival_entry=arrival_detail_object,
+                    former_name=request.POST['patti_farmer_name']
+                )
 
-            if not arrival_good_objects.exists():
-                return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
+                if not arrival_good_objects.exists():
+                    return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
 
-            for arrival_good_object in arrival_good_objects:
-                arrival_good_object.patti_status = True
-                arrival_good_object.save()
-
-            add_patti_item_list(request, list(request.POST), patti_entry_obj)
+                for arrival_good_object in arrival_good_objects:
+                    arrival_good_object.patti_status = True
+                    arrival_good_object.save()
 
             pdf_url = generate_patti_pdf(request, patti_entry_obj)
             return JsonResponse({'pdf_url': pdf_url}, status=200)
 
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    if str(request.POST.get('new')) == "False":
+        try:
+            patti_items = build_patti_item_list(request, list(request.POST))
+            patti_entry_obj = patti_repository.update(
+                record_id=request.POST['id'],
+                shop_id=shop_detail_object.pk,
+                lorry_no=request.POST['patti_lorry_number'],
+                date=getDate_from_string(request.POST['patti_entry_date']),
+                advance=request.POST['advance_amount'],
+                farmer_name=request.POST['patti_farmer_name'],
+                total_weight=request.POST['total_weight'],
+                hamali=request.POST['hamali'],
+                net_amount=request.POST['net_amount'],
+                patti_id=request.POST['patti_bill_id'],
+                items=patti_items,
+            )
+
+            pdf_url = generate_patti_pdf(request, patti_entry_obj)
+            return JsonResponse({'pdf_url': pdf_url}, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
@@ -180,11 +238,17 @@ def generate_patti_pdf(request, patti_entry_obj):
 @csrf_protect
 def edit_patti_entry(request, patti_id):
     if request.user.is_authenticated:
-        patti_bill_detail = PattiEntry.objects.get(pk=patti_id)
-        today = patti_bill_detail.date
-
-        patti_entry_obj = PattiEntryList.objects.filter(
-            patti=patti_bill_detail)
+        if patti_repository.using_firebase():
+            patti_bill_detail = patti_repository.get_by_id(patti_id)
+            if patti_bill_detail is None:
+                return JsonResponse({'error': 'Patti entry not found'}, status=404)
+            today = patti_bill_detail.date
+            patti_entry_obj = patti_bill_detail.items
+        else:
+            patti_bill_detail = PattiEntry.objects.get(pk=patti_id)
+            today = patti_bill_detail.date
+            patti_entry_obj = PattiEntryList.objects.filter(
+                patti=patti_bill_detail)
 
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {'patti_bill_detail': patti_bill_detail,
@@ -195,48 +259,41 @@ def edit_patti_entry(request, patti_id):
     return render(request, 'index.html')
 
 
-def add_patti_item_list(request, request_list, patti_entry_obj):
-    if request.user.is_authenticated:
-        item_name_list = []
-        lot_number_list = []
-        weight_list = []
-        rate_list = []
-        amount_list = []
+def build_patti_item_list(request, request_list):
+    item_name_list = []
+    lot_number_list = []
+    weight_list = []
+    rate_list = []
+    amount_list = []
 
-        for i in request_list:
-            item_name_list_regrex = re.search("^.*_item_name$", i)
-            if item_name_list_regrex:
-                item_name_list.append(i)
+    for key in request_list:
+        if re.search("^.*_item_name$", key):
+            item_name_list.append(key)
 
-            lot_number_list_regrex = re.search("^.*_lot_number$", i)
-            if lot_number_list_regrex:
-                lot_number_list.append(i)
+        if re.search("^.*_lot_number$", key):
+            lot_number_list.append(key)
 
-            weight_list_regrex = re.search("^.*_weight$", i)
-            if weight_list_regrex:
-                weight_list.append(i)
+        if re.search("^.*_weight$", key):
+            weight_list.append(key)
 
-            rate_list_regrex = re.search("^.*_rate$", i)
-            if rate_list_regrex:
-                rate_list.append(i)
+        if re.search("^.*_rate$", key):
+            rate_list.append(key)
 
-            amount_list_regrex = re.search("^.*_amount$", i)
-            if amount_list_regrex:
-                amount_list.append(i)
+        if re.search("^.*_amount$", key):
+            amount_list.append(key)
 
-        for i in range(0, len(item_name_list)):
-            patti_obj = PattiEntryList(
-                item=request.POST[item_name_list[i]],
-                lot_no=request.POST[lot_number_list[i]],
-                weight=request.POST[weight_list[i]],
-                rate=request.POST[rate_list[i]],
-                amount=request.POST[amount_list[i]],
-                patti=patti_entry_obj
-            )
-
-            patti_obj.save()
-
-    return render(request, 'index.html')
+    rows = []
+    for index in range(0, len(item_name_list)):
+        rows.append(
+            {
+                'item': request.POST[item_name_list[index]],
+                'lot_no': request.POST[lot_number_list[index]],
+                'weight': request.POST[weight_list[index]],
+                'rate': request.POST[rate_list[index]],
+                'amount': request.POST[amount_list[index]],
+            }
+        )
+    return rows
 
 
 @api_view(('GET',))

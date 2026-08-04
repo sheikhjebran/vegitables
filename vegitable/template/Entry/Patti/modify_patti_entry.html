@@ -42,7 +42,7 @@
           type="text"
           placeholder="Bill No"
           required=""
-          value="{{patti_bill_detail.id}}"
+          value="{{patti_bill_detail.patti_id|default:patti_bill_detail.id}}"
           name="patti_bill_id"
           id="patti_bill_id"
           readonly

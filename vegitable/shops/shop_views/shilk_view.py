@@ -5,6 +5,8 @@ from ..models import Shop, CreditBillEntry, ExpenditureEntry, CreditBillHistory,
     ArrivalGoods, ArrivalEntry
 from ..repositories.arrival_repository import ArrivalRepository
 from ..repositories.credit_bill_repository import CreditBillRepository
+from ..repositories.expenditure_repository import ExpenditureRepository
+from ..repositories.patti_repository import PattiRepository
 from ..repositories.sales_bill_repository import SalesBillRepository
 from django.db.models import Sum, F, Q
 from django.db import models
@@ -17,6 +19,8 @@ from ..utility import getDate_from_string
 arrival_repository = ArrivalRepository()
 sales_bill_repository = SalesBillRepository()
 credit_bill_repository = CreditBillRepository()
+expenditure_repository = ExpenditureRepository()
+patti_repository = PattiRepository()
 
 
 def _shop_pk(shop_or_id):
@@ -102,23 +106,36 @@ def get_sales_bag_count_detail_for_selected_date(selected_date: str, shop_id):
             except OperationalError:
                 collection = 0
 
-        try:
-            patti_entries = PattiEntry.objects.filter(
-                date=selected_date,
-                shop_id=shop_pk
-            ).aggregate(
-                net_amount=Sum('net_amount')
-            )['net_amount'] or 0
-        except OperationalError:
-            patti_entries = 0
+        if patti_repository.using_firebase():
+            patti_entries = sum(
+                float(record.net_amount)
+                for record in patti_repository.list_by_shop(shop_pk)
+                if str(record.date) == selected_date_iso
+            )
+        else:
+            try:
+                patti_entries = PattiEntry.objects.filter(
+                    date=selected_date,
+                    shop_id=shop_pk
+                ).aggregate(
+                    net_amount=Sum('net_amount')
+                )['net_amount'] or 0
+            except OperationalError:
+                patti_entries = 0
 
-        try:
-            total_expenditure = ExpenditureEntry.objects.filter(
-                shop_id=shop_pk,
-                date=selected_date
-            ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        except OperationalError:
-            total_expenditure = 0
+        if expenditure_repository.using_firebase():
+            total_expenditure = expenditure_repository.sum_amount_by_shop_and_date(
+                shop_pk,
+                selected_date_iso,
+            )
+        else:
+            try:
+                total_expenditure = ExpenditureEntry.objects.filter(
+                    shop_id=shop_pk,
+                    date=selected_date
+                ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+            except OperationalError:
+                total_expenditure = 0
 
         patti = round(patti_entries, 2)
         cash_balance = cash_bill_amount + collection - total_expenditure

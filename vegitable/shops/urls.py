@@ -35,7 +35,7 @@ urlpatterns = [
     path('add_arrival_entry', arrival_view.add_new_arrival_entry,
          name='add_new_arrival_entry'),
     path('add_arrival', arrival_view.add_arrival, name='add_arrival'),
-    path('edit_arrival_entry/<int:arrival_id>',
+     path('edit_arrival_entry/<str:arrival_id>',
          arrival_view.modify_arrival, name='modify_arrival'),
 
     # RestAPI
@@ -56,9 +56,9 @@ urlpatterns = [
          name='expenditure_entry'),
     path('add_expenditure', expenditure_view.add_expenditure_entry,
          name='add_expenditure_entry'),
-    path('edit_expense/<int:expenditure_id>',
+    path('edit_expense/<str:expenditure_id>',
          expenditure_view.edit_expense, name='edit_expense'),
-    path('delete_expense/<int:expenditure_id>',
+    path('delete_expense/<str:expenditure_id>',
          expenditure_view.delete_expense, name='delete_expense'),
     path('fetch_expenditures/', expenditure_view.fetch_expenditures,
          name='fetch_expenditures'),
@@ -88,7 +88,7 @@ urlpatterns = [
          name='add_new_patti_entry'),
     path('generate_patti_pdf_bill', view=patti_view.view_generate_patti_pdf_bill,
          name='generate_patti_pdf_bill'),
-    path('edit_patti_entry/<int:patti_id>',
+     path('edit_patti_entry/<str:patti_id>',
          patti_view.edit_patti_entry, name='edit_patti_entry'),
 
 

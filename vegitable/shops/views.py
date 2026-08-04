@@ -146,7 +146,7 @@ def get_arrival_goods_api(request):
             shop=shop_detail_object, qty__gte=1)
 
         for item in arrival_goods_obj:
-            mylist[item.id] = item.qty
+            mylist[item.pk] = item.qty
 
     return JsonResponse(mylist, status=status.HTTP_200_OK)
 
@@ -187,7 +187,7 @@ def get_arrival_goods_list(request):
             shop=shop_detail_object, qty__gte=1)
 
         for arrival_entry in arrival_detail_object:
-            item_goods_list[arrival_entry.id] = arrival_entry.remarks
+            item_goods_list[arrival_entry.pk] = arrival_entry.remarks
 
     data = {'item_goods_list': item_goods_list}
     return Response(data, status=status.HTTP_200_OK)
