@@ -2,19 +2,19 @@
 
 ## Local setup
 
-1. Create and activate virtualenv.
-2. Install dependencies.
+1. Install `uv`.
+2. Sync dependencies.
 3. Configure environment values.
 4. Run migrations and start server.
 
 Example (PowerShell):
 
 ```powershell
-cd vegitable
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r ..\requirements.txt
+uv sync
+Set-Location vegitable
 ```
+
+`pyproject.toml` and `uv.lock` are now the primary dependency sources. `requirements.txt` is kept temporarily for compatibility with older deployment flows.
 
 Create a `.env` file in `vegitable/` with at least:
 
@@ -35,10 +35,23 @@ SECRET_KEY=replace-with-long-random-key
 Run:
 
 ```powershell
+uv run python manage.py migrate
+uv run python manage.py collectstatic --noinput
+uv run python manage.py runserver
+```
+
+If you prefer to work from inside `vegitable/`, use:
+
+```powershell
+Set-Location vegitable
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py runserver
 ```
+
+## Firebase migration note
+
+The repo now includes `django-orm-firebase` in its managed dependencies, but the current codebase still uses Django's relational ORM extensively. See the plan documents in `plan/` before attempting a backend cutover.
 
 ## PythonAnywhere setup (new account)
 
@@ -48,9 +61,10 @@ python manage.py runserver
 ```bash
 git clone https://github.com/sheikhjebran/vegitables.git
 cd vegitables/vegitable
-python3.14 -m venv .venv
-source .venv/bin/activate
-pip install -r ../requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+cd ..
+uv sync
+cd vegitable
 ```
 
 3. Create `vegitable/.env`:
@@ -78,8 +92,8 @@ CLOUD_DB_HOST=mbillingtool.mysql.pythonanywhere-services.com
 
 ```bash
 cd ~/vegitables/vegitable
-python3 manage.py migrate
-python3 manage.py collectstatic --noinput
+uv run python manage.py migrate
+uv run python manage.py collectstatic --noinput
 ```
 
 7. Reload the web app from PythonAnywhere Web tab.
