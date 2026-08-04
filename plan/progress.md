@@ -49,6 +49,8 @@
 - Added `smoke_test_report_firebase` to validate Firestore-backed RMC/Shilk report payload builders with temporary Firestore data.
 - Added `smoke_test_report_http_firebase` to validate Firestore-backed RMC/Shilk HTTP endpoint payloads with temporary Firestore data.
 - Added `smoke_test_report_pdf_firebase` to validate Firestore-backed RMC daily/weekly PDF endpoint responses with temporary Firestore data.
+- Upgraded `smoke_test_report_pdf_firebase` to assert generated PDF text includes expected Firestore bill IDs and totals.
+- Added mixed-date weekly PDF parity checks in `smoke_test_report_pdf_firebase`, including date/bill ordering assertions for Firestore output.
 
 ## Verified facts
 
@@ -80,7 +82,7 @@
 - Decide how to implement Firestore-native sales bill editing and Firestore-native credit bill flows.
 - Validate Firestore credit flow on live UI interactions and settle payment-type mapping rules for fully cleared balances.
 - Migrate remaining SQL-only reporting domains (Patti/Expense-only sections can remain SQL until those domains are migrated).
-- Add response-content assertions (table totals and bill IDs) for Firestore PDF report generation outputs.
+- Begin live inventory/stock-mutation cutover from SQL `ArrivalGoods` to Firestore arrival stock for all sales paths.
 - Decide when to make Firebase the default enabled path for `MobileSalesBill` and `CustomerLedger` in the target environment.
 - Decide when to make Firebase the default enabled path for `FarmerLedger` in the target environment.
 - Decide whether the next implementation step is live inventory/read cutover or Firestore-side backfill for arrival history.
@@ -120,6 +122,7 @@
 - Passed: `uv run python manage.py smoke_test_report_firebase`
 - Passed: `uv run python manage.py smoke_test_report_http_firebase`
 - Passed: `uv run python manage.py smoke_test_report_pdf_firebase`
+- Passed: `uv run python manage.py smoke_test_report_pdf_firebase` with mixed-date weekly ordering assertions
 
 ## Current slice
 

@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 from uuid import uuid4
+import io
 
 from django.core.management.base import BaseCommand, CommandError
 from django.test.client import RequestFactory
@@ -31,6 +32,7 @@ class Command(BaseCommand):
             )
 
         token = uuid4().hex[:8]
+        previous_day = '2026-08-03'
         today = '2026-08-04'
         shop_id = options['shop_id']
         request_factory = RequestFactory()
@@ -44,6 +46,7 @@ class Command(BaseCommand):
         fake_shop = SimpleNamespace(pk=shop_id)
 
         arrival_record = None
+        sales_previous = None
         sales_cash = None
         sales_credit = None
 
@@ -98,6 +101,32 @@ class Command(BaseCommand):
                 ],
             )
 
+            sales_previous = sales_repository.create(
+                shop_id=shop_id,
+                sales_bill_id=f'SBRP-P-{token}',
+                payment_type='cash',
+                customer_name=f'customer-prev-{token[:4]}',
+                date=previous_day,
+                rmc=1.5,
+                commission=1.5,
+                cooli=1.5,
+                total_amount=40.0,
+                paid_amount=40.0,
+                balance_amount=0.0,
+                empty_data=False,
+                items=[
+                    SalesBillItemRecord(
+                        arrival_entry_id=str(arrival_record.id),
+                        arrival_goods_local_id='report-pdf-goods-1',
+                        item_name='Tomato',
+                        bags=1,
+                        net_weight=10.0,
+                        rates=10.0,
+                        amount=10.0,
+                    )
+                ],
+            )
+
             sales_credit = sales_repository.create(
                 shop_id=shop_id,
                 sales_bill_id=f'SBRP-R-{token}',
@@ -128,17 +157,49 @@ class Command(BaseCommand):
                 daily_request = request_factory.get('/print_rmc_daily_report', {'date': today})
                 daily_request.user = fake_user
                 daily_response = print_rmc_daily_report(daily_request)
-                self._validate_pdf_response(daily_response, 'daily')
+                self._validate_pdf_response(
+                    daily_response,
+                    'daily',
+                    expected_strings=[
+                        sales_cash.sales_bill_id,
+                        sales_credit.sales_bill_id,
+                        '30.0',
+                        '50.0',
+                    ],
+                    expected_order_pairs=[],
+                )
 
-                weekly_request = request_factory.get('/print_rmc_weekly_report', {'start_date': today, 'end_date': today})
+                weekly_request = request_factory.get('/print_rmc_weekly_report', {'start_date': previous_day, 'end_date': today})
                 weekly_request.user = fake_user
                 weekly_response = print_rmc_weekly_report(weekly_request)
-                self._validate_pdf_response(weekly_response, 'weekly')
+                self._validate_pdf_response(
+                    weekly_response,
+                    'weekly',
+                    expected_strings=[
+                        sales_previous.sales_bill_id,
+                        sales_cash.sales_bill_id,
+                        sales_credit.sales_bill_id,
+                        previous_day,
+                        today,
+                        '40.0',
+                        '30.0',
+                        '50.0',
+                    ],
+                    expected_order_pairs=[
+                        (previous_day, today),
+                        (sales_previous.sales_bill_id, sales_cash.sales_bill_id),
+                    ],
+                )
 
             self.stdout.write(self.style.SUCCESS('Firebase report PDF smoke test passed.'))
             self.stdout.write(f'Validated RMC daily/weekly Firestore PDF endpoints for shop_id={shop_id}.')
 
         except Exception:
+            if sales_previous is not None:
+                try:
+                    sales_repository.delete(sales_previous.id, restore_stock=True)
+                except Exception:
+                    pass
             if sales_credit is not None:
                 try:
                     sales_repository.delete(sales_credit.id, restore_stock=True)
@@ -156,6 +217,8 @@ class Command(BaseCommand):
                     pass
             raise
 
+        if sales_previous is not None:
+            sales_repository.delete(sales_previous.id, restore_stock=True)
         if sales_credit is not None:
             sales_repository.delete(sales_credit.id, restore_stock=True)
         if sales_cash is not None:
@@ -163,7 +226,7 @@ class Command(BaseCommand):
         if arrival_record is not None:
             arrival_repository.delete(arrival_record.id)
 
-    def _validate_pdf_response(self, response, label):
+    def _validate_pdf_response(self, response, label, expected_strings, expected_order_pairs):
         if getattr(response, 'status_code', 500) != 200:
             raise CommandError(f'RMC {label} PDF endpoint returned non-200 status: {getattr(response, "status_code", "unknown")}.')
         content_type = response.get('Content-Type', '')
@@ -171,3 +234,39 @@ class Command(BaseCommand):
             raise CommandError(f'RMC {label} PDF endpoint did not return PDF content type: {content_type}')
         if len(response.content or b'') == 0:
             raise CommandError(f'RMC {label} PDF endpoint returned an empty PDF response.')
+
+        extracted_text = self._extract_pdf_text(response.content)
+        missing = [item for item in expected_strings if item not in extracted_text]
+        if missing:
+            raise CommandError(
+                f'RMC {label} PDF endpoint is missing expected text markers: {", ".join(missing)}.'
+            )
+
+        for first, second in expected_order_pairs:
+            first_index = extracted_text.find(first)
+            second_index = extracted_text.find(second)
+            if first_index == -1 or second_index == -1:
+                raise CommandError(
+                    f'RMC {label} PDF endpoint is missing order markers: {first}, {second}.'
+                )
+            if first_index > second_index:
+                raise CommandError(
+                    f'RMC {label} PDF endpoint ordering is unexpected: "{first}" appears after "{second}".'
+                )
+
+    def _extract_pdf_text(self, pdf_bytes):
+        try:
+            from pypdf import PdfReader
+        except Exception:
+            try:
+                from PyPDF2 import PdfReader  # type: ignore
+            except Exception as error:
+                raise CommandError(
+                    f'PDF text extraction requires pypdf or PyPDF2 to be installed: {error}'
+                )
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        text_chunks = []
+        for page in reader.pages:
+            text_chunks.append(page.extract_text() or '')
+        return '\n'.join(text_chunks)

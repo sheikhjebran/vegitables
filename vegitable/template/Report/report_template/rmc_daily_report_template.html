@@ -22,6 +22,7 @@
     <table border="1">
       <thead>
         <tr>
+          <th>Bill No</th>
           <th>Date</th>
           <th>RMC</th>
           <th>Bags</th>
@@ -33,6 +34,7 @@
       <tbody>
         {% for entry in data %}
         <tr>
+          <td>{{ entry.sales_bill_id }}</td>
           <td>{{ entry.date }}</td>
           <td>{{ entry.rmc }}</td>
           <td>{{ entry.salesbillitem__bags }}</td>

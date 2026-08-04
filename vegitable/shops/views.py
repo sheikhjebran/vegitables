@@ -20,11 +20,13 @@ from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry
 import datetime
 from .report.report import Report
 from .repositories.arrival_repository import ArrivalRepository
+from .repositories.sales_bill_repository import SalesBillRepository
 from .utility import consolidate_result_for_report, get_float_number, getDate_from_string
 from django.db.models import Sum, F, Q
 
 
 arrival_repository = ArrivalRepository()
+sales_bill_repository = SalesBillRepository()
 
 
 def index(request):
@@ -193,6 +195,27 @@ def get_arrival_goods_list(request):
 
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
+
+    if sales_bill_repository.using_firebase():
+        result = []
+        selected_date_iso = selected_date.isoformat()
+        for sales_record in sales_bill_repository.list_by_shop(shop_detail_object.pk):
+            if str(sales_record.date) != selected_date_iso:
+                continue
+            for item in sales_record.items:
+                result.append({
+                    'id': sales_record.sales_bill_id,
+                    'customer_name': sales_record.customer_name,
+                    'item_name': item.item_name,
+                    'bags': item.bags,
+                    'amount': sales_record.total_amount,
+                    'balance': sales_record.balance_amount,
+                    'payment_type': sales_record.payment_type,
+                })
+
+        if len(result) <= 0:
+            return None
+        return consolidate_result_for_report(result)
 
     response = SalesBillEntry.objects.filter(
         date=selected_date,

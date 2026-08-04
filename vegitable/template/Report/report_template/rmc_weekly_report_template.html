@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RMC Daily Report</title>
+    <title>RMC Weekly Report</title>
     <style>
       th {
         font-weight: bold;
@@ -18,10 +18,11 @@
     </style>
   </head>
   <body>
-    <h1>RMC Daily Report for {{ data.0.date }}</h1>
+    <h1>RMC Weekly Report</h1>
     <table border="1">
       <thead>
         <tr>
+          <th>Bill No</th>
           <th>Date</th>
           <th>RMC</th>
           <th>Bags</th>
@@ -33,6 +34,7 @@
       <tbody>
         {% for entry in data %}
         <tr>
+          <td>{{ entry.sales_bill_id }}</td>
           <td>{{ entry.date }}</td>
           <td>{{ entry.rmc }}</td>
           <td>{{ entry.salesbillitem__bags }}</td>

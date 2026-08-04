@@ -9,12 +9,18 @@ from rest_framework.decorators import renderer_classes, api_view
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index, SalesBillItem
+from ..repositories.arrival_repository import ArrivalRepository
+from ..repositories.sales_bill_repository import SalesBillRepository
 from ..utility import getDate_from_string
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from django.conf import settings
 import uuid
+
+
+arrival_repository = ArrivalRepository()
+sales_bill_repository = SalesBillRepository()
 
 def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
@@ -242,6 +248,59 @@ def get_sales_list_for_arrival_item_list(request):
 
     lorry_number = request.GET['patti_lorry']
     patti_farmer = request.GET['patti_farmer']
+
+    if arrival_repository.using_firebase() and sales_bill_repository.using_firebase():
+        arrival_detail_object = arrival_repository.get_by_id(lorry_number)
+        if arrival_detail_object is None:
+            return JsonResponse({'error': 'No matching ArrivalEntry found'}, status=404)
+
+        arrival_good_object = [
+            goods for goods in arrival_detail_object.goods
+            if goods.former_name == patti_farmer and not goods.patti_status
+        ]
+
+        advance = 0
+        sales_response_list = []
+        sales_records = sales_bill_repository.list_by_shop(shop_detail_object.pk)
+        sales_items_by_lot = {}
+        for record in sales_records:
+            for item in record.items:
+                sales_items_by_lot.setdefault(str(item.arrival_goods_local_id), []).append(item)
+
+        for arrival_single_goods in arrival_good_object:
+            if float(arrival_single_goods.advance) > 0:
+                advance = arrival_single_goods.advance
+
+            sales_item_list = sales_items_by_lot.get(str(arrival_single_goods.local_id), [])
+            if len(sales_item_list) <= 0:
+                sales_response_list.append({
+                    'item_name': arrival_single_goods.item_name,
+                    'net_weight': arrival_single_goods.weight,
+                    'sold_qty': 0,
+                    'lot_number': arrival_single_goods.remarks,
+                    'arrival_qty': arrival_single_goods.qty,
+                    'rates': 0,
+                    'amount': 0,
+                })
+                continue
+
+            for single_sales in sales_item_list:
+                sales_response_list.append({
+                    'item_name': single_sales.item_name,
+                    'net_weight': single_sales.net_weight,
+                    'sold_qty': single_sales.bags,
+                    'lot_number': arrival_single_goods.remarks,
+                    'arrival_qty': arrival_single_goods.qty,
+                    'rates': single_sales.rates,
+                    'amount': single_sales.amount,
+                })
+
+        sales_response_list = grouping_sales_bill_entry(sales_response_list)
+        data = {
+            'farmer_advance': advance,
+            'sales_goods_list': sales_response_list
+        }
+        return Response(data, status=status.HTTP_200_OK)
 
     arrival_detail_object = ArrivalEntry.objects.get(
         id=int(lorry_number))

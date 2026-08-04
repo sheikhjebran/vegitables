@@ -175,8 +175,13 @@ def print_rmc_weekly_report(request):
     if start_date and end_date:
         if sales_bill_repository.using_firebase():
             data = []
-            for record in _firebase_sales_between_dates(shop_detail_object.pk, start_date, end_date):
+            records = sorted(
+                _firebase_sales_between_dates(shop_detail_object.pk, start_date, end_date),
+                key=lambda item: (str(item.date), str(item.sales_bill_id), int(item.created_at_ms)),
+            )
+            for record in records:
                 data.append({
+                    'sales_bill_id': record.sales_bill_id,
                     'date': record.date,
                     'rmc': round(float(record.rmc), 2),
                     'salesbillitem__bags': sum(int(item.bags) for item in record.items),
@@ -186,7 +191,7 @@ def print_rmc_weekly_report(request):
                 })
         else:
             data = SalesBillEntry.objects.filter(date__gte=start_date, date__lte=end_date, shop=shop_detail_object).values(
-                'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
+                'sales_bill_id', 'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
             )
         # Render the data to an HTML template
         html_string = render_to_string(
@@ -210,6 +215,7 @@ def print_rmc_daily_report(request):
             data = []
             for record in _firebase_sales_by_date(shop_detail_object.pk, selected_date):
                 data.append({
+                    'sales_bill_id': record.sales_bill_id,
                     'date': record.date,
                     'rmc': round(float(record.rmc), 2),
                     'salesbillitem__bags': sum(int(item.bags) for item in record.items),
@@ -219,7 +225,7 @@ def print_rmc_daily_report(request):
                 })
         else:
             data = SalesBillEntry.objects.filter(date=selected_date, shop=shop_detail_object).values(
-                'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
+                'sales_bill_id', 'date', 'rmc', 'salesbillitem__bags', 'total_amount', 'paid_amount', 'balance_amount'
             )
         # Render the data to an HTML template
         html_string = render_to_string(
