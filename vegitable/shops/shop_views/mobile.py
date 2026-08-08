@@ -1,25 +1,27 @@
 from django.contrib.auth import authenticate
-from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import status, serializers
+from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from ..models import Shop, ArrivalGoods, MobileSalesBill
-from django.db import transaction
 from ..repositories.arrival_repository import ArrivalRepository
 from ..repositories.mobile_sales_repository import MobileSalesRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 
 
 mobile_sales_repository = MobileSalesRepository()
 arrival_repository = ArrivalRepository()
+shop_metadata_repository = ShopMetadataRepository()
 
 
-class ArrivalGoodsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ArrivalGoods
-        fields = '__all__'
+def _arrival_firebase_required_message():
+    return 'Enable USE_FIREBASE_ARRIVAL=True. SQL arrival path has been removed from mobile goods lookup.'
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -62,35 +64,32 @@ def get_arrival_goods(request):
         return Response({"message": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if arrival_repository.using_firebase():
-            arrival_detail_object = arrival_repository.list_available_goods_by_shop(shop_detail_object.pk)
-            response_data = [
-                {
-                    'id': goods.local_id,
-                    'shop': shop_detail_object.pk,
-                    'arrival_entry': entry.id,
-                    'former_name': goods.former_name,
-                    'initial_qty': goods.initial_qty,
-                    'qty': goods.qty,
-                    'weight': goods.weight,
-                    'remarks': goods.remarks,
-                    'item_name': goods.item_name,
-                    'advance': goods.advance,
-                    'patti_status': goods.patti_status,
-                }
-                for entry, goods in arrival_detail_object
-            ]
-        else:
-            arrival_detail_object = ArrivalGoods.objects.filter(
-                Q(shop=shop_detail_object) & Q(qty__gte=1)
-            )
-            serializer = ArrivalGoodsSerializer(arrival_detail_object, many=True)
-            response_data = serializer.data
+        shop_detail_object = _load_shop_metadata(request.user.id)
+
+        if not arrival_repository.using_firebase():
+            return Response({"message": _arrival_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
+
+        arrival_detail_object = arrival_repository.list_available_goods_by_shop(shop_detail_object.pk)
+        response_data = [
+            {
+                'id': goods.local_id,
+                'shop': shop_detail_object.pk,
+                'arrival_entry': entry.id,
+                'former_name': goods.former_name,
+                'initial_qty': goods.initial_qty,
+                'qty': goods.qty,
+                'weight': goods.weight,
+                'remarks': goods.remarks,
+                'item_name': goods.item_name,
+                'advance': goods.advance,
+                'patti_status': goods.patti_status,
+            }
+            for entry, goods in arrival_detail_object
+        ]
 
         return Response({"data": response_data, "message": "Get arrival"}, status=status.HTTP_200_OK)
-    except Shop.DoesNotExist:
-        return Response({"message": "Shop not found"}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as error:
+        return Response({"message": str(error)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -103,10 +102,7 @@ def add_sales_data(request):
     """
     try:
         # Extract the sales data from the request
-        shop_owner = request.user  # The authenticated user
-        shop = Shop.objects.filter(shop_owner=shop_owner).first()
-        if not shop:
-            return Response({"error": "Shop not found"}, status=status.HTTP_404_NOT_FOUND)
+        shop = _load_shop_metadata(request.user.id)
 
         data = request.data
         name = data.get('name')
@@ -122,19 +118,20 @@ def add_sales_data(request):
             )
 
         # Create and save the MobileSalesBill instance
-        with transaction.atomic():  # Ensures atomicity for database operations
-            sales_bill = mobile_sales_repository.create(
-                shop_id=shop.id,
-                name=name,
-                lot_no=lot_no,
-                total_bags=total_bags,
-                net_weight=net_weight,
-            )
+        sales_bill = mobile_sales_repository.create(
+            shop_id=shop.pk,
+            name=name,
+            lot_no=lot_no,
+            total_bags=total_bags,
+            net_weight=net_weight,
+        )
 
         return Response(
             {"message": f"Sales data added successfully for {sales_bill.name}."},
             status=status.HTTP_201_CREATED,
         )
 
+    except ValueError as error:
+        return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

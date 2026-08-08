@@ -75,6 +75,22 @@
 - Updated report smoke commands to match Shilk guardrails (`USE_FIREBASE_PATTI` and `USE_FIREBASE_EXPENDITURE` now required in preflight checks).
 - Hardened report smoke commands to generate unique temporary `shop_id` values per run by default, eliminating false failures from historical Firestore data collisions.
 - Added Shilk guardrail for `USE_FIREBASE_ARRIVAL` when `USE_FIREBASE_SALES=True`, preventing silent SQL fallback when sales are stored in Firestore.
+- Standardized the remaining Firebase smoke commands to auto-generate unique temporary `shop_id` values when `--shop-id` is omitted, reducing cross-command Firestore collision risk.
+- Hardened `smoke_test_shilk_patti_firebase` error handling to translate Firestore runtime interruptions into actionable `CommandError` diagnostics while preserving cleanup behavior.
+- Added interruption-aware `KeyboardInterrupt` handling to the remaining Firebase smoke commands so interrupted Firestore runs now emit actionable `CommandError` messages while still cleaning up temporary records.
+- Removed the remaining SQL aggregation fallback branch from `shilk_view.py`; Shilk calculations are now Firebase-only with explicit flag guidance when dependencies are disabled.
+- Removed the remaining SQL fallback branch from `rmc_view.py`; RMC payload and PDF data builders are now Firebase-only with explicit flag guidance when sales Firebase mode is disabled.
+- Removed SQL fallback branches from `credit_bill_view.py`; credit search, payment posting, and credit history now run on Firebase repositories only with explicit sales+credit flag enforcement.
+- Removed SQL fallback branches from `sales_view.py`; sales list/create/update/edit and mobile customer lot details now run on Firebase repositories only with explicit sales/arrival flag guidance.
+- Fixed a syntax regression in `smoke_test_credit_bill_firebase.py` (`except KeyboardInterrupt` indentation) so Firebase credit smoke validation can execute successfully.
+- Removed SQL fallback branches from `arrival_view.py`; arrival list/create/update/edit now run on `ArrivalRepository` only with explicit Firebase-arrival guidance.
+- Removed SQL fallback branches from `patti_view.py`; patti list/create/update/edit, farmer-name lookup, settlement, and sales-list aggregation now run on Firebase repositories only with explicit Firebase dependency guidance.
+- Removed SQL fallback branches from `expenditure_view.py`; expenditure list/edit/delete/search now run on `ExpenditureRepository` only with explicit Firebase-expenditure guidance.
+- Removed SQL fallback branches from shared helpers in `shops/views.py`; inventory, arrival-goods APIs, duplicate validation, and sales-bill report data now run on repositories only with explicit Firebase dependency guidance.
+- Removed SQL fallback branch from `shop_views/mobile.py`; mobile arrival-goods lookup now requires Firebase arrival data and returns repository-backed payloads only.
+- Added Firestore `ShopMetadataRepository` plus `ShopMetadataDocument` to carry the remaining shop/index metadata needed by live Firebase workflows.
+- Cut `settings_view.py` and the arrival/sales/patti prefix-counter flows over from SQL `Shop`/`Index` reads to Firebase shop metadata, with explicit guidance when metadata has not been backfilled.
+- Added `smoke_test_shop_metadata_firebase` and `backfill_shop_metadata_to_firebase`; the backfill command now reports a clear source-environment requirement when local SQL shop tables are absent.
 
 ## Verified facts
 
@@ -212,6 +228,34 @@
 - Passed: `uv run python manage.py check` after adding Firestore arrival guard to Shilk
 - Passed: `uv run python manage.py smoke_test_report_http_firebase` after adding Firestore arrival guard to Shilk
 - Transient runtime issue observed: standalone `smoke_test_shilk_patti_firebase` intermittently hit Firestore gRPC `KeyboardInterrupt` during document create; this appears environmental/network-related rather than a deterministic assertion failure.
+- Passed: `uv run python manage.py check` after standardizing unique default shop IDs across remaining Firebase smoke commands
+- Passed: `uv run python manage.py check` after hardening `smoke_test_shilk_patti_firebase` interruption diagnostics and cleanup path
+- Passed: `uv run python manage.py check` after extending interruption-aware diagnostics to remaining Firebase smoke commands
+- Passed: `uv run python manage.py smoke_test_mobile_sales_firebase` with generated default shop id after interruption-diagnostics hardening
+- Passed: `uv run python manage.py smoke_test_customer_ledger_firebase` with generated default shop id after interruption-diagnostics hardening
+- Passed: `uv run python manage.py check` after removing SQL fallback branch from Shilk
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after removing SQL fallback branch from Shilk
+- Passed: `uv run python manage.py check` after removing SQL fallback branch from RMC
+- Passed: `uv run python manage.py smoke_test_report_firebase` after removing SQL fallback branch from RMC
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after removing SQL fallback branch from RMC
+- Passed: `uv run python manage.py check` after removing SQL fallback branches from sales and credit views
+- Passed: `uv run python manage.py smoke_test_sales_bill_firebase` after removing SQL fallback branches from sales and credit views
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase` after fixing smoke command syntax and removing SQL fallback branches from sales and credit views
+- Passed: `uv run python manage.py check` after removing SQL fallback branches from arrival and patti views
+- Passed: `uv run python manage.py smoke_test_arrival_firebase` after removing SQL fallback branches from arrival view
+- Passed: `uv run python manage.py smoke_test_patti_firebase` after removing SQL fallback branches from patti view
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after removing SQL fallback branches from arrival and patti views
+- Passed: `uv run python manage.py check` after removing SQL fallback branches from expenditure view
+- Passed: `uv run python manage.py smoke_test_expenditure_firebase` after removing SQL fallback branches from expenditure view
+- Passed: `uv run python manage.py smoke_test_report_firebase` after removing SQL fallback branches from expenditure view
+- Passed: `uv run python manage.py check` after removing SQL fallback branches from shared helper endpoints in `shops/views.py`
+- Passed: `uv run python manage.py smoke_test_report_firebase` after removing SQL fallback branches from shared helper endpoints in `shops/views.py`
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` after removing SQL fallback branches from shared helper endpoints in `shops/views.py`
+- Passed: `uv run python manage.py check` after removing SQL fallback branch from mobile arrival-goods lookup
+- Passed: `uv run python manage.py smoke_test_mobile_sales_firebase` after removing SQL fallback branch from mobile arrival-goods lookup
+- Passed: `uv run python manage.py check` after adding Firestore shop metadata repository and wiring metadata-dependent views
+- Passed: `uv run python manage.py smoke_test_shop_metadata_firebase`
+- Failed with clear source-environment message: `uv run python manage.py backfill_shop_metadata_to_firebase --dry-run` when local `shops_shop` / `shops_index` tables are unavailable
 
 ## Current slice
 
@@ -238,6 +282,7 @@
 	- `vegitable/shops/firebase_models/expenditure.py`
 	- `vegitable/shops/shop_views/expenditure_view.py`
 	- `vegitable/shops/shop_views/shilk_view.py`
+	- `vegitable/shops/shop_views/rmc_view.py`
 	- `vegitable/shops/shop_views/arrival_view.py`
 	- `vegitable/shops/urls.py`
 	- `vegitable/template/Entry/Arrival/modify_arrival_entry.html`
@@ -256,7 +301,24 @@
 	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
 	- `vegitable/shops/shop_views/shilk_view.py`
+	- `vegitable/shops/shop_views/shilk_view.py`
 	- `vegitable/shops/management/commands/smoke_test_shilk_patti_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_arrival_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_credit_bill_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_customer_ledger_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_expenditure_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_farmer_ledger_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_mobile_sales_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_patti_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_report_pdf_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_sales_bill_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_arrival_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_credit_bill_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_customer_ledger_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_expenditure_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_farmer_ledger_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_report_firebase.py`
+	- `vegitable/shops/management/commands/smoke_test_report_http_firebase.py`
 	- `vegitable/shops/management/commands/smoke_test_report_pdf_firebase.py`
 	- `vegitable/template/Entry/Sales/modify_sales_bill_entry.html`
 	- `vegitable/template/Entry/Sales/sales_bill_entry.html`

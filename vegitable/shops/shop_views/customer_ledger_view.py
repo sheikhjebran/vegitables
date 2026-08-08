@@ -6,11 +6,16 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from .. import utility
-from ..models import Shop, CustomerLedger
 from ..repositories.customer_ledger_repository import CustomerLedgerRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 
 
 customer_ledger_repository = CustomerLedgerRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 @csrf_protect
 def customer_ledger(request, current_page=1, customer_ledger_entry=None, message=None):
@@ -23,7 +28,10 @@ def customer_ledger(request, current_page=1, customer_ledger_entry=None, message
                 "id": None
             }
         items_per_page = 10
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         request.session['form_token'] = utility.generate_unique_number()
         customer_ledger_list = customer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(customer_ledger_list, items_per_page)
@@ -42,7 +50,10 @@ def add_customer_ledger(request):
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 # Remove the token from the session
                 del request.session['form_token']
-                shop = Shop.objects.get(shop_owner=request.user.id)
+                try:
+                    shop = _load_shop_metadata(request.user.id)
+                except ValueError as error:
+                    return JsonResponse({'error': str(error)}, status=400)
                 if request.POST['customer_ledger_id'] == "None":
                     if not customer_ledger_repository.exists_by_contact(request.POST['contact']):
                         customer_ledger_repository.create(
@@ -68,7 +79,10 @@ def add_customer_ledger(request):
 
 @api_view(['GET'])
 def search_customer_ledger(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'error': str(error)}, status=400)
     customerLedgerObject = customer_ledger_repository.search(
         shop_id=shop_detail_object.pk,
         search_text=request.GET['search_text'],
@@ -97,7 +111,10 @@ def default_customer_ledger(request, current_page=1, customer_ledger_entry=None)
                 "id": None
             }
         items_per_page = 10
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         request.session['form_token'] = utility.generate_unique_number()
         customer_ledger_list = customer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(customer_ledger_list, items_per_page)

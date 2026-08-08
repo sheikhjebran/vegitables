@@ -123,6 +123,16 @@ class Command(BaseCommand):
                 except Exception:
                     pass
             raise
+        except KeyboardInterrupt as error:
+            if created_record is not None:
+                try:
+                    repository.delete(created_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Arrival Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
 
 
 def _generated_shop_id(token):

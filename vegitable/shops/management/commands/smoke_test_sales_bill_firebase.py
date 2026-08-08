@@ -160,6 +160,21 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Firebase SalesBill smoke test passed.'))
             self.stdout.write(f'Created temporary sales record id={sales_record.id} for shop_id={shop_id}.')
+        except KeyboardInterrupt as error:
+            if sales_record is not None:
+                try:
+                    sales_repository.delete(sales_record.id, restore_stock=True)
+                except Exception:
+                    pass
+            if arrival_record is not None:
+                try:
+                    arrival_repository.delete(arrival_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Sales bill Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
         except Exception:
             if sales_record is not None:
                 try:

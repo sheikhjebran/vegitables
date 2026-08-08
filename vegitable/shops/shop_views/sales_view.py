@@ -5,18 +5,16 @@ from rest_framework import response, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Shop, SalesBillEntry, SalesBillItem, MobileSalesBill, ArrivalGoods, Index, CreditBillEntry, \
-    CreditBillHistory
+from ..models import Shop
 from datetime import date
 import re
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.core.paginator import Paginator
-from ..utility import getDate_from_string, generate_unique_number
-import datetime
-from django.db.models import Sum, F, Q
+from ..utility import generate_unique_number
 from ..repositories.arrival_repository import ArrivalRepository
 from ..repositories.credit_bill_repository import CreditBillRepository
 from ..repositories.mobile_sales_repository import MobileSalesRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 from ..repositories.sales_bill_repository import SalesBillItemRecord, SalesBillRepository
 
 
@@ -24,39 +22,62 @@ mobile_sales_repository = MobileSalesRepository()
 arrival_repository = ArrivalRepository()
 sales_bill_repository = SalesBillRepository()
 credit_bill_repository = CreditBillRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _sales_firebase_enabled():
+    return sales_bill_repository.using_firebase()
+
+
+def _sales_firebase_required_message():
+    return 'Enable USE_FIREBASE_SALES=True. SQL sales path has been removed.'
+
+
+def _arrival_firebase_enabled():
+    return arrival_repository.using_firebase()
+
+
+def _arrival_firebase_required_message():
+    return 'Enable USE_FIREBASE_ARRIVAL=True for Firebase-only sales workflows.'
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
 def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        sales_entry_detail = None
         try:
-            if sales_bill_repository.using_firebase():
-                sales_entry_detail = sales_bill_repository.list_by_shop(shop_detail_object.pk)
-            else:
-                sales_entry_detail = SalesBillEntry.objects.filter(
-                    shop=shop_detail_object, Empty_data=False).order_by('-id')
-            # Add pagination
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            messages.error(request, str(error))
+            return render(request, 'index.html')
+
+        if not _sales_firebase_enabled():
+            messages.error(request, _sales_firebase_required_message())
+            empty_page = Paginator([], 10).get_page(1)
+            return render(request, 'Entry/Sales/sales_bill_entry.html', {
+                'shop_details': shop_detail_object,
+                'sales_bill_detail': empty_page,
+                'current_page': current_page,
+                'use_firebase_sales': False,
+            })
+
+        try:
+            sales_entry_detail = sales_bill_repository.list_by_shop(shop_detail_object.pk)
             items_per_page = 10
             paginator = Paginator(sales_entry_detail, items_per_page)
             sales_entry_detail = paginator.get_page(current_page)
 
-            if not sales_bill_repository.using_firebase():
-                for entry in sales_entry_detail:
-                    total_net_weight = SalesBillItem.objects.filter(Sales_Bill_Entry=entry).aggregate(
-                        total_weight=Sum('net_weight')
-                    )['total_weight']
-
-                    entry.total_net_weight = total_net_weight if total_net_weight is not None else 0
-
         except Exception as error:
             print(error)
+            sales_entry_detail = Paginator([], 10).get_page(1)
 
         return render(request, 'Entry/Sales/sales_bill_entry.html', {
             'shop_details': shop_detail_object,
             'sales_bill_detail': sales_entry_detail,
             'current_page': current_page,
-            'use_firebase_sales': sales_bill_repository.using_firebase(),
+            'use_firebase_sales': True,
         })
 
     return render(request, 'index.html')
@@ -76,18 +97,24 @@ def sales_bill_prev_page(request, page_number):
 def navigate_to_add_sales_bill_entry(request):
     if request.user.is_authenticated:
         today = date.today()
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if arrival_repository.using_firebase():
-            arrival_detail_object = [goods for _, goods in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk)]
-        else:
-            arrival_detail_object = ArrivalGoods.objects.filter(
-                shop=shop_detail_object, qty__gte=1)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            messages.error(request, str(error))
+            return render(request, 'index.html')
 
-        index = get_object_or_404(Index, shop=shop_detail_object)
+        if not _sales_firebase_enabled():
+            messages.error(request, _sales_firebase_required_message())
+            return sales_bill_entry(request)
 
+        if not _arrival_firebase_enabled():
+            messages.error(request, _arrival_firebase_required_message())
+            return sales_bill_entry(request)
+
+        arrival_detail_object = [goods for _, goods in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk)]
         sales_bill_index = {
-            'sales_entry_prefix': index.sales_bill_entry_prefix,
-            'sales_entry_counter': int(index.sales_bill_entry_counter) + 1
+            'sales_entry_prefix': shop_detail_object.sales_bill_entry_prefix,
+            'sales_entry_counter': int(shop_detail_object.sales_bill_entry_counter) + 1
         }
 
         mobile_sales_customer = mobile_sales_repository.list_by_shop(shop_detail_object.pk)
@@ -104,7 +131,7 @@ def navigate_to_add_sales_bill_entry(request):
             "today": today,
             "sales_bill_index": sales_bill_index,
             "customer_list": customer_list,
-            'use_firebase_sales': sales_bill_repository.using_firebase(),
+            'use_firebase_sales': True,
         })
     return render(request, 'index.html')
 
@@ -114,189 +141,87 @@ def modify_sales_bill_entry(request):
         if request.POST.get('form_token') == str(request.session.get('form_token')):
             # Remove the token from the session
             del request.session['form_token']
-            shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-            if sales_bill_repository.using_firebase():
-                is_new = str(request.POST['new']) == "True"
+            try:
+                shop_detail_object = _load_shop_metadata(request.user.id)
+            except ValueError as error:
+                messages.error(request, str(error))
+                request.session['form_token'] = generate_unique_number()
+                return render(request, 'index.html')
 
-                balance_amount = round(float(request.POST['balance_amount']), 2)
-                if balance_amount > 0.0 and not credit_bill_repository.using_firebase():
-                    messages.error(
-                        request,
-                        'Enable USE_FIREBASE_CREDIT=True when using Firestore sales with outstanding balances.',
-                    )
-                    request.session['form_token'] = generate_unique_number()
-                    return sales_bill_entry(request)
+            if not _sales_firebase_enabled():
+                messages.error(request, _sales_firebase_required_message())
+                request.session['form_token'] = generate_unique_number()
+                return sales_bill_entry(request)
 
-                mobile_sales_repository.delete_by_shop_and_customer_name(
-                    shop_detail_object.pk,
-                    request.POST['sales_entry_customer_name'],
-                )
+            if not _arrival_firebase_enabled():
+                messages.error(request, _arrival_firebase_required_message())
+                request.session['form_token'] = generate_unique_number()
+                return sales_bill_entry(request)
 
-                sales_items = build_firestore_sales_items(request, list(request.POST), shop_detail_object.pk)
-                if is_new:
-                    sales_record = sales_bill_repository.create(
-                        shop_id=shop_detail_object.pk,
-                        sales_bill_id=request.POST['sales_bill_id'],
-                        payment_type=request.POST['payment_mode'],
-                        customer_name=request.POST['sales_entry_customer_name'],
-                        date=request.POST['sales_entry_date'],
-                        rmc=request.POST['rmc'],
-                        commission=request.POST['comission'],
-                        cooli=request.POST['cooli'],
-                        total_amount=round(float(request.POST['total_amount']), 2),
-                        paid_amount=round(float(request.POST['paid_amount']), 2),
-                        balance_amount=balance_amount,
-                        empty_data=False,
-                        items=sales_items,
-                    )
-                else:
-                    sales_record_id = request.POST.get('id')
-                    if not sales_record_id:
-                        messages.error(request, 'Sales bill id is required for Firestore update.')
-                        request.session['form_token'] = generate_unique_number()
-                        return sales_bill_entry(request)
+            is_new = str(request.POST['new']) == "True"
 
-                    sales_record = sales_bill_repository.update(
-                        record_id=sales_record_id,
-                        shop_id=shop_detail_object.pk,
-                        sales_bill_id=request.POST['sales_bill_id'],
-                        payment_type=request.POST['payment_mode'],
-                        customer_name=request.POST['sales_entry_customer_name'],
-                        date=request.POST['sales_entry_date'],
-                        rmc=request.POST['rmc'],
-                        commission=request.POST['comission'],
-                        cooli=request.POST['cooli'],
-                        total_amount=round(float(request.POST['total_amount']), 2),
-                        paid_amount=round(float(request.POST['paid_amount']), 2),
-                        balance_amount=balance_amount,
-                        empty_data=False,
-                        items=sales_items,
-                    )
-
-                sync_firestore_credit_bill(
-                    sales_record=sales_record,
-                    shop_id=shop_detail_object.pk,
+            balance_amount = round(float(request.POST['balance_amount']), 2)
+            if balance_amount > 0.0 and not credit_bill_repository.using_firebase():
+                messages.error(
+                    request,
+                    'Enable USE_FIREBASE_CREDIT=True when using Firestore sales with outstanding balances.',
                 )
                 request.session['form_token'] = generate_unique_number()
                 return sales_bill_entry(request)
 
-            if str(request.POST['new']) == "True":
-                sales_bill_entry_Obj = SalesBillEntry(
+            mobile_sales_repository.delete_by_shop_and_customer_name(
+                shop_detail_object.pk,
+                request.POST['sales_entry_customer_name'],
+            )
+
+            sales_items = build_firestore_sales_items(request, list(request.POST), shop_detail_object.pk)
+            if is_new:
+                sales_record = sales_bill_repository.create(
+                    shop_id=shop_detail_object.pk,
                     sales_bill_id=request.POST['sales_bill_id'],
                     payment_type=request.POST['payment_mode'],
                     customer_name=request.POST['sales_entry_customer_name'],
-                    date=getDate_from_string(request.POST['sales_entry_date']),
-                    shop=shop_detail_object,
+                    date=request.POST['sales_entry_date'],
                     rmc=request.POST['rmc'],
                     commission=request.POST['comission'],
                     cooli=request.POST['cooli'],
                     total_amount=round(float(request.POST['total_amount']), 2),
                     paid_amount=round(float(request.POST['paid_amount']), 2),
-                    balance_amount=round(
-                        float(request.POST['balance_amount']), 2),
-                    Empty_data=False
+                    balance_amount=balance_amount,
+                    empty_data=False,
+                    items=sales_items,
                 )
-
-                mobile_sales_repository.delete_by_shop_and_customer_name(
-                    shop_detail_object.pk,
-                    request.POST['sales_entry_customer_name'],
-                )
-
+                shop_metadata_repository.increment_counter(request.user.id, 'sales_bill_entry_counter')
             else:
-                sales_bill_entry_Obj = SalesBillEntry.objects.get(
-                    id=request.POST['id'])
-                sales_bill_entry_Obj.payment_type = request.POST['payment_mode']
-                sales_bill_entry_Obj.customer_name = request.POST['sales_entry_customer_name']
-                sales_bill_entry_Obj.date = getDate_from_string(
-                    request.POST['sales_entry_date'])
-                sales_bill_entry_Obj.shop = shop_detail_object
-                sales_bill_entry_Obj.rmc = request.POST['rmc']
-                sales_bill_entry_Obj.commission = request.POST['comission']
-                sales_bill_entry_Obj.cooli = request.POST['cooli']
-                sales_bill_entry_Obj.total_amount = round(
-                    float(request.POST['total_amount']), 2)
-                sales_bill_entry_Obj.paid_amount = round(
-                    float(request.POST['paid_amount']), 2)
-                sales_bill_entry_Obj.balance_amount = round(
-                    float(request.POST['balance_amount']), 2)
-                sales_bill_entry_Obj.Empty_data = False
+                sales_record_id = request.POST.get('id')
+                if not sales_record_id:
+                    messages.error(request, 'Sales bill id is required for Firestore update.')
+                    request.session['form_token'] = generate_unique_number()
+                    return sales_bill_entry(request)
 
-            sales_bill_entry_Obj.save()
+                sales_record = sales_bill_repository.update(
+                    record_id=sales_record_id,
+                    shop_id=shop_detail_object.pk,
+                    sales_bill_id=request.POST['sales_bill_id'],
+                    payment_type=request.POST['payment_mode'],
+                    customer_name=request.POST['sales_entry_customer_name'],
+                    date=request.POST['sales_entry_date'],
+                    rmc=request.POST['rmc'],
+                    commission=request.POST['comission'],
+                    cooli=request.POST['cooli'],
+                    total_amount=round(float(request.POST['total_amount']), 2),
+                    paid_amount=round(float(request.POST['paid_amount']), 2),
+                    balance_amount=balance_amount,
+                    empty_data=False,
+                    items=sales_items,
+                )
 
-            if str(request.POST['new']) == "True":
-                index_obj = get_object_or_404(Index, shop=shop_detail_object)
-
-                # Increment the arrival_entry_counter
-                index_obj.sales_bill_entry_counter += 1
-                index_obj.save()
-
-            print(f"New Sales Bill entry  = {sales_bill_entry_Obj.pk}")
-            if sales_bill_entry_Obj.balance_amount > 0.0:
-                add_to_credit_bill_db(sales_bill_entry_Obj, shop_detail_object, sales_bill_entry_Obj.customer_name,
-                                      sales_bill_entry_Obj.balance_amount)
-            add_sales_bill_item(request, list(
-                request.POST), sales_bill_entry_Obj)
+            sync_firestore_credit_bill(
+                sales_record=sales_record,
+                shop_id=shop_detail_object.pk,
+            )
         request.session['form_token'] = generate_unique_number()
         return sales_bill_entry(request)
-    return render(request, 'index.html')
-
-
-def add_sales_bill_item(request, request_list, sales):
-    if request.user.is_authenticated:
-        lot_number_list = []
-        bags_list = []
-        net_weight_list = []
-        rates_list = []
-        amount_list = []
-        item_name_list = []
-
-        for i in request_list:
-
-            lot_number_regrex = re.search("^.*_lot_number$", i)
-            if lot_number_regrex:
-                lot_number_list.append(i)
-
-            item_name_regrex = re.search("^.*_item_name$", i)
-            if item_name_regrex:
-                item_name_list.append(i)
-
-            bag_regrex = re.search("^.*_bags$", i)
-            if bag_regrex:
-                bags_list.append(i)
-
-            net_weight_regrex = re.search("^.*_net_weight$", i)
-            if net_weight_regrex:
-                net_weight_list.append(i)
-
-            rates_regrex = re.search("^.*_rates$", i)
-            if rates_regrex:
-                rates_list.append(i)
-
-            amount_regrex = re.search("^.*_amount$", i)
-            if amount_regrex:
-                amount_list.append(i)
-
-        for i in range(0, len(lot_number_list)):
-            arrival_goods_entry_Obj = ArrivalGoods.objects.get(
-                id=request.POST[lot_number_list[i]])
-
-            arrival_goods_entry_Obj.qty = int(
-                arrival_goods_entry_Obj.qty) - int(request.POST[bags_list[i]])
-            arrival_goods_entry_Obj.save()
-
-            sales_bill_entry_Obj = SalesBillItem(
-                item_name=request.POST[item_name_list[i]],
-                arrival_goods=arrival_goods_entry_Obj,
-                bags=request.POST[bags_list[i]],
-                net_weight=request.POST[net_weight_list[i]],
-                rates=request.POST[rates_list[i]],
-                amount=request.POST[amount_list[i]],
-                Sales_Bill_Entry=sales
-            )
-
-            sales_bill_entry_Obj.save()
-
-            print(f"New Sales Bill item  = {sales_bill_entry_Obj.pk}")
     return render(request, 'index.html')
 
 
@@ -340,23 +265,6 @@ def build_firestore_sales_items(request, request_list, shop_id):
     return sales_items
 
 
-def add_to_credit_bill_db(sales, shop, customer_name, balance_amount):
-    credit_bill_entry = CreditBillEntry(
-        customer_name=customer_name,
-        sales_bill=sales,
-        shop=shop,
-        initial_credit_bill_amount=float(balance_amount)
-    )
-    credit_bill_entry.save()
-
-    credit_bill_history = CreditBillHistory(
-        date=datetime.datetime.today(),
-        amount=0.0,
-        credit_bill=credit_bill_entry
-    )
-    credit_bill_history.save()
-
-
 def sync_firestore_credit_bill(*, sales_record, shop_id):
     if not credit_bill_repository.using_firebase():
         return
@@ -375,76 +283,59 @@ def sync_firestore_credit_bill(*, sales_record, shop_id):
 @csrf_protect
 def edit_sales_bill_entry(request, sales_id):
     if request.user.is_authenticated:
-        if sales_bill_repository.using_firebase():
-            shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-            sales_obj = sales_bill_repository.get_by_id(sales_id)
-            if sales_obj is None:
-                messages.error(request, 'Firestore sales bill not found.')
-                return sales_bill_entry(request)
+        if not _sales_firebase_enabled():
+            messages.error(request, _sales_firebase_required_message())
+            return sales_bill_entry(request)
 
-            arrival_goods_detail = list(arrival_repository.list_available_goods_by_shop(shop_detail_object.pk))
-            goods_map = {str(goods.local_id): goods for _, goods in arrival_goods_detail}
-            for item in sales_obj.items:
-                if str(item.arrival_goods_local_id) not in goods_map:
-                    _, goods = arrival_repository.get_goods_by_local_id_any_status(
-                        shop_detail_object.pk,
-                        item.arrival_goods_local_id,
-                    )
-                    if goods is not None:
-                        goods_map[str(goods.local_id)] = goods
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            messages.error(request, str(error))
+            return render(request, 'index.html')
 
-            sales_item_objs = []
-            for index, item in enumerate(sales_obj.items):
+        sales_obj = sales_bill_repository.get_by_id(sales_id)
+        if sales_obj is None:
+            messages.error(request, 'Firestore sales bill not found.')
+            return sales_bill_entry(request)
+
+        arrival_goods_detail = list(arrival_repository.list_available_goods_by_shop(shop_detail_object.pk))
+        goods_map = {str(goods.local_id): goods for _, goods in arrival_goods_detail}
+        for item in sales_obj.items:
+            if str(item.arrival_goods_local_id) not in goods_map:
                 _, goods = arrival_repository.get_goods_by_local_id_any_status(
                     shop_detail_object.pk,
                     item.arrival_goods_local_id,
                 )
-                available_qty = 0 if goods is None else goods.qty
-                sales_item_objs.append({
-                    'row_id': index,
-                    'arrival_goods_local_id': item.arrival_goods_local_id,
-                    'item_name': item.item_name,
-                    'bags': item.bags,
-                    'net_weight': item.net_weight,
-                    'rates': item.rates,
-                    'amount': item.amount,
-                    'available_qty': available_qty,
-                })
+                if goods is not None:
+                    goods_map[str(goods.local_id)] = goods
 
-            request.session['form_token'] = generate_unique_number()
-            return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
-                'sales_bill_detail': False,
-                'new': False,
-                'use_firebase_sales': True,
-                'arrival_goods_detail': sorted(goods_map.values(), key=lambda item: str(item.local_id)),
-                'sales_obj': sales_obj,
-                'sales_item_objs': sales_item_objs,
+        sales_item_objs = []
+        for index, item in enumerate(sales_obj.items):
+            _, goods = arrival_repository.get_goods_by_local_id_any_status(
+                shop_detail_object.pk,
+                item.arrival_goods_local_id,
+            )
+            available_qty = 0 if goods is None else goods.qty
+            sales_item_objs.append({
+                'row_id': index,
+                'arrival_goods_local_id': item.arrival_goods_local_id,
+                'item_name': item.item_name,
+                'bags': item.bags,
+                'net_weight': item.net_weight,
+                'rates': item.rates,
+                'amount': item.amount,
+                'available_qty': available_qty,
             })
-        sales_obj = SalesBillEntry.objects.get(pk=sales_id)
-        sales_item_objs = SalesBillItem.objects.filter(
-            Sales_Bill_Entry=sales_obj).order_by('-id')
 
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        selected_arrival_goods_ids = sales_item_objs.values_list(
-            'arrival_goods', flat=True)
-
-        arrival_detail_object = ArrivalGoods.objects.filter(
-            Q(shop=shop_detail_object) &
-            (Q(qty__gte=1) & Q(id__in=selected_arrival_goods_ids))
-        )
-
-        for iteam in sales_item_objs:
-            print(iteam)
-
-        return render(request, 'Entry/Sales/modify_sales_bill_entry.html',
-                      {'sales_bill_detail': False,
-                       'new': False,
-                       'use_firebase_sales': False,
-                       "arrival_goods_detail": arrival_detail_object,
-                       "sales_obj": sales_obj,
-                       "sales_item_objs": sales_item_objs
-                       }
-                      )
+        request.session['form_token'] = generate_unique_number()
+        return render(request, 'Entry/Sales/modify_sales_bill_entry.html', {
+            'sales_bill_detail': False,
+            'new': False,
+            'use_firebase_sales': True,
+            'arrival_goods_detail': sorted(goods_map.values(), key=lambda item: str(item.local_id)),
+            'sales_obj': sales_obj,
+            'sales_item_objs': sales_item_objs,
+        })
     return render(request, 'index.html')
 
 
@@ -453,8 +344,14 @@ def edit_sales_bill_entry(request, sales_id):
 def get_mobile_customer_detail(request):
     try:
         # Fetch shop detail object based on the authenticated user
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        shop_detail_object = _load_shop_metadata(request.user.id)
         selected_customer = request.GET.get('selectedCustomer', '').strip()
+
+        if not _arrival_firebase_enabled():
+            return JsonResponse(
+                data={'success': False, 'error': _arrival_firebase_required_message()},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Fetch mobile sales data for the selected customer
         results = mobile_sales_repository.list_by_shop_and_customer_name(
@@ -464,32 +361,24 @@ def get_mobile_customer_detail(request):
 
         response = []
         for single_result in results:
-            if arrival_repository.using_firebase():
-                _, arrival_goods = arrival_repository.get_goods_by_local_id(
-                    shop_detail_object.pk,
-                    single_result.lot_no,
-                )
-                arrival_data = []
-                if arrival_goods is not None:
-                    arrival_data.append({
-                        'id': arrival_goods.local_id,
-                        'shop__id': shop_detail_object.pk,
-                        'former_name': arrival_goods.former_name,
-                        'initial_qty': arrival_goods.initial_qty,
-                        'qty': arrival_goods.qty,
-                        'weight': arrival_goods.weight,
-                        'remarks': arrival_goods.remarks,
-                        'item_name': arrival_goods.item_name,
-                        'advance': arrival_goods.advance,
-                        'patti_status': arrival_goods.patti_status,
-                    })
-            else:
-                arrival_detail_object = ArrivalGoods.objects.filter(
-                    shop=shop_detail_object).filter(id=single_result.lot_no)
-                arrival_data = list(arrival_detail_object.values(
-                    "id", "shop__id", "former_name", "initial_qty", "qty",
-                    "weight", "remarks", "item_name", "advance", "patti_status"
-                ))
+            _, arrival_goods = arrival_repository.get_goods_by_local_id(
+                shop_detail_object.pk,
+                single_result.lot_no,
+            )
+            arrival_data = []
+            if arrival_goods is not None:
+                arrival_data.append({
+                    'id': arrival_goods.local_id,
+                    'shop__id': shop_detail_object.pk,
+                    'former_name': arrival_goods.former_name,
+                    'initial_qty': arrival_goods.initial_qty,
+                    'qty': arrival_goods.qty,
+                    'weight': arrival_goods.weight,
+                    'remarks': arrival_goods.remarks,
+                    'item_name': arrival_goods.item_name,
+                    'advance': arrival_goods.advance,
+                    'patti_status': arrival_goods.patti_status,
+                })
             for data in arrival_data:
                 data["net_weight"] = single_result.net_weight
                 data["total_bags"] = single_result.total_bags

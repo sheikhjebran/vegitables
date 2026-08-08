@@ -1,11 +1,22 @@
+from django.http import JsonResponse
 from django.shortcuts import render
-from ..models import Shop, Index
+
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
+
+
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
 def navigate_to_settings(request):
     if request.user.is_authenticated:
-        shop_instance = Shop.objects.get(shop_owner=request.user.id)
-        index_instance = Index.objects.get(shop=shop_instance)
+        try:
+            index_instance = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         return render(request, 'Settings/settings.html', {'index_data': index_instance, })
     return render(request, 'index.html')
 
@@ -22,20 +33,21 @@ def update_prefix(request):
         farmer_ledger_prefix = request.POST['farmer_ledger_prefix']
         inventory_prefix = request.POST['inventory_prefix']
 
-        shop_instance = Shop.objects.get(shop_owner=request.user.id)
-        index_instance = Index.objects.get(shop=shop_instance)
-
-        index_instance.arrival_entry_prefix = arrival_entry_prefix
-        index_instance.sales_bill_entry_prefix = sales_bill_entry_prefix
-        index_instance.patti_entry_prefix = patti_entry_prefix
-        index_instance.expenditure_entry_prefix = expenditure_entry_prefix
-        index_instance.credit_bill_entry_prefix = credit_bill_entry_prefix
-        index_instance.shilk_entry_prefix = shilk_entry_prefix
-        index_instance.customer_ledger_prefix = customer_ledger_prefix
-        index_instance.farmer_ledger_prefix = farmer_ledger_prefix
-        index_instance.inventory_prefix = inventory_prefix
-
-        index_instance.save()
+        try:
+            index_instance = shop_metadata_repository.update_prefixes(
+                request.user.id,
+                arrival_entry_prefix=arrival_entry_prefix,
+                sales_bill_entry_prefix=sales_bill_entry_prefix,
+                patti_entry_prefix=patti_entry_prefix,
+                expenditure_entry_prefix=expenditure_entry_prefix,
+                credit_bill_entry_prefix=credit_bill_entry_prefix,
+                shilk_entry_prefix=shilk_entry_prefix,
+                customer_ledger_prefix=customer_ledger_prefix,
+                farmer_ledger_prefix=farmer_ledger_prefix,
+                inventory_prefix=inventory_prefix,
+            )
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         return render(request, 'Settings/settings.html', {'index_data': index_instance, })
 
     return render(request, 'index.html')

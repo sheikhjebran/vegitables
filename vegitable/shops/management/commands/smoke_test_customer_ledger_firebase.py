@@ -69,6 +69,16 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Firebase CustomerLedger smoke test passed.'))
             self.stdout.write(f'Created temporary record id={created_record.id} for shop_id={shop_id}.')
+        except KeyboardInterrupt as error:
+            if created_record is not None:
+                try:
+                    repository.delete(created_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Customer ledger Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
         except Exception:
             if created_record is not None:
                 try:

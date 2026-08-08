@@ -6,11 +6,16 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from .. import utility
-from ..models import Shop, FarmerLedger
 from ..repositories.farmer_ledger_repository import FarmerLedgerRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 
 
 farmer_ledger_repository = FarmerLedgerRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
 @csrf_protect
@@ -24,7 +29,10 @@ def farmer_ledger(request, current_page=1, farmer_ledger_entry=None, message=Non
                 "id": None
             }
         items_per_page = 10
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         request.session['form_token'] = utility.generate_unique_number()
         farmer_ledger_list = farmer_ledger_repository.list_by_shop(shop_detail_object.pk)
         paginator = Paginator(farmer_ledger_list, items_per_page)
@@ -43,7 +51,10 @@ def add_farmer_ledger(request):
         if request.method == 'POST':
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 del request.session['form_token']
-                shop = Shop.objects.get(shop_owner=request.user.id)
+                try:
+                    shop = _load_shop_metadata(request.user.id)
+                except ValueError as error:
+                    return JsonResponse({'error': str(error)}, status=400)
                 if request.POST['farmer_ledger_id'] == "None" or len(request.POST['farmer_ledger_id']) == 0:
                     if not farmer_ledger_repository.exists_by_contact(request.POST['contact']):
                         farmer_ledger_repository.create(
@@ -70,7 +81,10 @@ def add_farmer_ledger(request):
 
 @api_view(['GET'])
 def search_farmer_ledger(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'error': str(error)}, status=400)
 
     search_text = request.GET.get('search_text', '').strip()
 
@@ -104,7 +118,10 @@ def default_farmer_ledger(request):
         items_per_page = 10
         current_page = 1
 
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         request.session['form_token'] = utility.generate_unique_number()
         farmer_ledger_list = farmer_ledger_repository.list_by_shop(shop_detail_object.pk)
 

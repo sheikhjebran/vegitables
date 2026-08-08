@@ -174,46 +174,88 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Firebase Shilk patti smoke test passed.'))
             self.stdout.write(f'Validated Shilk Firestore patti totals for shop_id={shop_id}.')
 
+        except KeyboardInterrupt as error:
+            _cleanup_records(
+                arrival_repository,
+                sales_repository,
+                credit_repository,
+                patti_repository,
+                arrival_record,
+                sales_cash,
+                sales_credit,
+                credit_record,
+                patti_record,
+            )
+            raise CommandError(
+                'Shilk Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
+
         except Exception:
-            if patti_record is not None:
-                try:
-                    patti_repository.delete(patti_record.id)
-                except Exception:
-                    pass
-            if credit_record is not None:
-                try:
-                    credit_repository.delete(credit_record.id)
-                except Exception:
-                    pass
-            if sales_credit is not None:
-                try:
-                    sales_repository.delete(sales_credit.id, restore_stock=True)
-                except Exception:
-                    pass
-            if sales_cash is not None:
-                try:
-                    sales_repository.delete(sales_cash.id, restore_stock=True)
-                except Exception:
-                    pass
-            if arrival_record is not None:
-                try:
-                    arrival_repository.delete(arrival_record.id)
-                except Exception:
-                    pass
+            _cleanup_records(
+                arrival_repository,
+                sales_repository,
+                credit_repository,
+                patti_repository,
+                arrival_record,
+                sales_cash,
+                sales_credit,
+                credit_record,
+                patti_record,
+            )
             raise
 
-        if patti_record is not None:
-            patti_repository.delete(patti_record.id)
-        if credit_record is not None:
-            credit_repository.delete(credit_record.id)
-        if sales_credit is not None:
-            sales_repository.delete(sales_credit.id, restore_stock=True)
-        if sales_cash is not None:
-            sales_repository.delete(sales_cash.id, restore_stock=True)
-        if arrival_record is not None:
-            arrival_repository.delete(arrival_record.id)
+        _cleanup_records(
+            arrival_repository,
+            sales_repository,
+            credit_repository,
+            patti_repository,
+            arrival_record,
+            sales_cash,
+            sales_credit,
+            credit_record,
+            patti_record,
+        )
 
 
 def _generated_shop_id(token):
     # Keep generated IDs in a high range to avoid clashing with real shops.
     return 900000 + (int(token[:6], 16) % 90000)
+
+
+def _cleanup_records(
+    arrival_repository,
+    sales_repository,
+    credit_repository,
+    patti_repository,
+    arrival_record,
+    sales_cash,
+    sales_credit,
+    credit_record,
+    patti_record,
+):
+    if patti_record is not None:
+        try:
+            patti_repository.delete(patti_record.id)
+        except Exception:
+            pass
+    if credit_record is not None:
+        try:
+            credit_repository.delete(credit_record.id)
+        except Exception:
+            pass
+    if sales_credit is not None:
+        try:
+            sales_repository.delete(sales_credit.id, restore_stock=True)
+        except Exception:
+            pass
+    if sales_cash is not None:
+        try:
+            sales_repository.delete(sales_cash.id, restore_stock=True)
+        except Exception:
+            pass
+    if arrival_record is not None:
+        try:
+            arrival_repository.delete(arrival_record.id)
+        except Exception:
+            pass

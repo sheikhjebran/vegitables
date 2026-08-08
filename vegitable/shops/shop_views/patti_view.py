@@ -8,10 +8,11 @@ from rest_framework import status
 from rest_framework.decorators import renderer_classes, api_view
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
-from ..models import Shop, PattiEntry, PattiEntryList, ArrivalEntry, ArrivalGoods, Index, SalesBillItem
+from ..models import Shop
 from ..repositories.arrival_repository import ArrivalRepository
 from ..repositories.patti_repository import PattiRepository
 from ..repositories.sales_bill_repository import SalesBillRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 from ..utility import getDate_from_string
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -23,16 +24,37 @@ import uuid
 arrival_repository = ArrivalRepository()
 sales_bill_repository = SalesBillRepository()
 patti_repository = PattiRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _patti_firebase_required_message():
+    return 'Enable USE_FIREBASE_PATTI=True. SQL patti path has been removed.'
+
+
+def _arrival_firebase_required_message():
+    return 'Enable USE_FIREBASE_ARRIVAL=True. SQL arrival path has been removed from patti workflows.'
+
+
+def _sales_firebase_required_message():
+    return 'Enable USE_FIREBASE_SALES=True. SQL sales path has been removed from patti workflows.'
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
+        if not patti_repository.using_firebase():
+            return JsonResponse({'error': _patti_firebase_required_message()}, status=400)
+
         patti_entry_detail = []
         try:
-            if patti_repository.using_firebase():
-                patti_entry_detail = patti_repository.list_by_shop(shop_detail_object.pk)
-            else:
-                patti_entry_detail = PattiEntry.objects.filter(shop=shop_detail_object).order_by('-id')
+            patti_entry_detail = patti_repository.list_by_shop(shop_detail_object.pk)
 
             items_per_page = 10
             paginator = Paginator(patti_entry_detail, items_per_page)
@@ -51,36 +73,37 @@ def patti_entry(request, current_page=1):
 
 
 def get_unsettled_lorry_details(shop_detail_object):
-    if arrival_repository.using_firebase():
-        return [
-            {
-                'id': record.id,
-                'lorry_no': record.lorry_no,
-            }
-            for record in arrival_repository.list_unsettled_entries(shop_detail_object.pk)
-        ]
+    if not arrival_repository.using_firebase():
+        raise ValueError(_arrival_firebase_required_message())
 
-    # SQL fallback for non-Firestore shops.
-    unsettled_entries = ArrivalEntry.objects.filter(
-        arrivalgoods__shop=shop_detail_object,
-        arrivalgoods__patti_status=False,
-    ).distinct().values('id', 'lorry_no')
-
-    return list(unsettled_entries)
+    return [
+        {
+            'id': record.id,
+            'lorry_no': record.lorry_no,
+        }
+        for record in arrival_repository.list_unsettled_entries(shop_detail_object.pk)
+    ]
 
 
 def add_new_patti_entry(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
 
-        index = get_object_or_404(Index, shop=shop_detail_object)
+        if not patti_repository.using_firebase():
+            return JsonResponse({'error': _patti_firebase_required_message()}, status=400)
 
         patti_index = {
-            'patti_entry_prefix': index.patti_entry_prefix,
-            'patti_entry_counter': int(index.patti_entry_counter) + 1
+            'patti_entry_prefix': shop_detail_object.patti_entry_prefix,
+            'patti_entry_counter': int(shop_detail_object.patti_entry_counter) + 1
         }
 
-        un_settled_lorry_detail = get_unsettled_lorry_details(shop_detail_object)
+        try:
+            un_settled_lorry_detail = get_unsettled_lorry_details(shop_detail_object)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {
                           "un_settled_lorry_detail": un_settled_lorry_detail,
@@ -95,30 +118,34 @@ def add_new_patti_entry(request):
 def get_all_farmer_name(request):
     [...]
     arrival_entry_id = request.GET['lorry_number']
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return Response({'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
-    if arrival_repository.using_firebase():
-        former_names = arrival_repository.list_unsettled_farmer_names(
-            shop_detail_object.pk,
-            arrival_entry_id,
-        )
-        return Response({'farmer_list': former_names}, status=status.HTTP_200_OK)
+    if not arrival_repository.using_firebase():
+        return Response({'error': _arrival_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
 
-    arrival_entry = get_object_or_404(ArrivalEntry, id=arrival_entry_id)
-    former_names = ArrivalGoods.objects.filter(
-        shop=shop_detail_object,
-        arrival_entry=arrival_entry,
-        patti_status=False
-    ).values_list('former_name', flat=True)
-    data = {'farmer_list': list(former_names)}
-    return Response(data, status=status.HTTP_200_OK)
+    former_names = arrival_repository.list_unsettled_farmer_names(
+        shop_detail_object.pk,
+        arrival_entry_id,
+    )
+    return Response({'farmer_list': former_names}, status=status.HTTP_200_OK)
 
 
 def view_generate_patti_pdf_bill(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Unauthorized access'}, status=403)
 
-    shop_detail_object = get_object_or_404(Shop, shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'error': str(error)}, status=400)
+
+    if not patti_repository.using_firebase():
+        return JsonResponse({'error': _patti_firebase_required_message()}, status=400)
+    if not arrival_repository.using_firebase():
+        return JsonResponse({'error': _arrival_firebase_required_message()}, status=400)
 
     is_new = str(request.POST.get('new')) == "True"
 
@@ -139,34 +166,15 @@ def view_generate_patti_pdf_bill(request):
                 items=patti_items,
             )
 
-            index_obj = get_object_or_404(Index, shop=shop_detail_object)
-            index_obj.patti_entry_counter += 1
-            index_obj.save()
+            shop_metadata_repository.increment_counter(request.user.id, 'patti_entry_counter')
 
-            if arrival_repository.using_firebase():
-                settled_count = arrival_repository.mark_goods_settled(
-                    shop_id=shop_detail_object.pk,
-                    entry_id=request.POST['patti_lorry_number'],
-                    former_name=request.POST['patti_farmer_name'],
-                )
-                if settled_count <= 0:
-                    return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
-            else:
-                arrival_detail_object = get_object_or_404(
-                    ArrivalEntry, id=request.POST['patti_lorry_number'])
-
-                arrival_good_objects = ArrivalGoods.objects.filter(
-                    shop=shop_detail_object,
-                    arrival_entry=arrival_detail_object,
-                    former_name=request.POST['patti_farmer_name']
-                )
-
-                if not arrival_good_objects.exists():
-                    return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
-
-                for arrival_good_object in arrival_good_objects:
-                    arrival_good_object.patti_status = True
-                    arrival_good_object.save()
+            settled_count = arrival_repository.mark_goods_settled(
+                shop_id=shop_detail_object.pk,
+                entry_id=request.POST['patti_lorry_number'],
+                former_name=request.POST['patti_farmer_name'],
+            )
+            if settled_count <= 0:
+                return JsonResponse({'error': 'No matching ArrivalGoods found'}, status=404)
 
             pdf_url = generate_patti_pdf(request, patti_entry_obj)
             return JsonResponse({'pdf_url': pdf_url}, status=200)
@@ -238,17 +246,14 @@ def generate_patti_pdf(request, patti_entry_obj):
 @csrf_protect
 def edit_patti_entry(request, patti_id):
     if request.user.is_authenticated:
-        if patti_repository.using_firebase():
-            patti_bill_detail = patti_repository.get_by_id(patti_id)
-            if patti_bill_detail is None:
-                return JsonResponse({'error': 'Patti entry not found'}, status=404)
-            today = patti_bill_detail.date
-            patti_entry_obj = patti_bill_detail.items
-        else:
-            patti_bill_detail = PattiEntry.objects.get(pk=patti_id)
-            today = patti_bill_detail.date
-            patti_entry_obj = PattiEntryList.objects.filter(
-                patti=patti_bill_detail)
+        if not patti_repository.using_firebase():
+            return JsonResponse({'error': _patti_firebase_required_message()}, status=400)
+
+        patti_bill_detail = patti_repository.get_by_id(patti_id)
+        if patti_bill_detail is None:
+            return JsonResponse({'error': 'Patti entry not found'}, status=404)
+        today = patti_bill_detail.date
+        patti_entry_obj = patti_bill_detail.items
 
         return render(request, 'Entry/Patti/modify_patti_entry.html',
                       {'patti_bill_detail': patti_bill_detail,
@@ -301,124 +306,65 @@ def build_patti_item_list(request, request_list):
 def get_sales_list_for_arrival_item_list(request):
     [...]
 
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return Response({'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
     lorry_number = request.GET['patti_lorry']
     patti_farmer = request.GET['patti_farmer']
 
-    if arrival_repository.using_firebase() and sales_bill_repository.using_firebase():
-        arrival_detail_object = arrival_repository.get_by_id(lorry_number)
-        if arrival_detail_object is None:
-            return JsonResponse({'error': 'No matching ArrivalEntry found'}, status=404)
+    if not arrival_repository.using_firebase():
+        return Response({'error': _arrival_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
+    if not sales_bill_repository.using_firebase():
+        return Response({'error': _sales_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
 
-        arrival_good_object = [
-            goods for goods in arrival_detail_object.goods
-            if goods.former_name == patti_farmer and not goods.patti_status
-        ]
+    arrival_detail_object = arrival_repository.get_by_id(lorry_number)
+    if arrival_detail_object is None:
+        return JsonResponse({'error': 'No matching ArrivalEntry found'}, status=404)
 
-        advance = 0
-        sales_response_list = []
-        sales_records = sales_bill_repository.list_by_shop(shop_detail_object.pk)
-        sales_items_by_lot = {}
-        for record in sales_records:
-            for item in record.items:
-                sales_items_by_lot.setdefault(str(item.arrival_goods_local_id), []).append(item)
-
-        for arrival_single_goods in arrival_good_object:
-            if float(arrival_single_goods.advance) > 0:
-                advance = arrival_single_goods.advance
-
-            sales_item_list = sales_items_by_lot.get(str(arrival_single_goods.local_id), [])
-            if len(sales_item_list) <= 0:
-                sales_response_list.append({
-                    'item_name': arrival_single_goods.item_name,
-                    'net_weight': arrival_single_goods.weight,
-                    'sold_qty': 0,
-                    'lot_number': arrival_single_goods.remarks,
-                    'arrival_qty': arrival_single_goods.qty,
-                    'rates': 0,
-                    'amount': 0,
-                })
-                continue
-
-            for single_sales in sales_item_list:
-                sales_response_list.append({
-                    'item_name': single_sales.item_name,
-                    'net_weight': single_sales.net_weight,
-                    'sold_qty': single_sales.bags,
-                    'lot_number': arrival_single_goods.remarks,
-                    'arrival_qty': arrival_single_goods.qty,
-                    'rates': single_sales.rates,
-                    'amount': single_sales.amount,
-                })
-
-        sales_response_list = grouping_sales_bill_entry(sales_response_list)
-        data = {
-            'farmer_advance': advance,
-            'sales_goods_list': sales_response_list
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
-    arrival_detail_object = ArrivalEntry.objects.get(
-        id=int(lorry_number))
-
-    arrival_good_object = ArrivalGoods.objects.filter(
-        shop=shop_detail_object,
-        arrival_entry=arrival_detail_object,
-        former_name=patti_farmer,
-        patti_status=False
-    )
+    arrival_good_object = [
+        goods for goods in arrival_detail_object.goods
+        if goods.former_name == patti_farmer and not goods.patti_status
+    ]
 
     advance = 0
+    sales_response_list = []
+    sales_records = sales_bill_repository.list_by_shop(shop_detail_object.pk)
+    sales_items_by_lot = {}
+    for record in sales_records:
+        for item in record.items:
+            sales_items_by_lot.setdefault(str(item.arrival_goods_local_id), []).append(item)
 
-    sales_array = []
-    arrival_entry_with_no_sales = []
     for arrival_single_goods in arrival_good_object:
-        print(arrival_single_goods.id)
         if float(arrival_single_goods.advance) > 0:
             advance = arrival_single_goods.advance
 
-        sales_item_list = SalesBillItem.objects.filter(
-            arrival_goods=arrival_single_goods
-        )
+        sales_item_list = sales_items_by_lot.get(str(arrival_single_goods.local_id), [])
         if len(sales_item_list) <= 0:
-            arrival_entry_with_no_sales.append(arrival_single_goods)
-        else:
-            for sales in sales_item_list:
-                sales_array.append(sales)
+            sales_response_list.append({
+                'item_name': arrival_single_goods.item_name,
+                'net_weight': arrival_single_goods.weight,
+                'sold_qty': 0,
+                'lot_number': arrival_single_goods.remarks,
+                'arrival_qty': arrival_single_goods.qty,
+                'rates': 0,
+                'amount': 0,
+            })
+            continue
 
-    sales_response_list = []
-    for single_sales in sales_array:
-        sales_dict = {
-            'item_name': single_sales.item_name,
-            'net_weight': single_sales.net_weight,
-            'sold_qty': single_sales.bags}
-
-        arrival_good_object = ArrivalGoods.objects.get(
-            id=single_sales.arrival_goods.id,
-        )
-
-        sales_dict['lot_number'] = arrival_good_object.remarks
-        sales_dict['arrival_qty'] = arrival_good_object.qty
-        sales_dict['rates'] = single_sales.rates
-        sales_dict['amount'] = single_sales.amount
-
-        sales_response_list.append(sales_dict)
-
-    for single_arrival_entry in arrival_entry_with_no_sales:
-        arrival_single_entry = {
-            'item_name': single_arrival_entry.item_name,
-            'net_weight': single_arrival_entry.weight,
-            'sold_qty': 0,
-            'lot_number': single_arrival_entry.remarks,
-            'arrival_qty': single_arrival_entry.qty,
-            'rates': 0,
-            'amount': 0
-        }
-        sales_response_list.append(arrival_single_entry)
+        for single_sales in sales_item_list:
+            sales_response_list.append({
+                'item_name': single_sales.item_name,
+                'net_weight': single_sales.net_weight,
+                'sold_qty': single_sales.bags,
+                'lot_number': arrival_single_goods.remarks,
+                'arrival_qty': arrival_single_goods.qty,
+                'rates': single_sales.rates,
+                'amount': single_sales.amount,
+            })
 
     sales_response_list = grouping_sales_bill_entry(sales_response_list)
-
     data = {
         'farmer_advance': advance,
         'sales_goods_list': sales_response_list

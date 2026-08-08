@@ -11,22 +11,30 @@ from rest_framework.decorators import api_view, renderer_classes, permission_cla
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 from datetime import date
 import re
-from django.db import models
 from django.core.paginator import Paginator
 from . import utility
-from .models import ExpenditureEntry, PattiEntry, PattiEntryList, SalesBillEntry, SalesBillItem, Shop, \
-    ArrivalEntry, \
-    ArrivalGoods, CustomerLedger, FarmerLedger, CreditBillEntry, CreditBillHistory, Index
-import datetime
+from .repositories.shop_metadata_repository import ShopMetadataRepository
 from .report.report import Report
 from .repositories.arrival_repository import ArrivalRepository
 from .repositories.sales_bill_repository import SalesBillRepository
 from .utility import consolidate_result_for_report, get_float_number, getDate_from_string
-from django.db.models import Sum, F, Q
 
 
 arrival_repository = ArrivalRepository()
 sales_bill_repository = SalesBillRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _arrival_firebase_required_message():
+    return 'Enable USE_FIREBASE_ARRIVAL=True. SQL arrival path has been removed from shared helpers.'
+
+
+def _sales_firebase_required_message():
+    return 'Enable USE_FIREBASE_SALES=True. SQL sales path has been removed from shared helpers.'
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
 def index(request):
@@ -46,22 +54,15 @@ def inventory_prev_page(request, page_number):
 
 def inventory(request, current_page=1):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
 
-        if arrival_repository.using_firebase():
-            entries = arrival_repository.build_inventory_entries(shop_detail_object.pk)
-        else:
-            entries = ArrivalGoods.objects.filter(shop_id=shop_detail_object).values(
-                'id',
-                'arrival_entry__date',
-                'remarks',
-                'item_name',
-                'initial_qty',
-                'qty',
-            ).annotate(
-                sold=F('initial_qty') - F('qty'),
-                balance=F('qty')
-            ).filter(qty__gt=0)
+        if not arrival_repository.using_firebase():
+            return JsonResponse({'error': _arrival_firebase_required_message()}, status=400)
+
+        entries = arrival_repository.build_inventory_entries(shop_detail_object.pk)
 
         items_per_page = 10
         paginator = Paginator(entries, items_per_page)
@@ -73,7 +74,10 @@ def inventory(request, current_page=1):
 
 def profile(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
 
         profile_data = {
             "username": request.user.username,
@@ -113,20 +117,20 @@ def total_amount_expenditure_entry(request):
 def get_arrival_goods_item_name(request):
     [...]
     item_name_list = {}
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    if arrival_repository.using_firebase():
-        _, arrival_goods = arrival_repository.get_goods_by_local_id(
-            shop_detail_object.pk,
-            request.GET['selected_lot'],
-        )
-        if arrival_goods is not None:
-            item_name_list[arrival_goods.item_name] = arrival_goods.qty
-    else:
-        arrival_detail_object = ArrivalGoods.objects.filter(
-            shop=shop_detail_object).filter(id=request.GET['selected_lot'])
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return Response({'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
-        for arrival_entry in arrival_detail_object:
-            item_name_list[arrival_entry.item_name] = arrival_entry.qty
+    if not arrival_repository.using_firebase():
+        return Response({'error': _arrival_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
+
+    _, arrival_goods = arrival_repository.get_goods_by_local_id(
+        shop_detail_object.pk,
+        request.GET['selected_lot'],
+    )
+    if arrival_goods is not None:
+        item_name_list[arrival_goods.item_name] = arrival_goods.qty
 
     data = {'item_name_list': item_name_list}
     return Response(data, status=status.HTTP_200_OK)
@@ -136,17 +140,17 @@ def get_arrival_goods_item_name(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_api(request):
     [...]
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'error': str(error)}, status=400)
     mylist = {}
-    if arrival_repository.using_firebase():
-        for _, item in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
-            mylist[item.local_id] = item.qty
-    else:
-        arrival_goods_obj = ArrivalGoods.objects.filter(
-            shop=shop_detail_object, qty__gte=1)
 
-        for item in arrival_goods_obj:
-            mylist[item.pk] = item.qty
+    if not arrival_repository.using_firebase():
+        return JsonResponse({'error': _arrival_firebase_required_message()}, status=400)
+
+    for _, item in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
+        mylist[item.local_id] = item.qty
 
     return JsonResponse(mylist, status=status.HTTP_200_OK)
 
@@ -154,18 +158,20 @@ def get_arrival_goods_api(request):
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_duplicate_validation_api(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    if arrival_repository.using_firebase():
-        responses = arrival_repository.find_duplicate(
-            shop_id=shop_detail_object.pk,
-            lorry_no=request.GET['lorry_no'],
-            date=request.GET['date'],
-        )
-        found = len(responses) > 0
-    else:
-        responses = ArrivalEntry.objects.filter(shop=shop_detail_object).filter(lorry_no=request.GET['lorry_no']).filter(
-            date=request.GET['date'])
-        found = responses.count() > 0
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'error': str(error)}, status=400)
+
+    if not arrival_repository.using_firebase():
+        return JsonResponse({'error': _arrival_firebase_required_message()}, status=400)
+
+    responses = arrival_repository.find_duplicate(
+        shop_id=shop_detail_object.pk,
+        lorry_no=request.GET['lorry_no'],
+        date=request.GET['date'],
+    )
+    found = len(responses) > 0
 
     if not found:
         return JsonResponse(data={'NOT_FOUND': True}, status=status.HTTP_200_OK)
@@ -178,16 +184,16 @@ def get_arrival_duplicate_validation_api(request):
 def get_arrival_goods_list(request):
     [...]
     item_goods_list = {}
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-    if arrival_repository.using_firebase():
-        for _, arrival_entry in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
-            item_goods_list[arrival_entry.local_id] = arrival_entry.remarks
-    else:
-        arrival_detail_object = ArrivalGoods.objects.filter(
-            shop=shop_detail_object, qty__gte=1)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return Response({'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
-        for arrival_entry in arrival_detail_object:
-            item_goods_list[arrival_entry.pk] = arrival_entry.remarks
+    if not arrival_repository.using_firebase():
+        return Response({'error': _arrival_firebase_required_message()}, status=status.HTTP_400_BAD_REQUEST)
+
+    for _, arrival_entry in arrival_repository.list_available_goods_by_shop(shop_detail_object.pk):
+        item_goods_list[arrival_entry.local_id] = arrival_entry.remarks
 
     data = {'item_goods_list': item_goods_list}
     return Response(data, status=status.HTTP_200_OK)
@@ -196,61 +202,43 @@ def get_arrival_goods_list(request):
 def get_sales_bill_detail_from_db(shop_detail_object, date):
     selected_date = getDate_from_string(date)
 
-    if sales_bill_repository.using_firebase():
-        result = []
-        selected_date_iso = selected_date.isoformat()
-        for sales_record in sales_bill_repository.list_by_shop(shop_detail_object.pk):
-            if str(sales_record.date) != selected_date_iso:
-                continue
-            for item in sales_record.items:
-                result.append({
-                    'id': sales_record.sales_bill_id,
-                    'customer_name': sales_record.customer_name,
-                    'item_name': item.item_name,
-                    'bags': item.bags,
-                    'amount': sales_record.total_amount,
-                    'balance': sales_record.balance_amount,
-                    'payment_type': sales_record.payment_type,
-                })
+    if not sales_bill_repository.using_firebase():
+        raise ValueError(_sales_firebase_required_message())
 
-        if len(result) <= 0:
-            return None
-        return consolidate_result_for_report(result)
+    result = []
+    selected_date_iso = selected_date.isoformat()
+    for sales_record in sales_bill_repository.list_by_shop(shop_detail_object.pk):
+        if str(sales_record.date) != selected_date_iso:
+            continue
+        for item in sales_record.items:
+            result.append({
+                'id': sales_record.sales_bill_id,
+                'customer_name': sales_record.customer_name,
+                'item_name': item.item_name,
+                'bags': item.bags,
+                'amount': sales_record.total_amount,
+                'balance': sales_record.balance_amount,
+                'payment_type': sales_record.payment_type,
+            })
 
-    response = SalesBillEntry.objects.filter(
-        date=selected_date,
-        shop=shop_detail_object,
-    ). \
-        values('id', 'customer_name', 'payment_type', 'total_amount', 'balance_amount'). \
-        annotate(
-        item_name=models.F('sales_bill_item__item_name'),
-        bags=models.F('sales_bill_item__bags'),
-    )
-
-    if len(response) <= 0:
-        response = None
-    else:
-        result = []
-        for single_response in response:
-            my_dict = {
-                'id': single_response.get('id'),
-                'customer_name': single_response.get('customer_name'),
-                'item_name': single_response.get('item_name'),
-                'bags': single_response.get('bags'),
-                'amount': single_response.get('total_amount'),
-                'balance': single_response.get('balance_amount'),
-                'payment_type': single_response.get('payment_type')
-            }
-            result.append(my_dict)
-        response = consolidate_result_for_report(result)
-    return response
+    if len(result) <= 0:
+        return None
+    return consolidate_result_for_report(result)
 
 
 @api_view(['GET'])
 def report_sales_bill(request):
-    shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse(data={'FOUND': False, 'error': str(error)}, status=400)
     date = request.GET['date']
-    response = get_sales_bill_detail_from_db(shop_detail_object, date)
+
+    try:
+        response = get_sales_bill_detail_from_db(shop_detail_object, date)
+    except ValueError as error:
+        return JsonResponse(data={'FOUND': False, 'error': str(error)}, status=400)
+
     print(response)
     return JsonResponse(data={'FOUND': True, 'result': response}, status=status.HTTP_200_OK)
 
@@ -258,7 +246,10 @@ def report_sales_bill(request):
 @csrf_protect
 def report(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         return render(request, 'report.html', {
             'shop_details': shop_detail_object,
         })
@@ -268,7 +259,10 @@ def report(request):
 @csrf_protect
 def sales_bill_report(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
         return render(request, 'Report/sales_bill_report.html', {
             'shop_details': shop_detail_object,
         })
@@ -285,9 +279,17 @@ def extract_dictionary_into_list_container(response):
 
 def generate_sales_bill_report(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        response = get_sales_bill_detail_from_db(
-            shop_detail_object, request.POST['sales_bill_date'])
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
+        try:
+            response = get_sales_bill_detail_from_db(
+                shop_detail_object, request.POST['sales_bill_date'])
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
         response = extract_dictionary_into_list_container(response)
         return Report.generate_sales_bill_table_report(response)
     return render(request, 'index.html')
@@ -295,7 +297,10 @@ def generate_sales_bill_report(request):
 
 def generate_patti_bill_report(request):
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
+        try:
+            _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
 
     return render(request, 'index.html')
 

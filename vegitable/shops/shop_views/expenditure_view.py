@@ -6,28 +6,40 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 
 from .. import utility
-from ..models import Shop, ExpenditureEntry
 from ..repositories.expenditure_repository import ExpenditureRepository
+from ..repositories.shop_metadata_repository import ShopMetadataRepository
 
 
 expenditure_repository = ExpenditureRepository()
+shop_metadata_repository = ShopMetadataRepository()
+
+
+def _expenditure_firebase_required_message():
+    return 'Enable USE_FIREBASE_EXPENDITURE=True. SQL expenditure path has been removed.'
+
+
+def _load_shop_metadata(user_id):
+    return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
 def expenditure_entry(request, current_page=1, expenditure_detail=None):
     total_amount = 0
     expenditure_events_today = []
     if request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
         try:
-            if expenditure_repository.using_firebase():
-                today = datetime.date.today().isoformat()
-                expenditure_events_today = expenditure_repository.list_by_shop_and_date(
-                    shop_detail_object.pk,
-                    today,
-                )
-            else:
-                expenditure_events_today = ExpenditureEntry.objects.filter(shop=shop_detail_object).filter(
-                    date=datetime.datetime.today())
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
+        if not expenditure_repository.using_firebase():
+            return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
+
+        try:
+            today = datetime.date.today().isoformat()
+            expenditure_events_today = expenditure_repository.list_by_shop_and_date(
+                shop_detail_object.pk,
+                today,
+            )
 
             total_amount = sum(float(entry.amount) for entry in expenditure_events_today)
 
@@ -65,8 +77,10 @@ def add_expenditure_entry(request):
             if request.POST.get('form_token') == str(request.session.get('form_token')):
                 # Remove the token from the session
                 del request.session['form_token']
-                shop_detail_object = Shop.objects.get(
-                    shop_owner=request.user.id)
+                try:
+                    shop_detail_object = _load_shop_metadata(request.user.id)
+                except ValueError as error:
+                    return JsonResponse({'error': str(error)}, status=400)
                 if request.POST['expenditure_id'] == "None":
 
                     expenditure_repository.create(
@@ -94,11 +108,10 @@ def add_expenditure_entry(request):
 @csrf_protect
 def edit_expense(request, expenditure_id):
     if request.user.is_authenticated:
-        if expenditure_repository.using_firebase():
-            expenditure_entry_detail = expenditure_repository.get_by_id(expenditure_id)
-        else:
-            expenditure_entry_detail = ExpenditureEntry.objects.get(
-                pk=expenditure_id)
+        if not expenditure_repository.using_firebase():
+            return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
+
+        expenditure_entry_detail = expenditure_repository.get_by_id(expenditure_id)
         return expenditure_entry(request, expenditure_detail=expenditure_entry_detail)
     return render(request, 'index.html')
 
@@ -106,12 +119,10 @@ def edit_expense(request, expenditure_id):
 @csrf_protect
 def delete_expense(request, expenditure_id):
     if request.user.is_authenticated:
-        if expenditure_repository.using_firebase():
-            expenditure_repository.delete(expenditure_id)
-        else:
-            expenditure_entry_detail = ExpenditureEntry.objects.get(
-                pk=expenditure_id)
-            expenditure_entry_detail.delete()
+        if not expenditure_repository.using_firebase():
+            return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
+
+        expenditure_repository.delete(expenditure_id)
         return expenditure_entry(request)
     return render(request, 'index.html')
 
@@ -131,17 +142,18 @@ def fetch_expenditures(request):
     search_date = request.GET.get('search_date')
 
     if search_date and request.user.is_authenticated:
-        shop_detail_object = Shop.objects.get(shop_owner=request.user.id)
-        if expenditure_repository.using_firebase():
-            expenditures = expenditure_repository.list_by_shop_and_date(
-                shop_detail_object.pk,
-                search_date,
-            )
-        else:
-            expenditures = ExpenditureEntry.objects.filter(
-                date=search_date,
-                shop=shop_detail_object,
-            )
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
+        if not expenditure_repository.using_firebase():
+            return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
+
+        expenditures = expenditure_repository.list_by_shop_and_date(
+            shop_detail_object.pk,
+            search_date,
+        )
 
         # Prepare the result data to send back
         result_data = []

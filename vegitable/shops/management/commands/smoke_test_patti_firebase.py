@@ -104,7 +104,7 @@ class Command(BaseCommand):
             if not any(str(entry.id) == str(arrival_record.id) for entry in unsettled_entries):
                 raise CommandError('Arrival record should appear in unsettled patti entries before settlement.')
 
-            with patch('shops.shop_views.patti_view.Shop.objects.get', return_value=fake_shop):
+            with patch('shops.shop_views.patti_view.shop_metadata_repository.require_by_owner_user_id', return_value=fake_shop):
                 farmer_request = request_factory.get('/get_all_farmer_name', {'lorry_number': str(arrival_record.id)})
                 farmer_request.user = fake_user  # type: ignore[assignment]
                 farmer_response = get_all_farmer_name(farmer_request)
@@ -204,6 +204,27 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Firebase patti smoke test passed.'))
             self.stdout.write(f'Validated patti Firestore read/write paths for shop_id={shop_id}.')
+
+        except KeyboardInterrupt as error:
+            if patti_record is not None:
+                try:
+                    patti_repository.delete(patti_record.id)
+                except Exception:
+                    pass
+            if sales_record is not None:
+                try:
+                    sales_repository.delete(sales_record.id, restore_stock=True)
+                except Exception:
+                    pass
+            if arrival_record is not None:
+                try:
+                    arrival_repository.delete(arrival_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Patti Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
 
         except Exception:
             if patti_record is not None:

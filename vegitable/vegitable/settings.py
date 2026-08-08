@@ -74,6 +74,7 @@ USE_FIREBASE_SALES = config('USE_FIREBASE_SALES', cast=bool, default=False)
 USE_FIREBASE_CREDIT = config('USE_FIREBASE_CREDIT', cast=bool, default=False)
 USE_FIREBASE_PATTI = config('USE_FIREBASE_PATTI', cast=bool, default=False)
 USE_FIREBASE_EXPENDITURE = config('USE_FIREBASE_EXPENDITURE', cast=bool, default=False)
+USE_FIREBASE_SHOP_METADATA = config('USE_FIREBASE_SHOP_METADATA', cast=bool, default=False)
 FIREBASE_CREDENTIAL_PATH = _resolve_optional_path(
     config('FIREBASE_CREDENTIAL_PATH', default='')
 )

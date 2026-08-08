@@ -161,6 +161,32 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Firebase report smoke test passed.'))
             self.stdout.write(f'Validated RMC/Shilk Firestore payload builders for shop_id={shop_id}.')
 
+        except KeyboardInterrupt as error:
+            if credit_record is not None:
+                try:
+                    credit_repository.delete(credit_record.id)
+                except Exception:
+                    pass
+            if sales_credit is not None:
+                try:
+                    sales_repository.delete(sales_credit.id, restore_stock=True)
+                except Exception:
+                    pass
+            if sales_cash is not None:
+                try:
+                    sales_repository.delete(sales_cash.id, restore_stock=True)
+                except Exception:
+                    pass
+            if arrival_record is not None:
+                try:
+                    arrival_repository.delete(arrival_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Report payload Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
+
         except Exception:
             if credit_record is not None:
                 try:

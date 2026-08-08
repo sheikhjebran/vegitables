@@ -153,7 +153,7 @@ class Command(BaseCommand):
                 ],
             )
 
-            with patch('shops.shop_views.rmc_view.Shop.objects.get', return_value=fake_shop):
+            with patch('shops.shop_views.rmc_view.shop_metadata_repository.require_by_owner_user_id', return_value=fake_shop):
                 daily_request = request_factory.get('/print_rmc_daily_report', {'date': today})
                 daily_request.user = fake_user
                 daily_response = print_rmc_daily_report(daily_request)
@@ -193,6 +193,32 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Firebase report PDF smoke test passed.'))
             self.stdout.write(f'Validated RMC daily/weekly Firestore PDF endpoints for shop_id={shop_id}.')
+
+        except KeyboardInterrupt as error:
+            if sales_previous is not None:
+                try:
+                    sales_repository.delete(sales_previous.id, restore_stock=True)
+                except Exception:
+                    pass
+            if sales_credit is not None:
+                try:
+                    sales_repository.delete(sales_credit.id, restore_stock=True)
+                except Exception:
+                    pass
+            if sales_cash is not None:
+                try:
+                    sales_repository.delete(sales_cash.id, restore_stock=True)
+                except Exception:
+                    pass
+            if arrival_record is not None:
+                try:
+                    arrival_repository.delete(arrival_record.id)
+                except Exception:
+                    pass
+            raise CommandError(
+                'Report PDF Firebase smoke test was interrupted while waiting on Firestore. '
+                'Retry the command; if the issue persists, check Firestore connectivity and gRPC stability.'
+            ) from error
 
         except Exception:
             if sales_previous is not None:
