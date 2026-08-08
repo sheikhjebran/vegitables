@@ -171,10 +171,37 @@ class SalesBillRepository:
                     pass
             raise
 
+    def import_legacy_record(self, *, shop_id, sales_bill_id, payment_type, customer_name, date, rmc, commission, cooli, total_amount, paid_amount, balance_amount, empty_data, items, created_at_ms=None):
+        initialize_project_firebase()
+        serialized_items = [self._serialize_item(item) for item in items]
+        document = SalesBillEntryDocument(
+            shop_id=str(shop_id),
+            sales_bill_id=str(sales_bill_id),
+            payment_type=str(payment_type),
+            customer_name=str(customer_name),
+            date=str(date),
+            rmc=float(rmc),
+            commission=float(commission),
+            cooli=float(cooli),
+            total_amount=float(total_amount),
+            paid_amount=float(paid_amount),
+            balance_amount=float(balance_amount),
+            empty_data=bool(empty_data),
+            items=serialized_items,
+            created_at_ms=int(created_at_ms if created_at_ms is not None else time.time() * 1000),
+        ).save()
+        return self._from_firebase(document)
+
     def get_by_id(self, record_id):
         initialize_project_firebase()
         document = SalesBillEntryDocument.get(str(record_id))
         return None if document is None else self._from_firebase(document)
+
+    def get_by_sales_bill_id(self, shop_id, sales_bill_id):
+        for record in self.list_by_shop(shop_id):
+            if str(record.sales_bill_id) == str(sales_bill_id):
+                return record
+        return None
 
     def list_by_shop(self, shop_id):
         initialize_project_firebase()

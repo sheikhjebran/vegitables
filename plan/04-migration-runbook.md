@@ -94,3 +94,231 @@
 3. Promote one slice at a time to production.
 4. Keep SQL rollback paths until parity checks pass for a full business cycle.
 5. Remove legacy SQL code only after production stability is confirmed.
+
+## Source-Environment Execution
+
+This is the concrete run order for the environment that still has the real SQL source data and working Firebase credentials.
+
+### Preconditions
+
+1. Run commands from `vegitable/`, the folder that contains `manage.py`.
+2. Ensure the environment can reach both:
+   - the source SQL database
+   - the target Firebase project
+3. Ensure the following base environment variables are set:
+   - `FIREBASE_ENABLED=True`
+   - `FIREBASE_CREDENTIAL_PATH=...`
+   - `FIREBASE_PROJECT_ID=...`
+4. Enable the Firebase feature flag for the slice you are backfilling before running that slice's command.
+5. Keep `USE_CLOUD_DB=True` only if this environment can reach the production MySQL host. Otherwise point the app at a local restored source database.
+
+### Baseline Validation
+
+Run these first:
+
+```powershell
+Set-Location "C:\Users\sheik\Documents\GitHub\vegitables\vegitable"
+uv run python manage.py check
+uv run python manage.py check_firebase
+```
+
+If either fails, stop before starting any backfill.
+
+### Step 1: Backfill Shop Metadata First
+
+The runtime app now depends on Firebase shop metadata for shop context and prefix counters. Backfill this before enabling `USE_FIREBASE_SHOP_METADATA` in a live environment.
+
+Dry run:
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_SHOP_METADATA='True'
+uv run python manage.py backfill_shop_metadata_to_firebase --dry-run
+```
+
+Write:
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_SHOP_METADATA='True'
+uv run python manage.py backfill_shop_metadata_to_firebase
+```
+
+Validate repository behavior:
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_SHOP_METADATA='True'
+uv run python manage.py smoke_test_shop_metadata_firebase
+```
+
+### Step 2: Backfill Domain Slices With Existing SQL Tooling
+
+Recommended order:
+
+1. `ArrivalEntry` plus `ArrivalGoods`
+2. `SalesBillEntry` plus `SalesBillItem`
+3. `CreditBillEntry` plus `CreditBillHistory`
+4. `PattiEntry`
+5. `ExpenditureEntry`
+6. `CustomerLedger`
+7. `FarmerLedger`
+8. `MobileSalesBill`
+
+For each slice, run dry-run, write, then compare.
+
+#### Arrival
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_ARRIVAL='True'
+uv run python manage.py backfill_arrival_to_firebase --dry-run
+uv run python manage.py backfill_arrival_to_firebase
+uv run python manage.py compare_arrival_sources --show-mismatches 20
+```
+
+#### Patti
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_PATTI='True'
+uv run python manage.py backfill_patti_to_firebase --dry-run
+uv run python manage.py backfill_patti_to_firebase
+uv run python manage.py compare_patti_sources --show-mismatches 20
+```
+
+#### Sales
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_ARRIVAL='True'
+$env:USE_FIREBASE_SALES='True'
+uv run python manage.py backfill_sales_to_firebase --dry-run
+uv run python manage.py backfill_sales_to_firebase
+uv run python manage.py compare_sales_sources --show-mismatches 20
+```
+
+#### Credit
+
+Note: this depends on Firestore sales already being backfilled, because each Firestore credit document must point at the corresponding Firestore sales record.
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_ARRIVAL='True'
+$env:USE_FIREBASE_SALES='True'
+$env:USE_FIREBASE_CREDIT='True'
+uv run python manage.py backfill_credit_to_firebase --dry-run
+uv run python manage.py backfill_credit_to_firebase
+uv run python manage.py compare_credit_sources --show-mismatches 20
+```
+
+#### Expenditure
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_EXPENDITURE='True'
+uv run python manage.py backfill_expenditure_to_firebase --dry-run
+uv run python manage.py backfill_expenditure_to_firebase
+uv run python manage.py compare_expenditure_sources --show-mismatches 20
+```
+
+#### Customer Ledger
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_CUSTOMER_LEDGER='True'
+uv run python manage.py backfill_customer_ledger_to_firebase --dry-run
+uv run python manage.py backfill_customer_ledger_to_firebase
+uv run python manage.py compare_customer_ledger_sources --show-mismatches 20
+```
+
+#### Farmer Ledger
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_FARMER_LEDGER='True'
+uv run python manage.py backfill_farmer_ledger_to_firebase --dry-run
+uv run python manage.py backfill_farmer_ledger_to_firebase
+uv run python manage.py compare_farmer_ledger_sources --show-mismatches 20
+```
+
+#### Mobile Sales
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_MOBILE_SALES='True'
+uv run python manage.py backfill_mobile_sales_to_firebase --dry-run
+uv run python manage.py backfill_mobile_sales_to_firebase
+uv run python manage.py compare_mobile_sales_sources --show-mismatches 20
+```
+
+### Step 3: Validate Live Firebase Runtime Paths
+
+After backfills complete, run the Firebase smoke suite with the runtime flags you intend to enable.
+
+```powershell
+$env:FIREBASE_ENABLED='True'
+$env:USE_FIREBASE_SHOP_METADATA='True'
+$env:USE_FIREBASE_MOBILE_SALES='True'
+$env:USE_FIREBASE_CUSTOMER_LEDGER='True'
+$env:USE_FIREBASE_FARMER_LEDGER='True'
+$env:USE_FIREBASE_ARRIVAL='True'
+$env:USE_FIREBASE_SALES='True'
+$env:USE_FIREBASE_CREDIT='True'
+$env:USE_FIREBASE_PATTI='True'
+$env:USE_FIREBASE_EXPENDITURE='True'
+
+uv run python manage.py smoke_test_shop_metadata_firebase
+uv run python manage.py smoke_test_mobile_sales_firebase
+uv run python manage.py smoke_test_customer_ledger_firebase
+uv run python manage.py smoke_test_farmer_ledger_firebase
+uv run python manage.py smoke_test_arrival_firebase
+uv run python manage.py smoke_test_sales_bill_firebase
+uv run python manage.py smoke_test_credit_bill_firebase
+uv run python manage.py smoke_test_patti_firebase
+uv run python manage.py smoke_test_expenditure_firebase
+uv run python manage.py smoke_test_shilk_patti_firebase
+uv run python manage.py smoke_test_report_firebase
+uv run python manage.py smoke_test_report_http_firebase
+uv run python manage.py smoke_test_report_pdf_firebase
+```
+
+### Step 4: Enable Runtime Flags in Staging
+
+Enable these together for the current migrated runtime:
+
+```text
+FIREBASE_ENABLED=True
+USE_FIREBASE_SHOP_METADATA=True
+USE_FIREBASE_MOBILE_SALES=True
+USE_FIREBASE_CUSTOMER_LEDGER=True
+USE_FIREBASE_FARMER_LEDGER=True
+USE_FIREBASE_ARRIVAL=True
+USE_FIREBASE_SALES=True
+USE_FIREBASE_CREDIT=True
+USE_FIREBASE_PATTI=True
+USE_FIREBASE_EXPENDITURE=True
+```
+
+Then rerun:
+
+```powershell
+uv run python manage.py check
+uv run python manage.py smoke_test_report_http_firebase
+uv run python manage.py smoke_test_report_pdf_firebase
+```
+
+### Current Gaps Before Declaring Full Migration Complete
+
+These are still open and should be treated as blockers for a final "MySQL fully retired" statement:
+
+1. The historical backfill/parity commands must still be executed in the real source-data environment.
+2. Runtime code is now pointed at Firebase for migrated paths, but production completion still depends on successful source-environment backfill, compare, and staging validation runs.
+
+### Rollback Rule
+
+If any compare command reports mismatches or any runtime smoke fails in the source environment:
+
+1. Do not enable or widen the corresponding Firebase runtime flag.
+2. Fix the slice-specific mismatch first.
+3. Re-run dry-run, backfill, compare, and smoke validation for that slice before continuing.

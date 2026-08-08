@@ -91,6 +91,12 @@
 - Added Firestore `ShopMetadataRepository` plus `ShopMetadataDocument` to carry the remaining shop/index metadata needed by live Firebase workflows.
 - Cut `settings_view.py` and the arrival/sales/patti prefix-counter flows over from SQL `Shop`/`Index` reads to Firebase shop metadata, with explicit guidance when metadata has not been backfilled.
 - Added `smoke_test_shop_metadata_firebase` and `backfill_shop_metadata_to_firebase`; the backfill command now reports a clear source-environment requirement when local SQL shop tables are absent.
+- Cut the remaining runtime shop-context reads over to Firebase metadata in ledger, expenditure, mobile, credit, RMC, Shilk, and shared helper views; runtime app code no longer reads SQL `Shop`/`Index` rows outside the intentional metadata backfill command.
+- Updated Firebase smoke commands that previously patched `Shop.objects.get` so they now patch the metadata repository dependency instead.
+- Added `backfill_sales_to_firebase` and `compare_sales_sources` for historical `SalesBillEntry` / `SalesBillItem` migration and parity checks without mutating Firestore arrival stock during import.
+- Added `backfill_customer_ledger_to_firebase` and `compare_customer_ledger_sources` for historical `CustomerLedger` migration and parity checks.
+- Added `backfill_farmer_ledger_to_firebase` and `compare_farmer_ledger_sources` for historical `FarmerLedger` migration and parity checks.
+- Added `backfill_credit_to_firebase` and `compare_credit_sources` for historical `CreditBillEntry` / `CreditBillHistory` migration and parity checks, resolving Firestore credit-to-sales references via already-backfilled Firestore sales documents.
 
 ## Verified facts
 
@@ -256,6 +262,25 @@
 - Passed: `uv run python manage.py check` after adding Firestore shop metadata repository and wiring metadata-dependent views
 - Passed: `uv run python manage.py smoke_test_shop_metadata_firebase`
 - Failed with clear source-environment message: `uv run python manage.py backfill_shop_metadata_to_firebase --dry-run` when local `shops_shop` / `shops_index` tables are unavailable
+- Passed: `uv run python manage.py check` after switching remaining runtime shop-context lookups to Firebase metadata
+- Passed: `uv run python manage.py smoke_test_customer_ledger_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_farmer_ledger_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_expenditure_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_mobile_sales_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_credit_bill_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_patti_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py smoke_test_report_http_firebase` with `USE_FIREBASE_SHOP_METADATA=True`
+- Passed: `uv run python manage.py check` after adding sales historical backfill/parity tooling
+- Failed with clear source-environment message: `uv run python manage.py backfill_sales_to_firebase --dry-run` when local sales source tables are unavailable
+- Failed with clear source-environment message: `uv run python manage.py compare_sales_sources --show-mismatches 1` when local sales source tables are unavailable
+- Passed: `uv run python manage.py check` after adding customer/farmer ledger historical backfill/parity tooling
+- Failed with clear source-environment message: `uv run python manage.py backfill_customer_ledger_to_firebase --dry-run` when local customer ledger source table is unavailable
+- Failed with clear source-environment message: `uv run python manage.py compare_customer_ledger_sources --show-mismatches 1` when local customer ledger source table is unavailable
+- Failed with clear source-environment message: `uv run python manage.py backfill_farmer_ledger_to_firebase --dry-run` when local farmer ledger source table is unavailable
+- Failed with clear source-environment message: `uv run python manage.py compare_farmer_ledger_sources --show-mismatches 1` when local farmer ledger source table is unavailable
+- Passed: `uv run python manage.py check` after adding credit historical backfill/parity tooling
+- Failed with clear source-environment message: `uv run python manage.py backfill_credit_to_firebase --dry-run` when local credit source tables are unavailable
+- Failed with clear source-environment message: `uv run python manage.py compare_credit_sources --show-mismatches 1` when local credit source tables are unavailable
 
 ## Current slice
 

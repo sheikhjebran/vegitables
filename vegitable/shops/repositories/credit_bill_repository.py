@@ -81,6 +81,20 @@ class CreditBillRepository:
         )
         return self._from_firebase(existing_document)
 
+    def import_legacy_record(self, *, shop_id, customer_name, sales_bill_record_id, sales_bill_id, initial_credit_bill_amount, histories, created_at_ms=None):
+        initialize_project_firebase()
+        serialized_histories = [self._serialize_history(history) for history in histories]
+        document = CreditBillEntryDocument(
+            shop_id=str(shop_id),
+            customer_name=str(customer_name),
+            sales_bill_record_id=str(sales_bill_record_id),
+            sales_bill_id=str(sales_bill_id),
+            initial_credit_bill_amount=float(initial_credit_bill_amount),
+            histories=serialized_histories,
+            created_at_ms=int(created_at_ms if created_at_ms is not None else time.time() * 1000),
+        ).save()
+        return self._from_firebase(document)
+
     def add_payment(self, *, credit_bill_record_id, amount, payment_mode, date=None):
         initialize_project_firebase()
         document = CreditBillEntryDocument.get(str(credit_bill_record_id))
@@ -130,3 +144,18 @@ class CreditBillRepository:
             histories=histories,
             created_at_ms=int(item.created_at_ms or 0),
         )
+
+    @staticmethod
+    def _serialize_history(history):
+        if isinstance(history, CreditBillHistoryRecord):
+            return {
+                'date': str(history.date),
+                'amount': float(history.amount),
+                'payment_mode': str(history.payment_mode),
+            }
+
+        return {
+            'date': str(history.get('date', '')),
+            'amount': float(history.get('amount', 0.0)),
+            'payment_mode': str(history.get('payment_mode', '')),
+        }
