@@ -267,7 +267,7 @@
                     {% else %}
                         <input type="radio" id="sales_enrty_cash" name="payment_mode" value= "cash" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
                         <label for="sales_enrty_cash">Cash </label><br>
-                        <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit" {% if sales_obj.payment_type == "cash" %} checked {% endif %}>
+                        <input type="radio" id="sales_entry_credit" name="payment_mode" value = "credit" {% if sales_obj.payment_type == "credit" %} checked {% endif %}>
                         <label for="sales_entry_credit">Credit </label><br>
                         <input type="radio" id="sales_entry_upi" name="payment_mode" value = "upi" {% if sales_obj.payment_type == "upi" %} checked {% endif %}>
                         <label for="sales_entry_upi">Upi </label><br>

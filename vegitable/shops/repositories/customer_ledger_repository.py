@@ -110,16 +110,16 @@ class CustomerLedgerRepository:
             for item in CustomerLedger.objects.filter(shop_id=shop_id).order_by('-id')
         ]
 
-    def exists_by_contact(self, contact):
+    def exists_by_contact(self, *, shop_id, contact):
         if self.using_firebase():
             initialize_project_firebase()
             normalized_contact = _normalize_contact(contact)
             return any(
                 item.contact_normalized == normalized_contact
-                for item in CustomerLedgerDocument.objects.all()
+                for item in CustomerLedgerDocument.objects.filter(shop_id=str(shop_id))
             )
 
-        return CustomerLedger.objects.filter(contact=contact).exists()
+        return CustomerLedger.objects.filter(shop_id=shop_id, contact=contact).exists()
 
     def search(self, *, shop_id, search_text):
         normalized_search = search_text.strip().lower()

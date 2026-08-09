@@ -22,6 +22,10 @@ def _load_shop_metadata(user_id):
     return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
+def _belongs_to_shop(record, shop_id):
+    return record is not None and int(record.shop_id) == int(shop_id)
+
+
 def expenditure_entry(request, current_page=1, expenditure_detail=None):
     total_amount = 0
     expenditure_events_today = []
@@ -91,6 +95,9 @@ def add_expenditure_entry(request):
                         remark=request.POST['expense_remark'],
                     )
                 else:
+                    existing_record = expenditure_repository.get_by_id(request.POST['expenditure_id'])
+                    if not _belongs_to_shop(existing_record, shop_detail_object.pk):
+                        return JsonResponse({'error': 'Expenditure record does not belong to your shop.'}, status=403)
                     expenditure_repository.update(
                         record_id=request.POST['expenditure_id'],
                         shop_id=shop_detail_object.pk,
@@ -111,7 +118,14 @@ def edit_expense(request, expenditure_id):
         if not expenditure_repository.using_firebase():
             return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
 
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
         expenditure_entry_detail = expenditure_repository.get_by_id(expenditure_id)
+        if not _belongs_to_shop(expenditure_entry_detail, shop_detail_object.pk):
+            return JsonResponse({'error': 'Expenditure record does not belong to your shop.'}, status=403)
         return expenditure_entry(request, expenditure_detail=expenditure_entry_detail)
     return render(request, 'index.html')
 
@@ -121,6 +135,15 @@ def delete_expense(request, expenditure_id):
     if request.user.is_authenticated:
         if not expenditure_repository.using_firebase():
             return JsonResponse({'error': _expenditure_firebase_required_message()}, status=400)
+
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
+        expenditure_entry_detail = expenditure_repository.get_by_id(expenditure_id)
+        if not _belongs_to_shop(expenditure_entry_detail, shop_detail_object.pk):
+            return JsonResponse({'error': 'Expenditure record does not belong to your shop.'}, status=403)
 
         expenditure_repository.delete(expenditure_id)
         return expenditure_entry(request)

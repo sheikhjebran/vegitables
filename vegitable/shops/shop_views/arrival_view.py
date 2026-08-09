@@ -21,6 +21,10 @@ def _shop_metadata_required_message(error):
     return str(error)
 
 
+def _belongs_to_shop(record, shop_id):
+    return record is not None and int(record.shop_id) == int(shop_id)
+
+
 def _parse_arrival_goods_payload(request, request_list, existing_goods_status=None):
     former_name_list = []
     item_name_list = []
@@ -120,6 +124,9 @@ def add_arrival(request):
         existing_goods_status = {}
         if not is_new:
             existing_record = arrival_repository.get_by_id(request.POST['id'])
+            if not _belongs_to_shop(existing_record, shop_detail_object.pk):
+                messages.error(request, 'Arrival record does not belong to your shop.')
+                return home(request)
             if existing_record is not None:
                 existing_goods_status = {
                     str(goods.local_id): bool(goods.patti_status)
@@ -173,7 +180,16 @@ def modify_arrival(request, arrival_id):
             messages.error(request, _arrival_firebase_required_message())
             return home(request)
 
+        try:
+            shop_detail_object = shop_metadata_repository.require_by_owner_user_id(request.user.id)
+        except ValueError as error:
+            messages.error(request, _shop_metadata_required_message(error))
+            return render(request, 'index.html')
+
         arrival_entry_obj = arrival_repository.get_by_id(arrival_id)
+        if not _belongs_to_shop(arrival_entry_obj, shop_detail_object.pk):
+            messages.error(request, 'Arrival record does not belong to your shop.')
+            return home(request)
         arrival_goods_objs = [] if arrival_entry_obj is None else arrival_entry_obj.goods
         today = '' if arrival_entry_obj is None else arrival_entry_obj.date
 

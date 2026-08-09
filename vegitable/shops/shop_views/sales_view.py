@@ -45,6 +45,10 @@ def _load_shop_metadata(user_id):
     return shop_metadata_repository.require_by_owner_user_id(user_id)
 
 
+def _belongs_to_shop(record, shop_id):
+    return record is not None and int(record.shop_id) == int(shop_id)
+
+
 def sales_bill_entry(request, current_page=1):
     if request.user.is_authenticated:
         try:
@@ -199,6 +203,12 @@ def modify_sales_bill_entry(request):
                     request.session['form_token'] = generate_unique_number()
                     return sales_bill_entry(request)
 
+                existing_record = sales_bill_repository.get_by_id(sales_record_id)
+                if not _belongs_to_shop(existing_record, shop_detail_object.pk):
+                    messages.error(request, 'Sales bill does not belong to your shop.')
+                    request.session['form_token'] = generate_unique_number()
+                    return sales_bill_entry(request)
+
                 sales_record = sales_bill_repository.update(
                     record_id=sales_record_id,
                     shop_id=shop_detail_object.pk,
@@ -296,6 +306,9 @@ def edit_sales_bill_entry(request, sales_id):
         sales_obj = sales_bill_repository.get_by_id(sales_id)
         if sales_obj is None:
             messages.error(request, 'Firestore sales bill not found.')
+            return sales_bill_entry(request)
+        if not _belongs_to_shop(sales_obj, shop_detail_object.pk):
+            messages.error(request, 'Sales bill does not belong to your shop.')
             return sales_bill_entry(request)
 
         arrival_goods_detail = list(arrival_repository.list_available_goods_by_shop(shop_detail_object.pk))

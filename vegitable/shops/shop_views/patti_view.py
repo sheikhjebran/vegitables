@@ -42,6 +42,10 @@ def _sales_firebase_required_message():
 def _load_shop_metadata(user_id):
     return shop_metadata_repository.require_by_owner_user_id(user_id)
 
+
+def _belongs_to_shop(record, shop_id):
+    return record is not None and int(record.shop_id) == int(shop_id)
+
 def patti_entry(request, current_page=1):
     if request.user.is_authenticated:
         try:
@@ -117,6 +121,9 @@ def add_new_patti_entry(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_all_farmer_name(request):
     [...]
+    if not request.user.is_authenticated:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
     arrival_entry_id = request.GET['lorry_number']
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)
@@ -184,6 +191,10 @@ def view_generate_patti_pdf_bill(request):
 
     if str(request.POST.get('new')) == "False":
         try:
+            existing_record = patti_repository.get_by_id(request.POST['id'])
+            if not _belongs_to_shop(existing_record, shop_detail_object.pk):
+                return JsonResponse({'error': 'Patti entry does not belong to your shop.'}, status=403)
+
             patti_items = build_patti_item_list(request, list(request.POST))
             patti_entry_obj = patti_repository.update(
                 record_id=request.POST['id'],
@@ -249,9 +260,16 @@ def edit_patti_entry(request, patti_id):
         if not patti_repository.using_firebase():
             return JsonResponse({'error': _patti_firebase_required_message()}, status=400)
 
+        try:
+            shop_detail_object = _load_shop_metadata(request.user.id)
+        except ValueError as error:
+            return JsonResponse({'error': str(error)}, status=400)
+
         patti_bill_detail = patti_repository.get_by_id(patti_id)
         if patti_bill_detail is None:
             return JsonResponse({'error': 'Patti entry not found'}, status=404)
+        if not _belongs_to_shop(patti_bill_detail, shop_detail_object.pk):
+            return JsonResponse({'error': 'Patti entry does not belong to your shop.'}, status=403)
         today = patti_bill_detail.date
         patti_entry_obj = patti_bill_detail.items
 
@@ -306,6 +324,9 @@ def build_patti_item_list(request, request_list):
 def get_sales_list_for_arrival_item_list(request):
     [...]
 
+    if not request.user.is_authenticated:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)
     except ValueError as error:
@@ -322,6 +343,8 @@ def get_sales_list_for_arrival_item_list(request):
     arrival_detail_object = arrival_repository.get_by_id(lorry_number)
     if arrival_detail_object is None:
         return JsonResponse({'error': 'No matching ArrivalEntry found'}, status=404)
+    if int(arrival_detail_object.shop_id) != int(shop_detail_object.pk):
+        return JsonResponse({'error': 'Arrival entry does not belong to your shop.'}, status=403)
 
     arrival_good_object = [
         goods for goods in arrival_detail_object.goods

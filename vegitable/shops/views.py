@@ -116,6 +116,9 @@ def total_amount_expenditure_entry(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_item_name(request):
     [...]
+    if not request.user.is_authenticated:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
     item_name_list = {}
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)
@@ -140,6 +143,9 @@ def get_arrival_goods_item_name(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_api(request):
     [...]
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)
     except ValueError as error:
@@ -158,6 +164,9 @@ def get_arrival_goods_api(request):
 @api_view(('GET',))
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_duplicate_validation_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)
     except ValueError as error:
@@ -183,6 +192,9 @@ def get_arrival_duplicate_validation_api(request):
 @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
 def get_arrival_goods_list(request):
     [...]
+    if not request.user.is_authenticated:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
     item_goods_list = {}
     try:
         shop_detail_object = _load_shop_metadata(request.user.id)

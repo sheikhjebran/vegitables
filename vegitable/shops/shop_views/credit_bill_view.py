@@ -84,6 +84,14 @@ def search_credit(request):
 
 
 def add_new_credit_bill_entry(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return JsonResponse({'success': False, 'message': str(error)}, status=400)
+
     balance_amount = get_float_number(
         request.POST['credit_bill_balance_amount'])
     sales_bill_id = request.POST['credit_bill_sales_bill_id']
@@ -106,6 +114,8 @@ def add_new_credit_bill_entry(request):
     sales_record = sales_bill_repository.get_by_id(sales_bill_id)
     if sales_record is None:
         return JsonResponse({'success': False, 'message': 'Sales bill not found.'}, status=404)
+    if int(sales_record.shop_id) != int(shop_detail_object.pk):
+        return JsonResponse({'success': False, 'message': 'Sales bill does not belong to your shop.'}, status=403)
 
     remaining_balance = round(float(sales_record.balance_amount) - amount, 2)
     if remaining_balance < 0:
@@ -161,6 +171,9 @@ def add_new_credit_bill_entry(request):
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def get_credit_bill_entry_list(request):
+    if not request.user.is_authenticated:
+        return Response(data={'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
     if not _credit_workflow_requires_firebase():
         return Response(
             data={
@@ -169,7 +182,18 @@ def get_credit_bill_entry_list(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    history_list = credit_bill_repository.list_history(request.GET['id'])
+    try:
+        shop_detail_object = _load_shop_metadata(request.user.id)
+    except ValueError as error:
+        return Response(data={'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+    credit_record = credit_bill_repository.get_by_id(request.GET['id'])
+    if credit_record is None:
+        return Response(data={'error': 'Credit bill not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if int(credit_record.shop_id) != int(shop_detail_object.pk):
+        return Response(data={'error': 'Credit bill does not belong to your shop.'}, status=status.HTTP_403_FORBIDDEN)
+
+    history_list = credit_record.histories
     data = []
     for single_credit in history_list:
         data.append({
