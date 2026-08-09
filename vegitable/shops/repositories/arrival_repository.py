@@ -29,6 +29,11 @@ class ArrivalGoodsRecord:
     def pk(self):
         return self.local_id
 
+    @property
+    def farmer_name(self):
+        # Backward compatibility for templates that still read farmer_name.
+        return self.former_name
+
 
 @dataclass
 class ArrivalEntryRecord:

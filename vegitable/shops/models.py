@@ -16,6 +16,20 @@ class Shop(models.Model):
         return '%s %s' % (self.shop_owner, self.shop_name)
 
 
+class ShopUserAssignment(models.Model):
+    user = ForeignKey(User, on_delete=models.CASCADE)
+    shop = ForeignKey(Shop, on_delete=models.CASCADE)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'shop'], name='unique_user_shop_assignment'),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.shop.shop_name}"
+
+
 class Index(models.Model):
     expenditure_entry_prefix = CharField(max_length=50)
     expenditure_entry_counter = IntegerField()

@@ -3,6 +3,15 @@
 {% block content %}
 
 <div class="container" style="margin-top:5%">
+	{% if messages %}
+	<div style="margin-bottom:20px;">
+		{% for message in messages %}
+		<div style="padding:12px 16px; background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:4px; margin-bottom:8px;">
+			{{ message }}
+		</div>
+		{% endfor %}
+	</div>
+	{% endif %}
 	<form action="authenticate" method="post">{% csrf_token %}
 	<div class="input-field">
 		<center><h3><span>Login</span></h3></center>

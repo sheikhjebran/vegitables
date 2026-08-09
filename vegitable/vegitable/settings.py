@@ -209,10 +209,17 @@ if config('USE_CLOUD_DB', cast=bool, default=False):
         }
     }
 else:
+    local_db_engine = config('LOCAL_DB_ENGINE', default='django.db.backends.sqlite3')
+    local_db_name = config('LOCAL_DB_NAME', default=str(BASE_DIR / 'db.sqlite3'))
+    if local_db_engine.endswith('sqlite3'):
+        local_db_path = Path(local_db_name)
+        if not local_db_path.is_absolute():
+            local_db_name = str(BASE_DIR / local_db_path)
+
     DATABASES = {
         'default': {
-            'ENGINE': config('LOCAL_DB_ENGINE', default='django.db.backends.sqlite3'),
-            'NAME': config('LOCAL_DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
+            'ENGINE': local_db_engine,
+            'NAME': local_db_name,
             'USER': config('LOCAL_DB_USER', default=''),
             'PASSWORD': config('LOCAL_DB_PASSWORD', default=''),
             'HOST': config('LOCAL_DB_HOST', default=''),

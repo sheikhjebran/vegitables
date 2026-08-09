@@ -6,6 +6,7 @@ from .models import (
     SalesBillEntry,
     SalesBillItem,
     Shop,
+    ShopUserAssignment,
     ArrivalEntry,
     ArrivalGoods,
     Index)
@@ -21,3 +22,4 @@ admin.site.register(SalesBillItem)
 admin.site.register(PattiEntry)
 admin.site.register(PattiEntryList)
 admin.site.register(Index)
+admin.site.register(ShopUserAssignment)

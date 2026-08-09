@@ -73,6 +73,7 @@ class ShopMetadataRepository:
         return 'Enable USE_FIREBASE_SHOP_METADATA=True and backfill shop/index metadata to Firebase. SQL shop/index path has been removed for this workflow.'
 
     def get_by_owner_user_id(self, owner_user_id):
+        owner_user_id = self._resolve_owner_user_id(owner_user_id)
         self._ensure_enabled()
         initialize_project_firebase()
         results = list(ShopMetadataDocument.objects.filter(owner_user_id=str(owner_user_id)))
@@ -81,10 +82,15 @@ class ShopMetadataRepository:
         return self._from_firebase(results[0])
 
     def require_by_owner_user_id(self, owner_user_id):
+        owner_user_id = self._resolve_owner_user_id(owner_user_id)
         record = self.get_by_owner_user_id(owner_user_id)
         if record is None:
+            self._bootstrap_from_sql(owner_user_id)
+            record = self.get_by_owner_user_id(owner_user_id)
+        if record is None:
             raise ValueError(
-                f'Shop metadata for owner {owner_user_id} was not found in Firebase. Run backfill_shop_metadata_to_firebase.'
+                f'Shop metadata for owner {owner_user_id} was not found in Firebase. '
+                f'Create an Index row for that owner\'s shop or run backfill_shop_metadata_to_firebase.'
             )
         return record
 
@@ -193,6 +199,60 @@ class ShopMetadataRepository:
     def _ensure_enabled(self):
         if not self.using_firebase():
             raise ValueError(self.requirement_message())
+
+    @staticmethod
+    def _resolve_owner_user_id(user_id):
+        from ..models import Shop, ShopUserAssignment
+
+        assignment = ShopUserAssignment.objects.select_related('shop').filter(
+            user_id=user_id,
+            is_active=True,
+        ).first()
+        if assignment is not None:
+            return int(assignment.shop.shop_owner_id)
+
+        owned_shop_exists = Shop.objects.filter(shop_owner_id=user_id).exists()
+        if owned_shop_exists:
+            return int(user_id)
+
+        return int(user_id)
+
+    def _bootstrap_from_sql(self, owner_user_id):
+        from ..models import Index, Shop
+
+        shop = Shop.objects.filter(shop_owner_id=owner_user_id).first()
+        if shop is None:
+            return
+
+        index = Index.objects.filter(shop=shop).first()
+        if index is None:
+            return
+
+        self.create_or_update(
+            owner_user_id=owner_user_id,
+            shop_id=shop.pk,
+            shop_name=shop.shop_name,
+            shop_location=shop.shop_location,
+            shop_address=shop.shop_address,
+            expenditure_entry_prefix=index.expenditure_entry_prefix,
+            expenditure_entry_counter=index.expenditure_entry_counter,
+            arrival_entry_prefix=index.arrival_entry_prefix,
+            arrival_entry_counter=index.arrival_entry_counter,
+            sales_bill_entry_prefix=index.sales_bill_entry_prefix,
+            sales_bill_entry_counter=index.sales_bill_entry_counter,
+            patti_entry_prefix=index.patti_entry_prefix,
+            patti_entry_counter=index.patti_entry_counter,
+            customer_ledger_prefix=index.customer_ledger_prefix,
+            customer_ledger_counter=index.customer_ledger_counter,
+            farmer_ledger_prefix=index.farmer_ledger_prefix,
+            farmer_ledger_counter=index.farmer_ledger_counter,
+            credit_bill_entry_prefix=index.credit_bill_entry_prefix,
+            credit_bill_entry_counter=index.credit_bill_entry_counter,
+            shilk_entry_prefix=index.shilk_entry_prefix,
+            shilk_entry_counter=index.shilk_entry_counter,
+            inventory_prefix=index.inventory_prefix,
+            inventory_counter=index.inventory_counter,
+        )
 
     @staticmethod
     def _from_firebase(document):
